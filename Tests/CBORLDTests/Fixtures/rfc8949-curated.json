@@ -1,0 +1,23 @@
+{
+  "source": "Curated from RFC 8949 Appendix A and https://github.com/cbor/test-vectors",
+  "vectors": [
+    {"name":"unsigned zero","hex":"00","expectedJSON":"0","deterministicHex":"00"},
+    {"name":"one-byte unsigned boundary","hex":"1818","expectedJSON":"24","deterministicHex":"1818"},
+    {"name":"two-byte unsigned","hex":"1903e8","expectedJSON":"1000","deterministicHex":"1903e8"},
+    {"name":"negative one","hex":"20","expectedJSON":"-1","deterministicHex":"20"},
+    {"name":"negative one hundred","hex":"3863","expectedJSON":"-100","deterministicHex":"3863"},
+    {"name":"half precision","hex":"f93e00","expectedJSON":"1.5","deterministicHex":"f93e00"},
+    {"name":"single precision","hex":"fa47c35000","expectedJSON":"100000.0","deterministicHex":"fa47c35000"},
+    {"name":"false","hex":"f4","expectedJSON":"false","deterministicHex":"f4"},
+    {"name":"true","hex":"f5","expectedJSON":"true","deterministicHex":"f5"},
+    {"name":"null","hex":"f6","expectedJSON":"null","deterministicHex":"f6"},
+    {"name":"text","hex":"6449455446","expectedJSON":"\"IETF\"","deterministicHex":"6449455446"},
+    {"name":"array","hex":"83010203","expectedJSON":"[1,2,3]","deterministicHex":"83010203"},
+    {"name":"text-key map","hex":"a26161016162820203","expectedJSON":"{\"a\":1,\"b\":[2,3]}","deterministicHex":"a26161016162820203"},
+    {"name":"indefinite text","hex":"7f657374726561646d696e67ff","expectedJSON":"\"streaming\"","deterministicHex":"6973747265616d696e67","indefinite":true},
+    {"name":"indefinite nested array","hex":"9f018202039f0405ffff","expectedJSON":"[1,[2,3],[4,5]]","deterministicHex":"8301820203820405","indefinite":true},
+    {"name":"byte string","hex":"4401020304","deterministicHex":"4401020304"},
+    {"name":"indefinite byte string","hex":"5f42010243030405ff","deterministicHex":"450102030405","indefinite":true},
+    {"name":"tagged date text","hex":"c074323031332d30332d32315432303a30343a30305a","deterministicHex":"c074323031332d30332d32315432303a30343a30305a"}
+  ]
+}

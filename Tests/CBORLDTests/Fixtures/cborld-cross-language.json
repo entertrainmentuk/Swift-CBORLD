@@ -1,0 +1,108 @@
+{
+  "description": "Small exact-byte CBOR-LD envelope corpus independently asserted by local processors",
+  "sources": [
+    {
+      "implementation": "ldclabs/cbor-ld Rust",
+      "url": "https://github.com/ldclabs/cbor-ld",
+      "version": "0.1.0",
+      "fixture": "src/tests.rs",
+      "license": "MIT"
+    },
+    {
+      "implementation": "subfile-llc/cborld Python",
+      "url": "https://github.com/subfile-llc/cborld",
+      "version": "1.0.0",
+      "fixture": "tests/test_encode.py",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "implementation": "subfile-llc/cborld Python legacy suite",
+      "url": "https://github.com/subfile-llc/cborld",
+      "version": "1.0.0",
+      "fixture": "tests/test_legacy.py",
+      "license": "BSD-3-Clause"
+    }
+  ],
+  "vectors": [
+    {
+      "name": "CBOR-LD 1.0 uncompressed empty document",
+      "format": "cbor-ld-1.0",
+      "registryEntryID": 0,
+      "compressed": false,
+      "hex": "d9cb1d8200a0",
+      "assertedBy": ["Rust", "Python"]
+    },
+    {
+      "name": "CBOR-LD 1.0 default dictionary empty document",
+      "format": "cbor-ld-1.0",
+      "registryEntryID": 1,
+      "compressed": true,
+      "hex": "d9cb1d8201a0",
+      "assertedBy": ["Rust", "Python"]
+    },
+    {
+      "name": "CBOR-LD 1.0 application dictionary",
+      "format": "cbor-ld-1.0",
+      "registryEntryID": 2,
+      "compressed": true,
+      "hex": "d9cb1d8202a0",
+      "assertedBy": ["Python"]
+    },
+    {
+      "name": "CBOR-LD 1.0 one-byte registry argument",
+      "format": "cbor-ld-1.0",
+      "registryEntryID": 16,
+      "compressed": true,
+      "hex": "d9cb1d8210a0",
+      "assertedBy": ["Python"]
+    },
+    {
+      "name": "CBOR-LD 1.0 two-byte registry argument",
+      "format": "cbor-ld-1.0",
+      "registryEntryID": 128,
+      "compressed": true,
+      "hex": "d9cb1d821880a0",
+      "assertedBy": ["Rust", "Python"]
+    },
+    {
+      "name": "CBOR-LD 1.0 four-byte registry argument",
+      "format": "cbor-ld-1.0",
+      "registryEntryID": 1000000000,
+      "compressed": true,
+      "hex": "d9cb1d821a3b9aca00a0",
+      "assertedBy": ["Python"]
+    },
+    {
+      "name": "Pre-1.0 range uncompressed empty document",
+      "format": "legacy-range",
+      "registryEntryID": 0,
+      "compressed": false,
+      "hex": "d90600a0",
+      "assertedBy": ["Python"]
+    },
+    {
+      "name": "Pre-1.0 range compressed empty document",
+      "format": "legacy-range",
+      "registryEntryID": 1,
+      "compressed": true,
+      "hex": "d90601a0",
+      "assertedBy": ["Python"]
+    },
+    {
+      "name": "Legacy singleton uncompressed empty document",
+      "format": "legacy-singleton",
+      "compressionMode": 0,
+      "compressed": false,
+      "hex": "d90500a0",
+      "assertedBy": ["Python"]
+    },
+    {
+      "name": "Legacy singleton compressed empty document",
+      "format": "legacy-singleton",
+      "compressionMode": 1,
+      "compressed": true,
+      "hex": "d90501a0",
+      "assertedBy": ["Python"]
+    }
+  ]
+}

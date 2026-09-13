@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "policy": "A comparator is release-pinned only when revision and archiveSHA256 are non-null and verified in CI.",
+  "comparators": [
+    {
+      "name": "Digital Bazaar cborld",
+      "role": "reference CBOR-LD processor",
+      "url": "https://github.com/digitalbazaar/cborld",
+      "versionObservedInDevelopmentTree": "8.1.1-0",
+      "license": "BSD-3-Clause",
+      "revision": null,
+      "archiveSHA256": null,
+      "status": "pin-required"
+    },
+    {
+      "name": "LDC Labs cbor-ld",
+      "role": "independent Rust CBOR-LD processor",
+      "url": "https://github.com/ldclabs/cbor-ld",
+      "versionObservedInDevelopmentTree": "0.1.0",
+      "license": "MIT",
+      "revision": null,
+      "archiveSHA256": null,
+      "status": "pin-required"
+    },
+    {
+      "name": "Subfile cborld",
+      "role": "independent Python CBOR-LD processor",
+      "url": "https://github.com/subfile-llc/cborld",
+      "versionObservedInDevelopmentTree": "1.0.0",
+      "license": "BSD-3-Clause",
+      "revision": null,
+      "archiveSHA256": null,
+      "status": "pin-required"
+    },
+    {
+      "name": "fxamacker cbor",
+      "role": "independent Go raw-CBOR oracle",
+      "url": "https://github.com/fxamacker/cbor",
+      "versionObservedInDevelopmentTree": "2.0.0",
+      "license": "MIT",
+      "revision": null,
+      "archiveSHA256": null,
+      "status": "pin-required"
+    }
+  ]
+}

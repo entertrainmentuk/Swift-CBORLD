@@ -1,0 +1,7 @@
+; Structural CBOR-LD 1.0 envelope gate.
+; Semantic compression and registry-table meaning require processor tests.
+
+cborld = #6.51997([
+  registry-entry-id: 0..9007199254740991,
+  payload: any
+])

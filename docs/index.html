@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Swift-CBORLD: native CBOR-LD encoding, strict decoding, deterministic serialization, integrity primitives, and cross-language evidence for Swift.">
+  <meta name="color-scheme" content="dark light">
+  <title>Swift-CBORLD</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23091015'/%3E%3Cpath d='M7 9h7v4h-3v6h3v4H7V9Zm18 0v14h-7v-4h3v-6h-3V9h7Z' fill='%234be1bd'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --ink: #eaf3f4;
+      --muted: #98aeb2;
+      --faint: #63777b;
+      --canvas: #071014;
+      --canvas-2: #0b171c;
+      --panel: rgba(15, 30, 35, 0.82);
+      --line: rgba(166, 208, 209, 0.16);
+      --line-strong: rgba(166, 208, 209, 0.30);
+      --mint: #4be1bd;
+      --mint-soft: rgba(75, 225, 189, 0.12);
+      --amber: #f2b85b;
+      --blue: #67b7ff;
+      --red: #ff8b78;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+      --mono: ui-monospace, "SFMono-Regular", "Cascadia Code", "Roboto Mono", monospace;
+      --sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 86% 2%, rgba(75, 225, 189, 0.10), transparent 25rem),
+        radial-gradient(circle at 2% 38%, rgba(103, 183, 255, 0.07), transparent 30rem),
+        var(--canvas);
+      font: 1rem/1.68 var(--sans);
+      text-rendering: optimizeLegibility;
+    }
+
+    a { color: inherit; }
+
+    a:focus-visible,
+    button:focus-visible {
+      outline: 3px solid var(--amber);
+      outline-offset: 4px;
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--line);
+      background: rgba(7, 16, 20, 0.88);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      font-weight: 750;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(75, 225, 189, 0.5);
+      border-radius: 9px;
+      background: var(--mint-soft);
+      color: var(--mint);
+      font: 700 0.82rem var(--mono);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+    }
+
+    .nav-links a:hover { color: var(--ink); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.14fr) minmax(350px, 0.86fr);
+      gap: clamp(48px, 8vw, 108px);
+      align-items: center;
+      padding: clamp(86px, 11vw, 148px) 0 100px;
+    }
+
+    .eyebrow {
+      margin: 0 0 22px;
+      color: var(--mint);
+      font: 700 0.78rem/1.4 var(--mono);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 780px;
+      margin-bottom: 26px;
+      font-size: clamp(3.1rem, 7vw, 6.7rem);
+      line-height: 0.92;
+      letter-spacing: -0.07em;
+      font-weight: 760;
+    }
+
+    h1 span { color: var(--mint); }
+
+    .lede {
+      max-width: 690px;
+      margin-bottom: 34px;
+      color: #bdced1;
+      font-size: clamp(1.08rem, 1.7vw, 1.28rem);
+      line-height: 1.58;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .button {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 19px;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .button.primary {
+      border-color: var(--mint);
+      background: var(--mint);
+      color: #04110e;
+    }
+
+    .button:hover { transform: translateY(-1px); }
+
+    .signal-card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(19, 42, 47, 0.96), rgba(8, 19, 23, 0.98));
+      box-shadow: var(--shadow);
+    }
+
+    .signal-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.22;
+      pointer-events: none;
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(to bottom, black, transparent 82%);
+    }
+
+    .signal-head,
+    .signal-body { position: relative; }
+
+    .signal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font: 650 0.76rem var(--mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--mint);
+    }
+
+    .status::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 14px currentColor;
+    }
+
+    .signal-body { padding: 28px 26px 30px; }
+
+    .bytes {
+      margin: 0 0 28px;
+      color: var(--mint);
+      font: 650 clamp(1rem, 2vw, 1.24rem)/1.7 var(--mono);
+      word-spacing: 0.35em;
+    }
+
+    .signal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .signal-metric {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgba(4, 12, 15, 0.68);
+    }
+
+    .signal-metric strong {
+      display: block;
+      color: var(--ink);
+      font: 700 1.14rem var(--mono);
+    }
+
+    .signal-metric span {
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    section { padding: 92px 0; }
+
+    .section-rule { border-top: 1px solid var(--line); }
+
+    .section-intro {
+      display: grid;
+      grid-template-columns: 0.75fr 1.25fr;
+      gap: 56px;
+      align-items: start;
+      margin-bottom: 46px;
+    }
+
+    h2 {
+      margin-bottom: 18px;
+      font-size: clamp(2rem, 4.4vw, 3.7rem);
+      line-height: 1.04;
+      letter-spacing: -0.05em;
+    }
+
+    .section-copy {
+      max-width: 680px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .install {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .code-card {
+      position: relative;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      overflow: hidden;
+      background: #050c0f;
+    }
+
+    .code-label {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      color: var(--faint);
+      font: 700 0.72rem var(--mono);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    pre {
+      margin: 0;
+      padding: 24px;
+      overflow: auto;
+      color: #cfdee0;
+      font: 0.88rem/1.72 var(--mono);
+      tab-size: 2;
+    }
+
+    .token { color: var(--blue); }
+    .string { color: var(--amber); }
+    .call { color: var(--mint); }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .feature {
+      min-height: 210px;
+      padding: 25px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+    }
+
+    .feature .number {
+      display: block;
+      margin-bottom: 40px;
+      color: var(--mint);
+      font: 700 0.76rem var(--mono);
+    }
+
+    .feature h3 {
+      margin-bottom: 10px;
+      font-size: 1.12rem;
+      letter-spacing: -0.02em;
+    }
+
+    .feature p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .evidence {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 18px;
+    }
+
+    .evidence-summary,
+    .evidence-table {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+    }
+
+    .evidence-summary { padding: 32px; }
+
+    .big-number {
+      margin-bottom: 6px;
+      color: var(--mint);
+      font: 750 clamp(3.4rem, 7vw, 6.1rem)/1 var(--mono);
+      letter-spacing: -0.08em;
+    }
+
+    .big-label {
+      margin-bottom: 28px;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .caveat {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .evidence-table { overflow: hidden; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.91rem;
+    }
+
+    th, td {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--faint);
+      font: 700 0.72rem var(--mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    td { color: var(--muted); }
+    td:first-child { color: var(--ink); font-weight: 650; }
+    tr:last-child td { border-bottom: 0; }
+
+    .pass { color: var(--mint); font-family: var(--mono); }
+    .bounded { color: var(--amber); font-family: var(--mono); }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .layer {
+      position: relative;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+    }
+
+    .layer:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -22px;
+      top: calc(50% - 12px);
+      z-index: 2;
+      color: var(--mint);
+      font: 700 1rem var(--mono);
+    }
+
+    .layer small {
+      display: block;
+      margin-bottom: 26px;
+      color: var(--faint);
+      font: 700 0.7rem var(--mono);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .layer strong { display: block; margin-bottom: 8px; }
+    .layer p { margin: 0; color: var(--muted); font-size: 0.87rem; }
+    .layer.optional { border-style: dashed; }
+
+    .notice {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .notice article {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(9, 20, 24, 0.72);
+    }
+
+    .notice h3 { margin-bottom: 10px; }
+    .notice p { margin: 0; color: var(--muted); font-size: 0.93rem; }
+
+    footer {
+      padding: 40px 0 56px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
+    .footer-links a:hover { color: var(--ink); }
+
+    @media (max-width: 900px) {
+      .hero,
+      .section-intro,
+      .install,
+      .evidence { grid-template-columns: 1fr; }
+      .hero { padding-top: 80px; }
+      .signal-card { max-width: 640px; }
+      .feature-grid { grid-template-columns: repeat(2, 1fr); }
+      .architecture { grid-template-columns: repeat(2, 1fr); }
+      .layer:not(:last-child)::after { display: none; }
+    }
+
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 26px, 1180px); }
+      .nav-links a:not(:last-child) { display: none; }
+      h1 { font-size: clamp(3rem, 18vw, 5rem); }
+      section { padding: 72px 0; }
+      .feature-grid,
+      .architecture,
+      .notice { grid-template-columns: 1fr; }
+      .signal-grid { grid-template-columns: 1fr; }
+      .footer-row { flex-direction: column; }
+      th, td { padding: 13px 12px; }
+      .evidence-table { overflow-x: auto; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .button:hover { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell nav">
+      <a class="brand" href="#top" aria-label="Swift-CBORLD home">
+        <span class="brand-mark" aria-hidden="true">{ }</span>
+        Swift-CBORLD
+      </a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#install">Install</a>
+        <a href="#evidence">Evidence</a>
+        <a href="#architecture">Architecture</a>
+        <a href="api/documentation/cborld/">API docs</a>
+        <a href="https://github.com/entertrainment/swift-cborld">GitHub ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <div class="shell hero">
+      <div>
+        <p class="eyebrow">Source-first · Swift 6 · 0.1.0 preview</p>
+        <h1>CBOR-LD,<br><span>native to Swift.</span></h1>
+        <p class="lede">Compatible bytes by default. Deterministic profiles by choice. Strict decoding, pinned resources, and integrity evidence with explicit semantic boundaries.</p>
+        <div class="actions">
+          <a class="button primary" href="#install">Add the package</a>
+          <a class="button" href="https://github.com/entertrainment/swift-cborld">Inspect the source</a>
+        </div>
+      </div>
+
+      <aside class="signal-card" aria-label="CBOR-LD envelope summary">
+        <div class="signal-head">
+          <span>Wire inspection</span>
+          <span class="status">CBOR-LD 1.0</span>
+        </div>
+        <div class="signal-body">
+          <p class="bytes">d9 cb 1d 82 01 a0</p>
+          <div class="signal-grid">
+            <div class="signal-metric"><strong>0xcb1d</strong><span>semantic tag</span></div>
+            <div class="signal-metric"><strong>1</strong><span>registry entry</span></div>
+            <div class="signal-metric"><strong>SHA-2</strong><span>structured digest</span></div>
+            <div class="signal-metric"><strong>bounded</strong><span>parser contract</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section id="install" class="section-rule">
+      <div class="shell">
+        <div class="section-intro">
+          <div>
+            <p class="eyebrow">Install</p>
+            <h2>One source package.<br>No runtime dependencies.</h2>
+          </div>
+          <p class="section-copy">The module and product stay concise: <code>CBORLD</code>. Compatibility serialization remains the default, so existing JavaScript vectors do not change when deterministic output is introduced elsewhere in an application.</p>
+        </div>
+
+        <div class="install">
+          <div class="code-card">
+            <div class="code-label">Package.swift</div>
+            <pre><span class="token">dependencies</span>: [
+  .<span class="call">package</span>(
+    url: <span class="string">"https://github.com/entertrainment/swift-cborld.git"</span>,
+    from: <span class="string">"0.1.0"</span>
+  )
+]</pre>
+          </div>
+          <div class="code-card">
+            <div class="code-label">Round trip</div>
+            <pre><span class="token">import</span> CBORLD
+
+<span class="token">let</span> bytes = <span class="token">try await</span> <span class="call">CBORLDEncoder</span>()
+  .<span class="call">encode</span>(document)
+
+<span class="token">let</span> restored = <span class="token">try await</span> <span class="call">CBORLDDecoder</span>()
+  .<span class="call">decode</span>(bytes)</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-rule">
+      <div class="shell">
+        <div class="section-intro">
+          <div>
+            <p class="eyebrow">Contract</p>
+            <h2>Precise where it matters.</h2>
+          </div>
+          <p class="section-copy">Encoding, identity, integrity, and authentication are separate concerns. Swift-CBORLD exposes each boundary instead of letting one checksum or serialization mode imply more than it proves.</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature"><span class="number">01 / WIRE</span><h3>Compatibility first</h3><p>Established JavaScript-compatible bytes remain the default representation.</p></article>
+          <article class="feature"><span class="number">02 / ORDER</span><h3>Determinism by choice</h3><p>Length-first and core deterministic RFC 8949 profiles are explicit opt-ins.</p></article>
+          <article class="feature"><span class="number">03 / LIMITS</span><h3>Bounded input</h3><p>Input size, nesting, container count, diagnostic retention, and indefinite items are controlled.</p></article>
+          <article class="feature"><span class="number">04 / PINS</span><h3>Frozen semantics</h3><p>Context and application dictionary fingerprints are checked before semantic use.</p></article>
+          <article class="feature"><span class="number">05 / HASH</span><h3>Named hash domains</h3><p>Transport, structure, contexts, and dictionaries never share an ambiguous digest meaning.</p></article>
+          <article class="feature"><span class="number">06 / VIEW</span><h3>Inspectable failure</h3><p>Envelope metadata, byte offsets, container paths, and aggregate verification reports make rejection explainable.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="evidence" class="section-rule">
+      <div class="shell">
+        <div class="section-intro">
+          <div>
+            <p class="eyebrow">Recorded evidence</p>
+            <h2>Measured, then bounded.</h2>
+          </div>
+          <p class="section-copy">The published report preserves the machine, toolchain, fixture, warm-up, and timing boundary. It supports a specific result—not a blanket “faster than Rust” claim.</p>
+        </div>
+
+        <div class="evidence">
+          <article class="evidence-summary">
+            <div class="big-number">11/11</div>
+            <p class="big-label">Swift round-trip wins in the recorded corpus</p>
+            <p class="caveat">All 11 fixtures were correct and byte-identical. Aggregate in-process round-trip speedup: 2.22x on the recorded macOS/arm64 setup. Process startup is excluded.</p>
+          </article>
+          <div class="evidence-table">
+            <table>
+              <thead><tr><th>Evidence</th><th>State</th><th>Boundary</th></tr></thead>
+              <tbody>
+                <tr><td>CBOR-LD fixtures</td><td><span class="pass">11/11 passed</span></td><td>Swift ↔ Rust correctness and exact bytes</td></tr>
+                <tr><td>Strict decoder</td><td><span class="pass">tested</span></td><td>Malformed CBOR, duplicate keys, preferred widths</td></tr>
+                <tr><td>macOS release</td><td><span class="pass">local gate</span></td><td>Build, tests, symbols, report checksum</td></tr>
+                <tr><td>Linux release</td><td><span class="bounded">CI gate</span></td><td>Must pass on the exact public commit</td></tr>
+                <tr><td>SC acceleration</td><td><span class="bounded">separate</span></td><td>Core contracts only in 0.1.0</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="actions" style="margin-top: 22px">
+          <a class="button" href="evidence/performance-macos-arm64.json">Machine-readable report</a>
+          <a class="button" href="evidence/performance-macos-arm64.md">Readable report</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture" class="section-rule">
+      <div class="shell">
+        <div class="section-intro">
+          <div>
+            <p class="eyebrow">Architecture</p>
+            <h2>CPU-correct at the core.</h2>
+          </div>
+          <p class="section-copy">Whole-document CBOR-LD transformation stays in the native processor. Dense, independent byte and integer work can cross a versioned provider boundary only when its result survives package-side acceptance checks.</p>
+        </div>
+
+        <div class="architecture" aria-label="Swift-CBORLD architecture">
+          <article class="layer"><small>Application</small><strong>Swift model or JSONValue</strong><p>Async context policy and caller-selected limits.</p></article>
+          <article class="layer"><small>CBORLD core</small><strong>Semantic transform</strong><p>Context inheritance, codecs, dictionaries, envelopes.</p></article>
+          <article class="layer"><small>Validation</small><strong>CPU reference</strong><p>Exact bytes, integer semantics, diagnostics, digests.</p></article>
+          <article class="layer optional"><small>Optional backend</small><strong>Compute provider</strong><p>Bounded families accepted one result at a time.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-rule">
+      <div class="shell">
+        <div class="section-intro">
+          <div>
+            <p class="eyebrow">Security boundary</p>
+            <h2>Integrity is not identity.</h2>
+          </div>
+          <p class="section-copy">A transport digest detects changed bytes. A structural fingerprint detects changed JSON-shaped structure. Neither proves who produced a document, and neither establishes RDF dataset equivalence.</p>
+        </div>
+        <div class="notice">
+          <article><h3>For untrusted input</h3><p>Set conservative byte, nesting, and container limits. Reject duplicate keys and indefinite-length items where a unique representation is required. Pin remote contexts and document dictionaries.</p></article>
+          <article><h3>For signed claims</h3><p>Canonicalize with a standards-appropriate JSON-LD/RDF algorithm and place signatures or MACs in an enclosing protocol with an explicit signing profile. Swift-CBORLD adds no authentication field to the wire envelope.</p></article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-row">
+      <p>BSD-3-Clause · Independent Swift implementation · Not endorsed by Digital Bazaar or W3C</p>
+      <div class="footer-links">
+        <a href="https://github.com/entertrainment/swift-cborld/blob/main/LICENSE">License</a>
+        <a href="https://github.com/entertrainment/swift-cborld/blob/main/SECURITY.md">Security</a>
+        <a href="https://github.com/entertrainment/swift-cborld/blob/main/THIRD_PARTY_NOTICES.md">Provenance</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

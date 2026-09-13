@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  swift:
+    name: Swift 6 / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.0"
+      - name: Toolchain
+        run: swift --version
+      - name: Manifest
+        run: swift package dump-package > /dev/null
+      - name: Format
+        run: swift format lint --strict --recursive Sources Tests Package.swift
+      - name: Release build with warnings as errors
+        run: >-
+          swift build -c release -Xswiftc -warnings-as-errors
+          --explicit-target-dependency-import-check error
+      - name: Release tests
+        run: swift test -c release
+      - name: Public symbol graph
+        run: |
+          mkdir -p .build/public-symbols
+          swift build --target CBORLD \
+            -Xswiftc -emit-symbol-graph \
+            -Xswiftc -emit-symbol-graph-dir \
+            -Xswiftc .build/public-symbols
+          test -s .build/public-symbols/CBORLD.symbols.json
+      - name: Evidence checksums
+        run: |
+          (cd Interop/reports && shasum -a 256 -c SHA256SUMS)
+          shasum -a 256 -c Interop/FIXTURE_SHA256SUMS

@@ -1,0 +1,4 @@
+; Structural gate for the pre-1.0 singleton CBOR-LD envelopes.
+; 1280 is uncompressed and 1281 is compressed.
+
+cborld-legacy-singleton = #6.1280(any) / #6.1281(any)

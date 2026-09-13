@@ -1,0 +1,56 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Emit public symbol graph
+        run: |
+          mkdir -p .build/public-symbols
+          swift build --target CBORLD \
+            -Xswiftc -emit-symbol-graph \
+            -Xswiftc -emit-symbol-graph-dir \
+            -Xswiftc .build/public-symbols
+      - name: Build DocC site
+        run: >-
+          xcrun docc convert Sources/CBORLD/CBORLD.docc
+          --additional-symbol-graph-dir .build/public-symbols
+          --output-path docs/api
+          --hosting-base-path swift-cborld/api
+          --warnings-as-errors
+          --fallback-display-name Swift-CBORLD
+          --fallback-bundle-identifier io.github.entertrainment.swift-cborld
+      - name: Add published evidence
+        run: |
+          mkdir -p docs/evidence
+          cp Interop/reports/performance-macos-arm64.json docs/evidence/
+          cp Interop/reports/performance-macos-arm64.md docs/evidence/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

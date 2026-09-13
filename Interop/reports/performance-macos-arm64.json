@@ -1,0 +1,1112 @@
+{
+  "adapterBuilds": {
+    "rust": {
+      "command": [
+        "cargo",
+        "build",
+        "--manifest-path",
+        "<source-checkout>/Interop/adapters/rust-adapter/Cargo.toml",
+        "--release",
+        "--target-dir",
+        "<temporary-build>/rust-target"
+      ],
+      "exitCode": 0,
+      "status": "passed",
+      "stderr": "    Finished `release` profile [optimized] target(s) in 0.07s\n",
+      "stdout": ""
+    },
+    "swift": {
+      "command": [
+        "swift",
+        "build",
+        "--disable-sandbox",
+        "--disable-build-manifest-caching",
+        "--package-path",
+        "<source-checkout>/Interop/adapters/swift-adapter",
+        "--scratch-path",
+        "<temporary-build>/swift-build",
+        "-c",
+        "release"
+      ],
+      "exitCode": 0,
+      "status": "passed",
+      "stderr": "",
+      "stdout": "Building for production...\n[0/4] Write sources\n[2/4] Write swift-version--58304C5D6DBC2206.txt\n[4/5] Compiling CBORLD AdvancedComputeFamilies.swift\n[5/7] Compiling CBORLDInteropAdapter main.swift\n[5/7] Write Objects.LinkFileList\n[6/7] Linking CBORLDInteropAdapter\nBuild complete! (22.40s)\n"
+    }
+  },
+  "aggregate": {
+    "byteIdenticalFixtures": 11,
+    "correctFixtures": 11,
+    "fixtureCount": 11,
+    "fixturesSwiftWon": 11,
+    "rustCorpusRoundTripMedianNanoseconds": 703185143.7826715,
+    "swiftCorpusRoundTripMedianNanoseconds": 317129094.6369714,
+    "swiftRoundTripSpeedupOverRust": 2.2173466757682125
+  },
+  "configuration": {
+    "correctnessOnly": false,
+    "fixtureSelection": [
+      "v1-empty-uncompressed",
+      "v1-empty-default-table",
+      "v1-inline-context-compressed",
+      "v1-custom-type-table",
+      "v1-json-shapes",
+      "v1-unicode-and-boundaries",
+      "performance-records-688",
+      "performance-records-2720",
+      "performance-records-10800",
+      "performance-records-42200",
+      "performance-records-166400"
+    ],
+    "iterations": 10000,
+    "samples": 5,
+    "warmupIterations": 1000
+  },
+  "environment": {
+    "machine": "arm64",
+    "platform": "macOS-26.5-arm64-arm-64bit-Mach-O",
+    "python": "3.14.5",
+    "rustc": "rustc 1.92.0 (ded5c06cf 2025-12-08) (Homebrew)",
+    "swift": "Apple Swift version 6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)\nTarget: arm64-apple-macosx26.0"
+  },
+  "fixtures": [
+    {
+      "correct": true,
+      "description": "CBOR-LD 1.0 envelope with the smallest uncompressed JSON object.",
+      "id": "v1-empty-uncompressed",
+      "implementations": {
+        "rust": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              229.4791,
+              232.2541,
+              238.0583,
+              233.9708,
+              230.1208
+            ],
+            "documentsPerSecond": 4305629.050251427,
+            "medianNanosecondsPerOperation": 232.2541,
+            "minimumNanosecondsPerOperation": 229.4791,
+            "p95NanosecondsPerOperation": 238.0583,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              245.5125,
+              257.0584,
+              254.4541,
+              246.4833,
+              256.175
+            ],
+            "documentsPerSecond": 3929981.870993629,
+            "medianNanosecondsPerOperation": 254.4541,
+            "minimumNanosecondsPerOperation": 245.5125,
+            "p95NanosecondsPerOperation": 257.0584,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 6,
+          "encodedBytesPerSourceByte": 3.0,
+          "peakResidentBytes": 1933312,
+          "roundTripMedianNanoseconds": 486.70820000000003,
+          "roundTripsPerSecond": 2054619.1742814276,
+          "sourceJSONByteCount": 2
+        },
+        "swift": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              136.7042,
+              136.2417,
+              149.4208,
+              135.4375,
+              138.3209
+            ],
+            "documentsPerSecond": 7315064.2043185225,
+            "medianNanosecondsPerOperation": 136.7042,
+            "minimumNanosecondsPerOperation": 135.4375,
+            "p95NanosecondsPerOperation": 149.4208,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              172.0917,
+              175.3875,
+              168.4417,
+              174.2,
+              171.0541
+            ],
+            "documentsPerSecond": 5810855.491578037,
+            "medianNanosecondsPerOperation": 172.0917,
+            "minimumNanosecondsPerOperation": 168.4417,
+            "p95NanosecondsPerOperation": 175.3875,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 6,
+          "encodedBytesPerSourceByte": 3.0,
+          "peakResidentBytes": 7094272,
+          "roundTripMedianNanoseconds": 308.79589999999996,
+          "roundTripsPerSecond": 3238384.9656034946,
+          "sourceJSONByteCount": 2
+        }
+      },
+      "iterationsPerSample": 10000,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.5761485175159389,
+      "warmupIterations": 1000,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "CBOR-LD 1.0 envelope using the default semantic table.",
+      "id": "v1-empty-default-table",
+      "implementations": {
+        "rust": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              4648.0458,
+              4636.9416,
+              4694.15,
+              4687.2625,
+              4754.6
+            ],
+            "documentsPerSecond": 213344.14276990035,
+            "medianNanosecondsPerOperation": 4687.2625,
+            "minimumNanosecondsPerOperation": 4636.9416,
+            "p95NanosecondsPerOperation": 4754.6,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              2937.5416,
+              3084.0417,
+              2951.6458,
+              2968.3167,
+              3018.3958
+            ],
+            "documentsPerSecond": 336891.27578603727,
+            "medianNanosecondsPerOperation": 2968.3167,
+            "minimumNanosecondsPerOperation": 2937.5416,
+            "p95NanosecondsPerOperation": 3084.0417,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 6,
+          "encodedBytesPerSourceByte": 3.0,
+          "peakResidentBytes": 2310144,
+          "roundTripMedianNanoseconds": 7655.5792,
+          "roundTripsPerSecond": 130623.68945252371,
+          "sourceJSONByteCount": 2
+        },
+        "swift": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              2547.7208,
+              2469.9333,
+              2481.2542,
+              2487.7917,
+              2475.5
+            ],
+            "documentsPerSecond": 403021.98783179896,
+            "medianNanosecondsPerOperation": 2481.2542,
+            "minimumNanosecondsPerOperation": 2469.9333,
+            "p95NanosecondsPerOperation": 2547.7208,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              2294.2,
+              2364.3834,
+              2292.4834,
+              2344.0125,
+              2387.0125
+            ],
+            "documentsPerSecond": 426618.88535150734,
+            "medianNanosecondsPerOperation": 2344.0125,
+            "minimumNanosecondsPerOperation": 2292.4834,
+            "p95NanosecondsPerOperation": 2387.0125,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 6,
+          "encodedBytesPerSourceByte": 3.0,
+          "peakResidentBytes": 7438336,
+          "roundTripMedianNanoseconds": 4825.2667,
+          "roundTripsPerSecond": 207242.43076553676,
+          "sourceJSONByteCount": 2
+        }
+      },
+      "iterationsPerSample": 10000,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.5865608423260833,
+      "warmupIterations": 1000,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Registry-1 semantic compression with an embedded context and typed terms.",
+      "id": "v1-inline-context-compressed",
+      "implementations": {
+        "rust": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              23594.6333,
+              23419.3,
+              23266.3459,
+              23289.0958,
+              23101.15
+            ],
+            "documentsPerSecond": 42938.54980836139,
+            "medianNanosecondsPerOperation": 23289.0958,
+            "minimumNanosecondsPerOperation": 23101.15,
+            "p95NanosecondsPerOperation": 23594.6333,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              22362.4959,
+              22243.3333,
+              21711.1958,
+              22008.575,
+              21692.4792
+            ],
+            "documentsPerSecond": 45436.835415286994,
+            "medianNanosecondsPerOperation": 22008.575,
+            "minimumNanosecondsPerOperation": 21692.4792,
+            "p95NanosecondsPerOperation": 22362.4959,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 110,
+          "encodedBytesPerSourceByte": 0.7096774193548387,
+          "peakResidentBytes": 2539520,
+          "roundTripMedianNanoseconds": 45297.6708,
+          "roundTripsPerSecond": 22076.190283938395,
+          "sourceJSONByteCount": 155
+        },
+        "swift": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              15538.5708,
+              15545.2125,
+              15698.65,
+              15720.2208,
+              15888.4458
+            ],
+            "documentsPerSecond": 63699.74488252174,
+            "medianNanosecondsPerOperation": 15698.65,
+            "minimumNanosecondsPerOperation": 15538.5708,
+            "p95NanosecondsPerOperation": 15888.4458,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              16723.975,
+              16504.6958,
+              16640.9417,
+              16683.4459,
+              16988.9041
+            ],
+            "documentsPerSecond": 59939.65551205462,
+            "medianNanosecondsPerOperation": 16683.4459,
+            "minimumNanosecondsPerOperation": 16504.6958,
+            "p95NanosecondsPerOperation": 16988.9041,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 110,
+          "encodedBytesPerSourceByte": 0.7096774193548387,
+          "peakResidentBytes": 7831552,
+          "roundTripMedianNanoseconds": 32382.0959,
+          "roundTripsPerSecond": 30881.2623830195,
+          "sourceJSONByteCount": 155
+        }
+      },
+      "iterationsPerSample": 10000,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.3988492573144409,
+      "warmupIterations": 1000,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Custom registry type-table loader and compressed scalar value.",
+      "id": "v1-custom-type-table",
+      "implementations": {
+        "rust": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              12646.3542,
+              12531.7209,
+              12505.1833,
+              12437.4916,
+              12647.1583
+            ],
+            "documentsPerSecond": 79797.50011827984,
+            "medianNanosecondsPerOperation": 12531.7209,
+            "minimumNanosecondsPerOperation": 12437.4916,
+            "p95NanosecondsPerOperation": 12647.1583,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              10879.9458,
+              10789.7541,
+              10909.7417,
+              10813.8875,
+              10815.9875
+            ],
+            "documentsPerSecond": 92455.72815242253,
+            "medianNanosecondsPerOperation": 10815.9875,
+            "minimumNanosecondsPerOperation": 10789.7541,
+            "p95NanosecondsPerOperation": 10909.7417,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 44,
+          "encodedBytesPerSourceByte": 0.7213114754098361,
+          "peakResidentBytes": 2506752,
+          "roundTripMedianNanoseconds": 23347.7084,
+          "roundTripsPerSecond": 42830.75592977682,
+          "sourceJSONByteCount": 61
+        },
+        "swift": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              8495.6583,
+              8543.5708,
+              8285.6125,
+              8324.8333,
+              8252.8666
+            ],
+            "documentsPerSecond": 120122.52545645568,
+            "medianNanosecondsPerOperation": 8324.8333,
+            "minimumNanosecondsPerOperation": 8252.8666,
+            "p95NanosecondsPerOperation": 8543.5708,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              9046.8958,
+              8798.5833,
+              8762.3333,
+              8861.4417,
+              9012.4959
+            ],
+            "documentsPerSecond": 112848.45444505944,
+            "medianNanosecondsPerOperation": 8861.4417,
+            "minimumNanosecondsPerOperation": 8762.3333,
+            "p95NanosecondsPerOperation": 9046.8958,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 44,
+          "encodedBytesPerSourceByte": 0.7213114754098361,
+          "peakResidentBytes": 7733248,
+          "roundTripMedianNanoseconds": 17186.275,
+          "roundTripsPerSecond": 58185.96525425084,
+          "sourceJSONByteCount": 61
+        }
+      },
+      "iterationsPerSample": 10000,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.3585089497287806,
+      "warmupIterations": 1000,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Uncompressed nested JSON shapes and scalar types.",
+      "id": "v1-json-shapes",
+      "implementations": {
+        "rust": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              1620.0625,
+              1614.225,
+              1575.7834,
+              1614.2625,
+              1620.4209
+            ],
+            "documentsPerSecond": 619477.9349703038,
+            "medianNanosecondsPerOperation": 1614.2625,
+            "minimumNanosecondsPerOperation": 1575.7834,
+            "p95NanosecondsPerOperation": 1620.4209,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              2140.4167,
+              2175.3208,
+              2202.5125,
+              2196.0792,
+              2180.8875
+            ],
+            "documentsPerSecond": 458528.92457772355,
+            "medianNanosecondsPerOperation": 2180.8875,
+            "minimumNanosecondsPerOperation": 2140.4167,
+            "p95NanosecondsPerOperation": 2202.5125,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 67,
+          "encodedBytesPerSourceByte": 0.7204301075268817,
+          "peakResidentBytes": 2129920,
+          "roundTripMedianNanoseconds": 3795.1499999999996,
+          "roundTripsPerSecond": 263494.1965403212,
+          "sourceJSONByteCount": 93
+        },
+        "swift": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              1557.9042,
+              1548.9708,
+              1575.5042,
+              1545.6,
+              1614.2084
+            ],
+            "documentsPerSecond": 641887.9928560434,
+            "medianNanosecondsPerOperation": 1557.9042,
+            "minimumNanosecondsPerOperation": 1545.6,
+            "p95NanosecondsPerOperation": 1614.2084,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              695.25,
+              671.5333,
+              705.9375,
+              686.1375,
+              689.5833
+            ],
+            "documentsPerSecond": 1450151.1274997524,
+            "medianNanosecondsPerOperation": 689.5833,
+            "minimumNanosecondsPerOperation": 671.5333,
+            "p95NanosecondsPerOperation": 705.9375,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 67,
+          "encodedBytesPerSourceByte": 0.7204301075268817,
+          "peakResidentBytes": 7323648,
+          "roundTripMedianNanoseconds": 2247.4875,
+          "roundTripsPerSecond": 444941.2955578173,
+          "sourceJSONByteCount": 93
+        }
+      },
+      "iterationsPerSample": 10000,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.6886189578362503,
+      "warmupIterations": 1000,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Unicode strings plus integers around compact CBOR-width boundaries.",
+      "id": "v1-unicode-and-boundaries",
+      "implementations": {
+        "rust": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              1114.5459,
+              1109.2834,
+              1133.2375,
+              1121.2416,
+              1117.0833
+            ],
+            "documentsPerSecond": 895188.3892633611,
+            "medianNanosecondsPerOperation": 1117.0833,
+            "minimumNanosecondsPerOperation": 1109.2834,
+            "p95NanosecondsPerOperation": 1133.2375,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              1305.9042,
+              1264.4958,
+              1289.8792,
+              1287.4542,
+              1281.7542
+            ],
+            "documentsPerSecond": 776726.6594803917,
+            "medianNanosecondsPerOperation": 1287.4542,
+            "minimumNanosecondsPerOperation": 1264.4958,
+            "p95NanosecondsPerOperation": 1305.9042,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 53,
+          "encodedBytesPerSourceByte": 0.7681159420289855,
+          "peakResidentBytes": 2097152,
+          "roundTripMedianNanoseconds": 2404.5375,
+          "roundTripsPerSecond": 415880.392799031,
+          "sourceJSONByteCount": 69
+        },
+        "swift": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              889.4875,
+              887.2958,
+              873.5416,
+              955.5,
+              883.3042
+            ],
+            "documentsPerSecond": 1127019.8731922319,
+            "medianNanosecondsPerOperation": 887.2958,
+            "minimumNanosecondsPerOperation": 873.5416,
+            "p95NanosecondsPerOperation": 955.5,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              421.3,
+              441.8042,
+              444.6333,
+              425.9916,
+              420.85
+            ],
+            "documentsPerSecond": 2347464.128400654,
+            "medianNanosecondsPerOperation": 425.9916,
+            "minimumNanosecondsPerOperation": 420.85,
+            "p95NanosecondsPerOperation": 444.6333,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 53,
+          "encodedBytesPerSourceByte": 0.7681159420289855,
+          "peakResidentBytes": 7274496,
+          "roundTripMedianNanoseconds": 1313.2874,
+          "roundTripsPerSecond": 761447.9511491545,
+          "sourceJSONByteCount": 69
+        }
+      },
+      "iterationsPerSample": 10000,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.8309301528363098,
+      "warmupIterations": 1000,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Deterministic uncompressed scaling document with 688 records.",
+      "id": "performance-records-688",
+      "implementations": {
+        "rust": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              899636.8571428572,
+              909208.4285714285,
+              902678.5714285715,
+              912160.7142857143,
+              905208.2857142857
+            ],
+            "documentsPerSecond": 1104.7181248577676,
+            "medianNanosecondsPerOperation": 905208.2857142857,
+            "minimumNanosecondsPerOperation": 899636.8571428572,
+            "p95NanosecondsPerOperation": 912160.7142857143,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              1110637.0,
+              1105345.2857142857,
+              1129815.4285714286,
+              1124672.5714285714,
+              1116113.142857143
+            ],
+            "documentsPerSecond": 895.9665123556341,
+            "medianNanosecondsPerOperation": 1116113.142857143,
+            "minimumNanosecondsPerOperation": 1105345.2857142857,
+            "p95NanosecondsPerOperation": 1129815.4285714286,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 45566,
+          "encodedBytesPerSourceByte": 0.6960147860754273,
+          "peakResidentBytes": 4325376,
+          "roundTripMedianNanoseconds": 2021321.4285714286,
+          "roundTripsPerSecond": 494.72586886230715,
+          "sourceJSONByteCount": 65467
+        },
+        "swift": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              708029.7142857143,
+              681142.8571428572,
+              683678.5714285715,
+              692613.1428571428,
+              683970.2857142857
+            ],
+            "documentsPerSecond": 1462.051818458279,
+            "medianNanosecondsPerOperation": 683970.2857142857,
+            "minimumNanosecondsPerOperation": 681142.8571428572,
+            "p95NanosecondsPerOperation": 708029.7142857143,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              346214.28571428574,
+              343113.14285714284,
+              337232.14285714284,
+              345470.14285714284,
+              337065.4285714286
+            ],
+            "documentsPerSecond": 2914.4905137497335,
+            "medianNanosecondsPerOperation": 343113.14285714284,
+            "minimumNanosecondsPerOperation": 337065.4285714286,
+            "p95NanosecondsPerOperation": 346214.28571428574,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 45566,
+          "encodedBytesPerSourceByte": 0.6960147860754273,
+          "peakResidentBytes": 9551872,
+          "roundTripMedianNanoseconds": 1027083.4285714285,
+          "roundTripsPerSecond": 973.6307413613918,
+          "sourceJSONByteCount": 65467
+        }
+      },
+      "iterationsPerSample": 7,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.9680206810296674,
+      "warmupIterations": 0,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Deterministic uncompressed scaling document with 2720 records.",
+      "id": "performance-records-2720",
+      "implementations": {
+        "rust": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              3388125.0,
+              3459125.0,
+              3465792.0,
+              3424542.0,
+              3346167.0
+            ],
+            "documentsPerSecond": 292.0098512443416,
+            "medianNanosecondsPerOperation": 3424542.0,
+            "minimumNanosecondsPerOperation": 3346167.0,
+            "p95NanosecondsPerOperation": 3465792.0,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              4655708.0,
+              4678292.0,
+              4732708.0,
+              4728042.0,
+              4792500.0
+            ],
+            "documentsPerSecond": 211.5040433227962,
+            "medianNanosecondsPerOperation": 4728042.0,
+            "minimumNanosecondsPerOperation": 4655708.0,
+            "p95NanosecondsPerOperation": 4792500.0,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 183742,
+          "encodedBytesPerSourceByte": 0.6996390276593152,
+          "peakResidentBytes": 10584064,
+          "roundTripMedianNanoseconds": 8152584.0,
+          "roundTripsPerSecond": 122.66049635305812,
+          "sourceJSONByteCount": 262624
+        },
+        "swift": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              2568208,
+              2725083,
+              3017417,
+              2532792,
+              2603708
+            ],
+            "documentsPerSecond": 384.0676450661902,
+            "medianNanosecondsPerOperation": 2603708,
+            "minimumNanosecondsPerOperation": 2532792,
+            "p95NanosecondsPerOperation": 3017417,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              1355709,
+              1413459,
+              1381583,
+              1377167,
+              1404375
+            ],
+            "documentsPerSecond": 723.8074006411485,
+            "medianNanosecondsPerOperation": 1381583,
+            "minimumNanosecondsPerOperation": 1355709,
+            "p95NanosecondsPerOperation": 1413459,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 183742,
+          "encodedBytesPerSourceByte": 0.6996390276593152,
+          "peakResidentBytes": 13828096,
+          "roundTripMedianNanoseconds": 3985291,
+          "roundTripsPerSecond": 250.92270551886926,
+          "sourceJSONByteCount": 262624
+        }
+      },
+      "iterationsPerSample": 1,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 2.0456684342498455,
+      "warmupIterations": 0,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Deterministic uncompressed scaling document with 10800 records.",
+      "id": "performance-records-10800",
+      "implementations": {
+        "rust": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              13385208.0,
+              13191625.0,
+              13325667.0,
+              13254250.0,
+              13484459.0
+            ],
+            "documentsPerSecond": 75.04314793398335,
+            "medianNanosecondsPerOperation": 13325667.0,
+            "minimumNanosecondsPerOperation": 13191625.0,
+            "p95NanosecondsPerOperation": 13484459.0,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              19431542.0,
+              20084042.0,
+              19398458.0,
+              19344583.0,
+              19697875.0
+            ],
+            "documentsPerSecond": 51.4627197368073,
+            "medianNanosecondsPerOperation": 19431542.0,
+            "minimumNanosecondsPerOperation": 19344583.0,
+            "p95NanosecondsPerOperation": 20084042.0,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 733982,
+          "encodedBytesPerSourceByte": 0.6980485545570659,
+          "peakResidentBytes": 35880960,
+          "roundTripMedianNanoseconds": 32757209.0,
+          "roundTripsPerSecond": 30.527631337578242,
+          "sourceJSONByteCount": 1051477
+        },
+        "swift": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              9747209,
+              9605792,
+              9924375,
+              9416083,
+              9642750
+            ],
+            "documentsPerSecond": 103.70485597988126,
+            "medianNanosecondsPerOperation": 9642750,
+            "minimumNanosecondsPerOperation": 9416083,
+            "p95NanosecondsPerOperation": 9924375,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              5747959,
+              5613000,
+              5646125,
+              5616291,
+              5691000
+            ],
+            "documentsPerSecond": 177.1126214881888,
+            "medianNanosecondsPerOperation": 5646125,
+            "minimumNanosecondsPerOperation": 5613000,
+            "p95NanosecondsPerOperation": 5747959,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 733982,
+          "encodedBytesPerSourceByte": 0.6980485545570659,
+          "peakResidentBytes": 34357248,
+          "roundTripMedianNanoseconds": 15288875,
+          "roundTripsPerSecond": 65.40703616191512,
+          "sourceJSONByteCount": 1051477
+        }
+      },
+      "iterationsPerSample": 1,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 2.1425519536264113,
+      "warmupIterations": 0,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Deterministic uncompressed scaling document with 42200 records.",
+      "id": "performance-records-42200",
+      "implementations": {
+        "rust": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              54785333.0,
+              58880000.0,
+              64002000.0,
+              59840750.0,
+              54789041.0
+            ],
+            "documentsPerSecond": 16.983695652173914,
+            "medianNanosecondsPerOperation": 58880000.0,
+            "minimumNanosecondsPerOperation": 54785333.0,
+            "p95NanosecondsPerOperation": 64002000.0,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              87287750.0,
+              111161333.0,
+              93856583.0,
+              81475083.0,
+              82323916.0
+            ],
+            "documentsPerSecond": 11.456361287809573,
+            "medianNanosecondsPerOperation": 87287750.0,
+            "minimumNanosecondsPerOperation": 81475083.0,
+            "p95NanosecondsPerOperation": 111161333.0,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 2900582,
+          "encodedBytesPerSourceByte": 0.6902952538158529,
+          "peakResidentBytes": 148242432,
+          "roundTripMedianNanoseconds": 146167750.0,
+          "roundTripsPerSecond": 6.841454424796168,
+          "sourceJSONByteCount": 4201944
+        },
+        "swift": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              37165334,
+              37603833,
+              36936250,
+              68277250,
+              65461875
+            ],
+            "documentsPerSecond": 26.593033747384208,
+            "medianNanosecondsPerOperation": 37603833,
+            "minimumNanosecondsPerOperation": 36936250,
+            "p95NanosecondsPerOperation": 68277250,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              22261667,
+              21655500,
+              21897542,
+              22531500,
+              22145041
+            ],
+            "documentsPerSecond": 45.15683669314498,
+            "medianNanosecondsPerOperation": 22145041,
+            "minimumNanosecondsPerOperation": 21655500,
+            "p95NanosecondsPerOperation": 22531500,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 2900582,
+          "encodedBytesPerSourceByte": 0.6902952538158529,
+          "peakResidentBytes": 115195904,
+          "roundTripMedianNanoseconds": 59748874,
+          "roundTripsPerSecond": 16.73671708022481,
+          "sourceJSONByteCount": 4201944
+        }
+      },
+      "iterationsPerSample": 1,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 2.44636827800303,
+      "warmupIterations": 0,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Deterministic uncompressed scaling document with 166400 records.",
+      "id": "performance-records-166400",
+      "implementations": {
+        "rust": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              210483625.0,
+              210351250.0,
+              208233833.0,
+              212264833.0,
+              210488792.0
+            ],
+            "documentsPerSecond": 4.750963406298234,
+            "medianNanosecondsPerOperation": 210483625.0,
+            "minimumNanosecondsPerOperation": 208233833.0,
+            "p95NanosecondsPerOperation": 212264833.0,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              309665500.0,
+              303519667.0,
+              302244958.0,
+              303036583.0,
+              304267709.0
+            ],
+            "documentsPerSecond": 3.2946794185827835,
+            "medianNanosecondsPerOperation": 303519667.0,
+            "minimumNanosecondsPerOperation": 302244958.0,
+            "p95NanosecondsPerOperation": 309665500.0,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 11738512,
+          "encodedBytesPerSourceByte": 0.696129362212487,
+          "peakResidentBytes": 564264960,
+          "roundTripMedianNanoseconds": 514003292.0,
+          "roundTripsPerSecond": 1.9455128314625658,
+          "sourceJSONByteCount": 16862544
+        },
+        "swift": {
+          "allocatedBytesPerOperation": null,
+          "allocationMeasurement": "unavailable without an injected allocator counter; peak RSS is measured separately",
+          "decode": {
+            "allNanosecondsPerOperation": [
+              147228750,
+              159031834,
+              142794333,
+              146147291,
+              142277792
+            ],
+            "documentsPerSecond": 6.842412152545475,
+            "medianNanosecondsPerOperation": 146147291,
+            "minimumNanosecondsPerOperation": 142277792,
+            "p95NanosecondsPerOperation": 159031834,
+            "samples": 5,
+            "scope": "in-process decode; parsed byte input; output consumed by barrier"
+          },
+          "decodedDocumentMatches": true,
+          "encode": {
+            "allNanosecondsPerOperation": [
+              92877875,
+              90873417,
+              96778666,
+              88523000,
+              89224000
+            ],
+            "documentsPerSecond": 11.004318237532544,
+            "medianNanosecondsPerOperation": 90873417,
+            "minimumNanosecondsPerOperation": 88523000,
+            "p95NanosecondsPerOperation": 96778666,
+            "samples": 5,
+            "scope": "in-process encode; parsed JSON input; output consumed by barrier"
+          },
+          "encodedByteCount": 11738512,
+          "encodedBytesPerSourceByte": 0.696129362212487,
+          "peakResidentBytes": 430292992,
+          "roundTripMedianNanoseconds": 237020708,
+          "roundTripsPerSecond": 4.219040641799112,
+          "sourceJSONByteCount": 16862544
+        }
+      },
+      "iterationsPerSample": 1,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 2.1686007789665367,
+      "warmupIterations": 0,
+      "wireBytesEqual": true
+    }
+  ],
+  "generatedAt": "2026-09-13T05:48:03Z",
+  "measurementScope": "in-process codec throughput; process startup and JSON protocol I/O excluded",
+  "schemaVersion": 2,
+  "status": "passed"
+}

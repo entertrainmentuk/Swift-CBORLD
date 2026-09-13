@@ -1,0 +1,19 @@
+.DS_Store
+.build/
+.swiftpm/
+DerivedData/
+coverage/
+*.log
+*.profdata
+*.xcresult
+
+# Interoperability tools are fetched into temporary directories, never here.
+RUST/
+iridium-cbor-ld-main/
+node_modules/
+target/
+Interop/vendor/
+Interop/work/
+
+# Generated documentation. The authored landing page remains tracked.
+docs/api/
