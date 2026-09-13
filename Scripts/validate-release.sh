@@ -21,6 +21,10 @@ if grep -R -n -E '/Users/|/var/folders/' \
   exit 1
 fi
 
+find Interop -type f -name '*.json' -print0 | xargs -0 -n1 jq -e . >/dev/null
+jq -e '.schemaVersion == 1 and (.implementations | length == 8)' \
+  Interop/lab-status.json >/dev/null
+
 swift package --disable-sandbox dump-package >/dev/null
 swift format lint --strict --recursive Sources Tests Package.swift
 swift build --disable-sandbox -c release -Xswiftc -warnings-as-errors \

@@ -68,6 +68,20 @@ values used to test the package's CBOR reader, deterministic writer, malformed
 input behavior, and indefinite-length policy. It is not a vendored copy of the
 upstream test-vector repository.
 
+## Additional comparison oracles
+
+The Interop Lab names the following independent projects as potential oracles
+or architecture references. No source or binary from them is distributed in
+Swift-CBORLD:
+
+- Iridium CBOR-LD: <https://github.com/filip26/iridium-cbor-ld>, Apache-2.0.
+- fxamacker CBOR: <https://github.com/fxamacker/cbor>, MIT.
+- anweiss CDDL: <https://github.com/anweiss/cddl>, MIT.
+
+Naming or linking a project does not imply its endorsement of Swift-CBORLD,
+SemanticCompute, or the Interop Lab. Executable use requires an immutable pin,
+license review, archive checksum, and a separately recorded runtime result.
+
 ## CBOR-LD specification
 
 - Specification: <https://digitalbazaar.github.io/cbor-ld-spec/>

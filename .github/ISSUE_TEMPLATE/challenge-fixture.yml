@@ -1,0 +1,77 @@
+name: Challenge fixture
+description: Propose a minimized CBOR-LD compatibility, conformance, diagnostic, or performance case.
+title: "[Fixture]: "
+labels:
+  - interop
+  - fixture
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for challenging the corpus. Do not include private, personal, credential-bearing, or confidential data. For security-sensitive malformed input, follow SECURITY.md instead of filing publicly.
+  - type: input
+    id: identifier
+    attributes:
+      label: Fixture identifier
+      description: A short lowercase identifier, such as nested-protected-context.
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Compatibility or exact bytes
+        - Deterministic encoding
+        - Malformed input or diagnostics
+        - Resource limits
+        - Performance or crossover
+        - Other conformance behavior
+    validations:
+      required: true
+  - type: textarea
+    id: specimen
+    attributes:
+      label: Minimal specimen
+      description: Attach or link to a public, redistributable input and include its SHA-256. Materialize contexts and dictionaries locally.
+    validations:
+      required: true
+  - type: textarea
+    id: expectation
+    attributes:
+      label: Expected behavior
+      description: State exact bytes, decoded structure, semantic-only equivalence, or the expected rejection and byte offset.
+    validations:
+      required: true
+  - type: textarea
+    id: distinction
+    attributes:
+      label: Why this case is distinct
+      description: Explain what existing fixtures miss and list affected implementations if known.
+    validations:
+      required: true
+  - type: input
+    id: provenance
+    attributes:
+      label: Source and license
+      description: Identify the author/source and a license that permits repository redistribution.
+    validations:
+      required: true
+  - type: textarea
+    id: resources
+    attributes:
+      label: Resource and measurement bounds
+      description: Give input bytes, depth, item count, and, for performance work, batch size, warm-up, iterations, samples, and timing boundary.
+    validations:
+      required: true
+  - type: checkboxes
+    id: attestations
+    attributes:
+      label: Submission checks
+      options:
+        - label: I have minimized the fixture or explained why further minimization is impractical.
+          required: true
+        - label: The fixture contains no private, personal, credential-bearing, or confidential data.
+          required: true
+        - label: The fixture may be redistributed under the stated license with the supplied attribution.
+          required: true

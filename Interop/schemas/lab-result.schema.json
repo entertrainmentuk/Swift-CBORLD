@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/entertrainment/swift-cborld/blob/main/Interop/schemas/lab-result.schema.json",
+  "title": "Swift-CBORLD Interop Lab result",
+  "description": "A portable, implementation-neutral record for CBOR-LD conformance and performance lanes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "reportID",
+    "generatedAt",
+    "workload",
+    "environment",
+    "lanes"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "reportID": { "type": "string", "minLength": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "workload": { "$ref": "#/$defs/workload" },
+    "environment": { "$ref": "#/$defs/environment" },
+    "lanes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/lane" }
+    },
+    "comparisons": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/comparison" }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "nonNegativeInteger": { "type": "integer", "minimum": 0 },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "evidenceState": {
+      "enum": [
+        "source-present",
+        "build-validated",
+        "runtime-validated",
+        "hardware-executed",
+        "byte-identical",
+        "semantically-equivalent",
+        "performance-win",
+        "performance-wash",
+        "performance-loss",
+        "unavailable"
+      ]
+    },
+    "workload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "operation",
+        "workItems",
+        "inputBytes",
+        "warmupIterations",
+        "iterations",
+        "samples"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "family": { "type": "string", "pattern": "^cborld\\.[a-z0-9-]+\\.v[0-9]+$" },
+        "operation": { "type": "string", "minLength": 1 },
+        "workItems": { "$ref": "#/$defs/nonNegativeInteger" },
+        "inputBytes": { "$ref": "#/$defs/nonNegativeInteger" },
+        "warmupIterations": { "$ref": "#/$defs/nonNegativeInteger" },
+        "iterations": { "type": "integer", "minimum": 1 },
+        "samples": { "type": "integer", "minimum": 1 },
+        "limits": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operatingSystem", "architecture", "hardware", "toolchains"],
+      "properties": {
+        "operatingSystem": { "type": "string", "minLength": 1 },
+        "architecture": { "type": "string", "minLength": 1 },
+        "hardware": { "type": "string", "minLength": 1 },
+        "memoryBytes": { "$ref": "#/$defs/nonNegativeInteger" },
+        "toolchains": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "parity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checked"],
+      "properties": {
+        "checked": { "type": "boolean" },
+        "referenceLane": { "type": "string", "minLength": 1 },
+        "exactBytes": { "type": "boolean" },
+        "semanticallyEquivalent": { "type": "boolean" },
+        "mismatchCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "firstMismatchOffset": {
+          "oneOf": [
+            { "$ref": "#/$defs/nonNegativeInteger" },
+            { "type": "null" }
+          ]
+        },
+        "diagnostic": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "checked": { "const": true } } },
+          "then": {
+            "properties": {
+              "referenceLane": true,
+              "exactBytes": true,
+              "semanticallyEquivalent": true
+            },
+            "required": ["referenceLane", "exactBytes", "semanticallyEquivalent"]
+          }
+        }
+      ]
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["medianNanoseconds", "minimumNanoseconds", "p95Nanoseconds"],
+      "properties": {
+        "medianNanoseconds": { "$ref": "#/$defs/nonNegativeInteger" },
+        "minimumNanoseconds": { "$ref": "#/$defs/nonNegativeInteger" },
+        "p95Nanoseconds": { "$ref": "#/$defs/nonNegativeInteger" },
+        "dispatchOverheadNanoseconds": { "$ref": "#/$defs/nonNegativeInteger" },
+        "crossoverInputBytes": {
+          "oneOf": [
+            { "$ref": "#/$defs/nonNegativeInteger" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "lane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "implementation",
+        "implementationVersion",
+        "execution",
+        "evidence",
+        "parity"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "implementation": { "type": "string", "minLength": 1 },
+        "implementationVersion": { "type": "string", "minLength": 1 },
+        "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "binarySHA256": { "$ref": "#/$defs/sha256" },
+        "execution": { "enum": ["cpu", "backend", "cpu-fallback", "unavailable"] },
+        "backend": { "type": "string", "minLength": 1 },
+        "fallbackReason": { "type": "string", "minLength": 1 },
+        "unavailabilityReason": { "type": "string", "minLength": 1 },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/evidenceState" }
+        },
+        "parity": { "$ref": "#/$defs/parity" },
+        "timing": { "$ref": "#/$defs/timing" },
+        "peakMemoryBytes": { "$ref": "#/$defs/nonNegativeInteger" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "execution": { "const": "backend" } } },
+          "then": {
+            "properties": { "backend": true, "binarySHA256": true, "timing": true },
+            "required": ["backend", "binarySHA256", "timing"]
+          }
+        },
+        {
+          "if": { "properties": { "execution": { "const": "cpu-fallback" } } },
+          "then": {
+            "properties": { "backend": true, "fallbackReason": true },
+            "required": ["backend", "fallbackReason"]
+          }
+        },
+        {
+          "if": { "properties": { "execution": { "const": "unavailable" } } },
+          "then": {
+            "properties": { "unavailabilityReason": true },
+            "required": ["unavailabilityReason"]
+          }
+        }
+      ]
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["leftLane", "rightLane", "metric", "classification"],
+      "properties": {
+        "leftLane": { "type": "string", "minLength": 1 },
+        "rightLane": { "type": "string", "minLength": 1 },
+        "metric": { "type": "string", "minLength": 1 },
+        "ratio": { "type": "number", "exclusiveMinimum": 0 },
+        "classification": {
+          "enum": ["performance-win", "performance-wash", "performance-loss", "unavailable"]
+        },
+        "tolerance": { "type": "string" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "path", "sha256"],
+      "properties": {
+        "role": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

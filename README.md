@@ -10,6 +10,10 @@ JavaScript-compatible wire representation by default, exposes deterministic
 serialization profiles explicitly, validates untrusted envelopes, and keeps
 integrity evidence separate from authentication.
 
+It is also the neutral host for the CBOR-LD Interop Lab: public fixtures,
+portable CPU references, immutable comparator pins, and machine-readable
+evidence contracts that any implementation or compute provider can use.
+
 This is an independent implementation. It is not an official Digital Bazaar
 or W3C project and is not endorsed by either organization.
 
@@ -212,9 +216,16 @@ only; it does not prove accelerator catalogue registration, legality, lowering,
 compilation, hardware execution, or doctor parity.
 
 The SemanticCompute adapter is intentionally not included in the `0.1.0` core
-tree. Its remote dependency and newer Apple deployment floors will be released
-as an optional, separate package after SemanticCompute `1.23.0` is publicly
-resolvable and independently verified.
+tree. The intended companion distribution is
+`swift-cborld-semanticcompute`, after SemanticCompute `1.23.0` is publicly
+resolvable and independently verified. Importing that future package will add
+a separately licensed commercial binary dependency and newer Apple deployment
+floors; neither is required to build, test, or use Swift-CBORLD.
+
+The public family identifiers and acceptance rules remain owned by CBORLD.
+There are 12 conceptual additions and 13 stable identifiers because prefix
+scan and byte compaction are represented separately. Another implementation is
+free to provide the same protocols without SemanticCompute.
 
 ## Correctness and performance evidence
 
@@ -227,11 +238,22 @@ both passed all 11 measured fixtures with byte-identical encoding. Swift had the
 lower in-process round-trip median in 11 of 11 fixtures and a 2.22x aggregate
 round-trip speedup for that corpus. This is fixture-, machine-, toolchain-, and
 measurement-bound evidence—not a universal performance claim and not a claim
-about cold CLI startup.
+about cold CLI startup. It is a Swift CPU result: SemanticCompute did not cause
+the recorded 2.22x speedup.
 
 - [Human-readable benchmark](Interop/reports/performance-macos-arm64.md)
 - [Machine-readable benchmark](Interop/reports/performance-macos-arm64.json)
-- [Interoperability boundary](Interop/README.md)
+- [CBOR-LD Interop Lab](Interop/README.md)
+- [Current evidence status](Interop/STATUS.md)
+- [Challenge-fixture contract](Interop/CHALLENGE_FIXTURES.md)
+- [Portable lab-result schema](Interop/schemas/lab-result.schema.json)
+
+Future acceleration reports use three separately labelled lanes: Rust CPU,
+Swift CPU, and Swift plus an optional provider. A conforming report states the
+backend, hardware, toolchains, batch and byte counts, dispatch overhead,
+crossover point, memory boundary, exact parity result, and whether execution
+used hardware or fell back to the CPU. Unmeasured or unavailable lanes remain
+explicitly unavailable rather than inheriting a result from another lane.
 
 ## What this package does not prove
 

@@ -13,6 +13,7 @@ authorship or legal advice.
 | `Tests/CBORLDTests/Fixtures/rfc8949-curated.json` | Small selection of public CBOR standard examples | Attribution in the fixture and `THIRD_PARTY_NOTICES.md` |
 | `Schemas/` | Small structural CDDL gates written for this implementation from the public CBOR-LD envelope contract | Repository BSD-3-Clause license; specification attribution retained |
 | `Interop/reports/` | Locally generated measurement evidence with machine-local paths removed | Repository BSD-3-Clause license; comparator identity and measurement boundary retained |
+| `Interop/schemas/`, `Interop/lab-status.json`, and challenge documentation | Public evidence vocabulary, portable result contracts, and bounded status records authored for this release | Repository BSD-3-Clause license; named external implementations are linked, not redistributed |
 | Documentation, CI, scripts, and site | Release engineering and explanatory material for Swift-CBORLD | Repository BSD-3-Clause license |
 
 Excluded vendor and reference trees—including Digital Bazaar JavaScript source,

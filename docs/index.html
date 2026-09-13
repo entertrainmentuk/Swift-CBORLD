@@ -472,6 +472,38 @@
     .notice h3 { margin-bottom: 10px; }
     .notice p { margin: 0; color: var(--muted); font-size: 0.93rem; }
 
+    .interop-banner {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+      gap: 30px;
+      align-items: end;
+      padding: clamp(30px, 5vw, 54px);
+      border: 1px solid rgba(75, 225, 189, 0.34);
+      border-radius: 16px;
+      background:
+        linear-gradient(135deg, rgba(75, 225, 189, 0.09), transparent 55%),
+        var(--panel);
+    }
+
+    .interop-banner h2 { margin-bottom: 18px; }
+    .interop-banner p { margin-bottom: 0; color: var(--muted); }
+
+    .interop-note {
+      padding-left: 22px;
+      border-left: 2px solid var(--amber);
+      color: #c7d4d6;
+      font-size: 0.92rem;
+    }
+
+    .interop-note strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--amber);
+      font: 700 0.72rem var(--mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
     footer {
       padding: 40px 0 56px;
       border-top: 1px solid var(--line);
@@ -508,7 +540,8 @@
       section { padding: 72px 0; }
       .feature-grid,
       .architecture,
-      .notice { grid-template-columns: 1fr; }
+      .notice,
+      .interop-banner { grid-template-columns: 1fr; }
       .signal-grid { grid-template-columns: 1fr; }
       .footer-row { flex-direction: column; }
       th, td { padding: 13px 12px; }
@@ -531,6 +564,7 @@
       <nav class="nav-links" aria-label="Primary navigation">
         <a href="#install">Install</a>
         <a href="#evidence">Evidence</a>
+        <a href="interop/">Interop Lab</a>
         <a href="#architecture">Architecture</a>
         <a href="api/documentation/cborld/">API docs</a>
         <a href="https://github.com/entertrainment/swift-cborld">GitHub ↗</a>
@@ -629,14 +663,14 @@
             <p class="eyebrow">Recorded evidence</p>
             <h2>Measured, then bounded.</h2>
           </div>
-          <p class="section-copy">The published report preserves the machine, toolchain, fixture, warm-up, and timing boundary. It supports a specific result—not a blanket “faster than Rust” claim.</p>
+          <p class="section-copy">The published report preserves the machine, toolchain, fixture, warm-up, and timing boundary. It supports a specific Swift CPU result—not a blanket “faster than Rust” claim and not a SemanticCompute result.</p>
         </div>
 
         <div class="evidence">
           <article class="evidence-summary">
             <div class="big-number">11/11</div>
             <p class="big-label">Swift round-trip wins in the recorded corpus</p>
-            <p class="caveat">All 11 fixtures were correct and byte-identical. Aggregate in-process round-trip speedup: 2.22x on the recorded macOS/arm64 setup. Process startup is excluded.</p>
+            <p class="caveat">All 11 fixtures were correct and byte-identical. Aggregate in-process Swift CPU round-trip speedup: 2.22x on the recorded macOS/arm64 setup. Process startup is excluded. SemanticCompute did not participate.</p>
           </article>
           <div class="evidence-table">
             <table>
@@ -655,6 +689,24 @@
         <div class="actions" style="margin-top: 22px">
           <a class="button" href="evidence/performance-macos-arm64.json">Machine-readable report</a>
           <a class="button" href="evidence/performance-macos-arm64.md">Readable report</a>
+          <a class="button" href="interop/">Open the Interop Lab</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-rule">
+      <div class="shell">
+        <div class="interop-banner">
+          <div>
+            <p class="eyebrow">CBOR-LD Interop Lab</p>
+            <h2>Bring your hardest fixture.</h2>
+            <p>Run the same document through independent implementations, separate semantic agreement from exact byte identity, and publish the result. Eligible bounded operations may also use an optional compute provider, but every accepted result remains checked against the public CPU reference.</p>
+            <div class="actions" style="margin-top: 26px">
+              <a class="button primary" href="interop/">Explore the lab</a>
+              <a class="button" href="https://github.com/entertrainment/swift-cborld/blob/main/Interop/CHALLENGE_FIXTURES.md">Submit a challenge fixture</a>
+            </div>
+          </div>
+          <p class="interop-note"><strong>Commercial boundary</strong>SemanticCompute is a separately licensed commercial binary. It is not required to build, test, or use Swift-CBORLD core. Hardware results must identify the binary, backend, hardware, fallback state, and exact CPU-reference parity.</p>
         </div>
       </div>
     </section>

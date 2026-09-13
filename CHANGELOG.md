@@ -24,12 +24,16 @@ Initial source-first preview.
   references, whole-document transformation, and independent CDDL oracle hooks.
 - Curated, attributed interoperability fixtures and measured Swift/Rust
   evidence.
+- A neutral CBOR-LD Interop Lab with immutable comparator pins, explicit
+  evidence states, portable result schemas, a challenge-fixture intake, and a
+  three-lane CPU/provider benchmark contract.
 
 ### Release boundaries
 
 - Public API is preview quality and may change before 1.0.
 - Compatibility serialization is the default; deterministic encoding is
   opt-in.
-- The SemanticCompute adapter is not part of this release.
+- The SemanticCompute adapter and commercial binary are not part of this
+  release; any future integration is a separate optional companion package.
 - The core package contains no signature or authentication wire format.
 - A complete JSON-LD/RDF canonicalization engine is out of scope.

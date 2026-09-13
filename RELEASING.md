@@ -7,7 +7,8 @@ or publish directly from the mixed development workspace.
 
 - [ ] The release repository contains only the reviewed allowlist.
 - [ ] `LICENSE` and `THIRD_PARTY_NOTICES.md` match every retained file.
-- [ ] All comparator sources have immutable revisions and checksums.
+- [ ] The recorded comparator revisions and checksums pass the public pin
+      workflow.
 - [ ] `Scripts/validate-release.sh` passes from a fresh clone on macOS.
 - [ ] Release build and tests pass on the supported Linux CI image.
 - [ ] Compatibility and malformed-input checks pass with pinned comparators.
@@ -15,6 +16,10 @@ or publish directly from the mixed development workspace.
 - [ ] The SemanticCompute adapter is omitted, or its exact public dependency is
       resolvable and its newer platform floors are explicit.
 - [ ] The landing page and generated DocC documentation deploy successfully.
+- [ ] Interop status and lab reports validate against the public evidence
+      vocabulary and disclose CPU, accelerator, and fallback lanes separately.
+- [ ] Every performance statement identifies its implementation, workload,
+      hardware, toolchain, measurement boundary, and parity result.
 - [ ] The working tree is clean and CI is green at the exact release commit.
 
 ## Tagging

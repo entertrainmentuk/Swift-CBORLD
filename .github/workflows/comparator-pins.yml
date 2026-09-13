@@ -1,0 +1,26 @@
+name: Comparator pins
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Interop/comparators.json
+      - Scripts/verify-comparator-pins.sh
+      - .github/workflows/comparator-pins.yml
+  pull_request:
+    paths:
+      - Interop/comparators.json
+      - Scripts/verify-comparator-pins.sh
+      - .github/workflows/comparator-pins.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and verify immutable comparator archives
+        run: Scripts/verify-comparator-pins.sh

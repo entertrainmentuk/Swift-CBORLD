@@ -43,5 +43,7 @@ jobs:
           test -s .build/public-symbols/CBORLD.symbols.json
       - name: Evidence checksums
         run: |
+          find Interop -type f -name '*.json' -print0 | xargs -0 -n1 jq -e . > /dev/null
+          jq -e '.schemaVersion == 1 and (.implementations | length == 8)' Interop/lab-status.json > /dev/null
           (cd Interop/reports && shasum -a 256 -c SHA256SUMS)
           shasum -a 256 -c Interop/FIXTURE_SHA256SUMS

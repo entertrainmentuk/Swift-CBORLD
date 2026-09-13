@@ -1,0 +1,151 @@
+{
+  "$schema": "schemas/lab-status.schema.json",
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-13",
+  "implementations": [
+    {
+      "id": "digitalbazaar-javascript",
+      "name": "Digital Bazaar JavaScript",
+      "role": "reference CBOR-LD processor and compatibility-vector source",
+      "url": "https://github.com/digitalbazaar/cborld",
+      "claims": [
+        {
+          "classification": "source-present",
+          "scope": "immutable comparator source",
+          "evidence": "comparators.json records a commit-addressed archive and SHA-256"
+        }
+      ]
+    },
+    {
+      "id": "swift-cborld",
+      "name": "Swift-CBORLD",
+      "role": "native Swift processor and public CPU reference",
+      "url": "https://github.com/entertrainment/swift-cborld",
+      "claims": [
+        {
+          "classification": "source-present",
+          "scope": "core and 13 stable compute-family identifiers",
+          "evidence": "Sources/CBORLD and public family contracts are retained in this revision"
+        },
+        {
+          "classification": "build-validated",
+          "scope": "local macOS release build",
+          "evidence": "Scripts/validate-release.sh passed in the release tree and a fresh clone"
+        },
+        {
+          "classification": "runtime-validated",
+          "scope": "local macOS release tests",
+          "evidence": "74 tests passed; public macOS and Linux CI remain pending"
+        },
+        {
+          "classification": "performance-win",
+          "scope": "Swift CPU versus Rust CPU in-process round trip",
+          "evidence": "11 of 11 fixtures; 2.2173466757682125x aggregate on the recorded macOS/arm64 run"
+        }
+      ]
+    },
+    {
+      "id": "ldclabs-rust",
+      "name": "LDC Labs Rust",
+      "role": "independent Rust CBOR-LD processor",
+      "url": "https://github.com/ldclabs/cbor-ld",
+      "claims": [
+        {
+          "classification": "source-present",
+          "scope": "immutable comparator source",
+          "evidence": "comparators.json records a commit-addressed archive and SHA-256"
+        },
+        {
+          "classification": "build-validated",
+          "scope": "recorded macOS/arm64 adapter",
+          "evidence": "performance-macos-arm64.json records a successful release build"
+        },
+        {
+          "classification": "runtime-validated",
+          "scope": "11-fixture in-process benchmark",
+          "evidence": "all measured fixtures completed successfully"
+        },
+        {
+          "classification": "byte-identical",
+          "scope": "Swift and Rust compatibility-mode encoding",
+          "evidence": "11 of 11 measured fixture encodings matched exactly"
+        }
+      ]
+    },
+    {
+      "id": "subfile-python",
+      "name": "Subfile Python",
+      "role": "independent Python CBOR-LD processor",
+      "url": "https://github.com/subfile-llc/cborld",
+      "claims": [
+        {
+          "classification": "source-present",
+          "scope": "immutable comparator source",
+          "evidence": "comparators.json records a commit-addressed archive and SHA-256"
+        }
+      ]
+    },
+    {
+      "id": "iridium-java",
+      "name": "Iridium Java",
+      "role": "independent Java CBOR-LD implementation",
+      "url": "https://github.com/filip26/iridium-cbor-ld",
+      "claims": [
+        {
+          "classification": "source-present",
+          "scope": "mixed-workspace architecture reference",
+          "evidence": "not vendored, built, or executed in the clean release"
+        }
+      ]
+    },
+    {
+      "id": "fxamacker-go",
+      "name": "fxamacker Go CBOR",
+      "role": "independent raw-CBOR oracle",
+      "url": "https://github.com/fxamacker/cbor",
+      "claims": [
+        {
+          "classification": "source-present",
+          "scope": "immutable comparator source",
+          "evidence": "comparators.json records a commit-addressed archive and SHA-256; runtime result unavailable"
+        }
+      ]
+    },
+    {
+      "id": "anweiss-cddl",
+      "name": "anweiss CDDL",
+      "role": "independent CDDL parser and validation oracle",
+      "url": "https://github.com/anweiss/cddl",
+      "claims": [
+        {
+          "classification": "source-present",
+          "scope": "immutable comparator source",
+          "evidence": "comparators.json records a commit-addressed archive and SHA-256"
+        },
+        {
+          "classification": "unavailable",
+          "scope": "Swift-CBORLD default CDDL CPU provider",
+          "evidence": "an independent oracle must be injected before the family can execute"
+        }
+      ]
+    },
+    {
+      "id": "swift-cborld-semanticcompute",
+      "name": "Swift-CBORLD with SemanticCompute",
+      "role": "optional commercial acceleration lane",
+      "url": "https://github.com/entertrainment/swift-cborld",
+      "claims": [
+        {
+          "classification": "runtime-validated",
+          "scope": "excluded local adapter parity suite",
+          "evidence": "five tests covered four bridged families and capability metadata; no hardware-execution claim"
+        },
+        {
+          "classification": "unavailable",
+          "scope": "public 0.1.0 distribution and benchmark lane",
+          "evidence": "no public signed SemanticCompute 1.23.0 binary package or SC-on/off report is retained"
+        }
+      ]
+    }
+  ]
+}
