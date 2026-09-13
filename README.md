@@ -17,9 +17,8 @@ evidence contracts that any implementation or compute provider can use.
 This is an independent implementation. It is not an official Digital Bazaar
 or W3C project and is not endorsed by either organization.
 
-> **Release status:** the repository is being prepared as a source-first
-> `0.1.0` preview. The module and product are named `CBORLD`; the repository and
-> package identity are `swift-cborld`.
+> **Release status:** `0.1.0` is a source-first preview. The module and product
+> are named `CBORLD`; the repository and package identity are `swift-cborld`.
 
 ## Why Swift-CBORLD
 
@@ -53,7 +52,7 @@ Linux release builds are CI gates for the preview.
 
 ## Installation
 
-After the `0.1.0` preview tag is published, add the source package:
+Add the `0.1.0` preview as a source package:
 
 ```swift
 dependencies: [
