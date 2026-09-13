@@ -1081,11 +1081,14 @@ where Bytes.Element == UInt8, Bytes.Index == Int {
         T(bytes[index]) << 24 | T(bytes[index + 1]) << 16
         | T(bytes[index + 2]) << 8 | T(bytes[index + 3])
     case 8:
-      value =
-        T(bytes[index]) << 56 | T(bytes[index + 1]) << 48
-        | T(bytes[index + 2]) << 40 | T(bytes[index + 3]) << 32
-        | T(bytes[index + 4]) << 24 | T(bytes[index + 5]) << 16
-        | T(bytes[index + 6]) << 8 | T(bytes[index + 7])
+      value = T(bytes[index]) << 56
+      value |= T(bytes[index + 1]) << 48
+      value |= T(bytes[index + 2]) << 40
+      value |= T(bytes[index + 3]) << 32
+      value |= T(bytes[index + 4]) << 24
+      value |= T(bytes[index + 5]) << 16
+      value |= T(bytes[index + 6]) << 8
+      value |= T(bytes[index + 7])
     default:
       for offset in 0..<size {
         value = (value << 8) | T(bytes[index + offset])
