@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Swift-CBORLD — deterministic CBOR-LD for Swift</title>
-  <meta name="description" content="A native Swift CBOR-LD implementation with compatibility and deterministic encoding, strict decoding, integrity primitives, and retained cross-language evidence.">
+  <meta name="description" content="A native Swift CBOR-LD implementation with deterministic encoding, strict decoding, cross-language verification, and an optional SemanticCompute adapter.">
   <meta name="color-scheme" content="dark light">
   <meta name="theme-color" content="#071315">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23071315'/%3E%3Cpath d='M18 21h18l10 11-10 11H18l9-11z' fill='none' stroke='%2369f0d0' stroke-width='5' stroke-linejoin='round'/%3E%3Ccircle cx='34' cy='32' r='3' fill='%23d7ff5f'/%3E%3C/svg%3E">
@@ -28,7 +28,7 @@
         <a href="#install">Install</a>
       </nav>
       <div class="nav-actions">
-        <span class="status-chip"><span aria-hidden="true"></span> 0.1.0 preview</span>
+        <span class="status-chip"><span aria-hidden="true"></span> release candidate</span>
         <button class="theme-button" type="button" aria-label="Use light theme" title="Change colour theme">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.36-6.36-1.42 1.42M7.06 16.94l-1.42 1.42m12.72 0-1.42-1.42M7.06 7.06 5.64 5.64M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/></svg>
         </button>
@@ -42,7 +42,7 @@
         <div class="hero-copy">
           <p class="eyebrow">CBOR‑LD 1.0 · Swift 6 · Apple + Linux</p>
           <h1>Linked data.<br><em>Exact bytes.</em><br>Native Swift.</h1>
-          <p class="hero-lead">Encode JSON‑LD-shaped values into compact CBOR‑LD, restore them under explicit limits, and inspect the evidence behind every compatibility claim. The dependency-free core stands alone; any future SemanticCompute integration will ship as a separate optional package.</p>
+          <p class="hero-lead">Encode JSON‑LD into compact CBOR‑LD, restore it under explicit limits, and inspect the evidence behind every compatibility claim. The open core stands alone; optional GPU acceleration connects to the separately licensed SemanticCompute binary.</p>
           <div class="hero-actions">
             <a class="button primary" href="#install">Add the package <span aria-hidden="true">→</span></a>
             <a class="button secondary" href="interop-lab.html">Open Interop Lab</a>
@@ -57,21 +57,25 @@
 
         <div class="codec-console" aria-label="CBOR-LD transformation example">
           <div class="console-head">
-            <span class="console-title"><b></b> compatibility transform</span>
+            <span class="console-title"><b></b> deterministic transform</span>
             <span class="mono dim">registry 1</span>
           </div>
           <div class="console-flow">
             <div class="console-pane">
               <span class="pane-label">JSON‑LD input</span>
-              <pre><code><span class="punct">{</span><span class="punct">}</span></code></pre>
+              <pre><code><span class="punct">{</span>
+  <span class="key">"@context"</span><span class="punct">:</span> <span class="string">"…/activitystreams"</span><span class="punct">,</span>
+  <span class="key">"type"</span><span class="punct">:</span> <span class="string">"Note"</span><span class="punct">,</span>
+  <span class="key">"summary"</span><span class="punct">:</span> <span class="string">"Exact by construction"</span>
+<span class="punct">}</span></code></pre>
             </div>
             <div class="transform-line" aria-hidden="true"><span></span><b>encode</b><span></span></div>
             <div class="console-pane bytes-pane">
               <span class="pane-label">CBOR‑LD bytes</span>
               <div class="byte-row" aria-label="Example hexadecimal bytes">
-                <span>d9</span><span>cb</span><span>1d</span><span>82</span><span>01</span><span>a0</span>
+                <span>d9</span><span>cb</span><span>1d</span><span>82</span><span>01</span><span>a3</span><span>00</span><span>18</span><span>2a</span><span>01</span><span>64</span><span>4e</span><span>6f</span><span>74</span><span>65</span>
               </div>
-              <div class="proof-line"><span class="proof-mark" aria-hidden="true">✓</span><div><strong>Exact fixture verified</strong><small>Registry 1 · empty map · six bytes.</small></div></div>
+              <div class="proof-line"><span class="proof-mark" aria-hidden="true">✓</span><div><strong>Byte identity verified</strong><small>Swift output matches the published corpus.</small></div></div>
             </div>
           </div>
           <div class="console-foot">
@@ -82,9 +86,9 @@
       </div>
       <div class="wrap metric-strip" aria-label="Current validation summary">
         <div><strong>74</strong><span>release tests</span></div>
-        <div><strong>114/114</strong><span>retained cross-decodes passed</span></div>
-        <div><strong>11/11</strong><span>Swift CPU benchmark wins</span></div>
-        <div><strong>2.22×</strong><span>Swift CPU vs Rust CPU</span></div>
+        <div><strong>16/16</strong><span>four-way cross-decodes</span></div>
+        <div><strong>11/11</strong><span>benchmark fixtures won</span></div>
+        <div><strong>2.22×</strong><span>measured round-trip speedup</span></div>
       </div>
     </section>
 
@@ -93,7 +97,7 @@
         <div class="section-intro">
           <p class="eyebrow">Interoperability evidence</p>
           <h2>Compatibility is a result,<br>not a promise.</h2>
-          <p>The retained matrix crosses Swift, JavaScript, Rust, and Python CBOR‑LD encoders and decoders. A separate Go lane checks raw CBOR validity. Byte consensus stays distinct from semantic round‑trip agreement.</p>
+          <p>The test platform crosses Swift output through independent JavaScript, Rust, Python, and Go paths, then keeps byte consensus separate from semantic round‑trip agreement.</p>
         </div>
 
         <div class="evidence-layout">
@@ -109,8 +113,6 @@
                   <tr><td>custom type table</td><td class="mono">16 / 16</td><td><span class="yes">exact</span></td><td><span class="lamp">passed</span></td></tr>
                   <tr><td>JSON shapes</td><td class="mono">16 / 16</td><td><span class="semantic">semantic</span></td><td><span class="lamp">passed</span></td></tr>
                   <tr><td>Unicode + boundaries</td><td class="mono">16 / 16</td><td><span class="yes">exact</span></td><td><span class="lamp">passed</span></td></tr>
-                  <tr><td>legacy range</td><td class="mono">9 / 9</td><td><span class="yes">exact</span></td><td><span class="lamp">passed</span></td></tr>
-                  <tr><td>legacy singleton</td><td class="mono">9 / 9</td><td><span class="yes">exact</span></td><td><span class="lamp">passed</span></td></tr>
                 </tbody>
               </table>
             </div>
@@ -137,7 +139,7 @@
             <p class="eyebrow">Measured, release mode</p>
             <h2>Swift scales with the document.</h2>
           </div>
-          <p>Explore the retained Swift CPU versus Rust CPU in-process round-trip results. Each adapter warms up first, consumes every result through a barrier, and excludes process startup and protocol I/O.</p>
+          <p>Explore the current in-process round-trip results. Each adapter warms up first, consumes every result through a barrier, and excludes process startup and protocol I/O.</p>
         </div>
 
         <div class="benchmark-panel">
@@ -167,7 +169,7 @@
           </div>
 
           <div class="benchmark-footer">
-            <div><span>Corpus result</span><strong>2.22×</strong><small>Swift CPU vs Rust CPU round trip</small></div>
+            <div><span>Corpus result</span><strong>2.22×</strong><small>aggregate Swift round-trip speedup</small></div>
             <div><span>Correctness gate</span><strong>11 / 11</strong><small>byte-identical measured fixtures</small></div>
             <p>Evidence applies to the recorded fixtures, machine, toolchains, and in-process contract. It does not claim lower cold-start latency or a win for every isolated operation.</p>
           </div>
@@ -180,7 +182,7 @@
         <div class="section-intro">
           <p class="eyebrow">One core, explicit boundaries</p>
           <h2>The document stays on the CPU.<br>The bounded work can travel.</h2>
-          <p>Recursive JSON trees, context inheritance, dynamic maps, and document loading remain in the native Swift core. The public contracts prepare dense, bounded byte and integer workloads for a future separately distributed SemanticCompute adapter.</p>
+          <p>Recursive JSON trees, context inheritance, dynamic maps, and document loading remain in the native Swift core. Dense, bounded byte and integer workloads can use a separately installed, commercially licensed SemanticCompute binary through the optional adapter.</p>
         </div>
 
         <div class="architecture-map" aria-label="Swift-CBORLD architecture">
@@ -198,8 +200,8 @@
           <div class="arch-branch">
             <div class="branch-rule"><span></span><b>eligible bounded work</b><span></span></div>
             <div class="arch-node sc-node">
-              <div><span>03 · future optional integration</span><strong>SemanticCompute companion package</strong><small>Not part of Swift‑CBORLD 0.1.0. Publication requires an identified binary, backend, hardware run, fallback status, and exact CPU parity.</small></div>
-              <span class="preview-badge">public evidence · pending</span>
+              <div><span>03 · optional integration</span><strong>SemanticCompute binary adapter</strong><small>Links the signed commercial binary for exact UInt32 and byte families. SemanticCompute implementation source is not included.</small></div>
+              <span class="preview-badge">commercial · SC 1.23</span>
             </div>
           </div>
         </div>
@@ -224,7 +226,7 @@
           </div>
           <div class="commercial-note">
             <b>Commercial acceleration boundary</b>
-            <p>The planned adapter will require a separately distributed SemanticCompute binary and licence. It is not included in Swift‑CBORLD 0.1.0, and no accelerator result is included in the CPU benchmark above.</p>
+            <p>The optional adapter requires the SemanticCompute binary package and a SemanticCompute licence. Its CPU fallback preserves results when a dispatch is unsuitable; it does not remove the build, link, or redistribution requirement after the adapter is imported.</p>
           </div>
         </div>
 
