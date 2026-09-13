@@ -34,7 +34,7 @@ swift package --disable-sandbox dump-package >/dev/null
 swift format lint --strict --recursive Sources Tests Package.swift
 swift build --disable-sandbox -c release -Xswiftc -warnings-as-errors \
   --explicit-target-dependency-import-check error
-swift test --disable-sandbox -c release
+swift test --disable-sandbox -c release --disable-swift-testing
 mkdir -p .build/public-symbols
 swift build --disable-sandbox --target CBORLD \
   -Xswiftc -emit-symbol-graph \

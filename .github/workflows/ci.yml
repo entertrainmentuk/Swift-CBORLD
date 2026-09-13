@@ -32,7 +32,7 @@ jobs:
           swift build -c release -Xswiftc -warnings-as-errors
           --explicit-target-dependency-import-check error
       - name: Release tests
-        run: swift test -c release
+        run: swift test -c release --disable-swift-testing
       - name: Public symbol graph
         run: |
           mkdir -p .build/public-symbols

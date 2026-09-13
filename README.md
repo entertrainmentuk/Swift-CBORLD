@@ -282,7 +282,7 @@ Or invoke the principal checks separately:
 swift format lint --recursive Sources Tests Package.swift
 swift build -c release -Xswiftc -warnings-as-errors \
   --explicit-target-dependency-import-check error
-swift test -c release
+swift test -c release --disable-swift-testing
 ```
 
 The default suite remains offline. An additional opt-in, digest-only
