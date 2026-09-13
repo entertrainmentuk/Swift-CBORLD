@@ -1,761 +1,269 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Swift-CBORLD: native CBOR-LD encoding, strict decoding, deterministic serialization, integrity primitives, and cross-language evidence for Swift.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Swift-CBORLD — deterministic CBOR-LD for Swift</title>
+  <meta name="description" content="A native Swift CBOR-LD implementation with compatibility and deterministic encoding, strict decoding, integrity primitives, and retained cross-language evidence.">
   <meta name="color-scheme" content="dark light">
-  <title>Swift-CBORLD</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23091015'/%3E%3Cpath d='M7 9h7v4h-3v6h3v4H7V9Zm18 0v14h-7v-4h3v-6h-3V9h7Z' fill='%234be1bd'/%3E%3C/svg%3E">
-  <style>
-    :root {
-      --ink: #eaf3f4;
-      --muted: #98aeb2;
-      --faint: #63777b;
-      --canvas: #071014;
-      --canvas-2: #0b171c;
-      --panel: rgba(15, 30, 35, 0.82);
-      --line: rgba(166, 208, 209, 0.16);
-      --line-strong: rgba(166, 208, 209, 0.30);
-      --mint: #4be1bd;
-      --mint-soft: rgba(75, 225, 189, 0.12);
-      --amber: #f2b85b;
-      --blue: #67b7ff;
-      --red: #ff8b78;
-      --shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
-      --mono: ui-monospace, "SFMono-Regular", "Cascadia Code", "Roboto Mono", monospace;
-      --sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    * { box-sizing: border-box; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      margin: 0;
-      min-width: 320px;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at 86% 2%, rgba(75, 225, 189, 0.10), transparent 25rem),
-        radial-gradient(circle at 2% 38%, rgba(103, 183, 255, 0.07), transparent 30rem),
-        var(--canvas);
-      font: 1rem/1.68 var(--sans);
-      text-rendering: optimizeLegibility;
-    }
-
-    a { color: inherit; }
-
-    a:focus-visible,
-    button:focus-visible {
-      outline: 3px solid var(--amber);
-      outline-offset: 4px;
-    }
-
-    .shell {
-      width: min(1180px, calc(100% - 40px));
-      margin: 0 auto;
-    }
-
-    .site-header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      border-bottom: 1px solid var(--line);
-      background: rgba(7, 16, 20, 0.88);
-      backdrop-filter: blur(18px);
-    }
-
-    .nav {
-      min-height: 68px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      text-decoration: none;
-      font-weight: 750;
-      letter-spacing: -0.02em;
-    }
-
-    .brand-mark {
-      width: 34px;
-      height: 34px;
-      display: grid;
-      place-items: center;
-      border: 1px solid rgba(75, 225, 189, 0.5);
-      border-radius: 9px;
-      background: var(--mint-soft);
-      color: var(--mint);
-      font: 700 0.82rem var(--mono);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 22px;
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-
-    .nav-links a {
-      text-decoration: none;
-    }
-
-    .nav-links a:hover { color: var(--ink); }
-
-    .hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1.14fr) minmax(350px, 0.86fr);
-      gap: clamp(48px, 8vw, 108px);
-      align-items: center;
-      padding: clamp(86px, 11vw, 148px) 0 100px;
-    }
-
-    .eyebrow {
-      margin: 0 0 22px;
-      color: var(--mint);
-      font: 700 0.78rem/1.4 var(--mono);
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-    }
-
-    h1, h2, h3, p { margin-top: 0; }
-
-    h1 {
-      max-width: 780px;
-      margin-bottom: 26px;
-      font-size: clamp(3.1rem, 7vw, 6.7rem);
-      line-height: 0.92;
-      letter-spacing: -0.07em;
-      font-weight: 760;
-    }
-
-    h1 span { color: var(--mint); }
-
-    .lede {
-      max-width: 690px;
-      margin-bottom: 34px;
-      color: #bdced1;
-      font-size: clamp(1.08rem, 1.7vw, 1.28rem);
-      line-height: 1.58;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .button {
-      min-height: 46px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 19px;
-      border: 1px solid var(--line-strong);
-      border-radius: 8px;
-      background: transparent;
-      color: var(--ink);
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 0.92rem;
-    }
-
-    .button.primary {
-      border-color: var(--mint);
-      background: var(--mint);
-      color: #04110e;
-    }
-
-    .button:hover { transform: translateY(-1px); }
-
-    .signal-card {
-      position: relative;
-      overflow: hidden;
-      border: 1px solid var(--line-strong);
-      border-radius: 18px;
-      background: linear-gradient(145deg, rgba(19, 42, 47, 0.96), rgba(8, 19, 23, 0.98));
-      box-shadow: var(--shadow);
-    }
-
-    .signal-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      opacity: 0.22;
-      pointer-events: none;
-      background-image:
-        linear-gradient(var(--line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--line) 1px, transparent 1px);
-      background-size: 34px 34px;
-      mask-image: linear-gradient(to bottom, black, transparent 82%);
-    }
-
-    .signal-head,
-    .signal-body { position: relative; }
-
-    .signal-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 20px;
-      border-bottom: 1px solid var(--line);
-      color: var(--muted);
-      font: 650 0.76rem var(--mono);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .status {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--mint);
-    }
-
-    .status::before {
-      content: "";
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: currentColor;
-      box-shadow: 0 0 14px currentColor;
-    }
-
-    .signal-body { padding: 28px 26px 30px; }
-
-    .bytes {
-      margin: 0 0 28px;
-      color: var(--mint);
-      font: 650 clamp(1rem, 2vw, 1.24rem)/1.7 var(--mono);
-      word-spacing: 0.35em;
-    }
-
-    .signal-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-
-    .signal-metric {
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      background: rgba(4, 12, 15, 0.68);
-    }
-
-    .signal-metric strong {
-      display: block;
-      color: var(--ink);
-      font: 700 1.14rem var(--mono);
-    }
-
-    .signal-metric span {
-      color: var(--muted);
-      font-size: 0.76rem;
-    }
-
-    section { padding: 92px 0; }
-
-    .section-rule { border-top: 1px solid var(--line); }
-
-    .section-intro {
-      display: grid;
-      grid-template-columns: 0.75fr 1.25fr;
-      gap: 56px;
-      align-items: start;
-      margin-bottom: 46px;
-    }
-
-    h2 {
-      margin-bottom: 18px;
-      font-size: clamp(2rem, 4.4vw, 3.7rem);
-      line-height: 1.04;
-      letter-spacing: -0.05em;
-    }
-
-    .section-copy {
-      max-width: 680px;
-      color: var(--muted);
-      font-size: 1.05rem;
-    }
-
-    .install {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-    }
-
-    .code-card {
-      position: relative;
-      min-width: 0;
-      border: 1px solid var(--line);
-      border-radius: 13px;
-      overflow: hidden;
-      background: #050c0f;
-    }
-
-    .code-label {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--line);
-      color: var(--faint);
-      font: 700 0.72rem var(--mono);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    pre {
-      margin: 0;
-      padding: 24px;
-      overflow: auto;
-      color: #cfdee0;
-      font: 0.88rem/1.72 var(--mono);
-      tab-size: 2;
-    }
-
-    .token { color: var(--blue); }
-    .string { color: var(--amber); }
-    .call { color: var(--mint); }
-
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-
-    .feature {
-      min-height: 210px;
-      padding: 25px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--panel);
-    }
-
-    .feature .number {
-      display: block;
-      margin-bottom: 40px;
-      color: var(--mint);
-      font: 700 0.76rem var(--mono);
-    }
-
-    .feature h3 {
-      margin-bottom: 10px;
-      font-size: 1.12rem;
-      letter-spacing: -0.02em;
-    }
-
-    .feature p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.93rem;
-    }
-
-    .evidence {
-      display: grid;
-      grid-template-columns: 0.8fr 1.2fr;
-      gap: 18px;
-    }
-
-    .evidence-summary,
-    .evidence-table {
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: var(--panel);
-    }
-
-    .evidence-summary { padding: 32px; }
-
-    .big-number {
-      margin-bottom: 6px;
-      color: var(--mint);
-      font: 750 clamp(3.4rem, 7vw, 6.1rem)/1 var(--mono);
-      letter-spacing: -0.08em;
-    }
-
-    .big-label {
-      margin-bottom: 28px;
-      color: var(--ink);
-      font-weight: 700;
-    }
-
-    .caveat {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.88rem;
-    }
-
-    .evidence-table { overflow: hidden; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.91rem;
-    }
-
-    th, td {
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--line);
-      text-align: left;
-      vertical-align: top;
-    }
-
-    th {
-      color: var(--faint);
-      font: 700 0.72rem var(--mono);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    td { color: var(--muted); }
-    td:first-child { color: var(--ink); font-weight: 650; }
-    tr:last-child td { border-bottom: 0; }
-
-    .pass { color: var(--mint); font-family: var(--mono); }
-    .bounded { color: var(--amber); font-family: var(--mono); }
-
-    .architecture {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
-      align-items: stretch;
-    }
-
-    .layer {
-      position: relative;
-      padding: 22px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--panel);
-    }
-
-    .layer:not(:last-child)::after {
-      content: "→";
-      position: absolute;
-      right: -22px;
-      top: calc(50% - 12px);
-      z-index: 2;
-      color: var(--mint);
-      font: 700 1rem var(--mono);
-    }
-
-    .layer small {
-      display: block;
-      margin-bottom: 26px;
-      color: var(--faint);
-      font: 700 0.7rem var(--mono);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    .layer strong { display: block; margin-bottom: 8px; }
-    .layer p { margin: 0; color: var(--muted); font-size: 0.87rem; }
-    .layer.optional { border-style: dashed; }
-
-    .notice {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-    }
-
-    .notice article {
-      padding: 28px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: rgba(9, 20, 24, 0.72);
-    }
-
-    .notice h3 { margin-bottom: 10px; }
-    .notice p { margin: 0; color: var(--muted); font-size: 0.93rem; }
-
-    .interop-banner {
-      display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
-      gap: 30px;
-      align-items: end;
-      padding: clamp(30px, 5vw, 54px);
-      border: 1px solid rgba(75, 225, 189, 0.34);
-      border-radius: 16px;
-      background:
-        linear-gradient(135deg, rgba(75, 225, 189, 0.09), transparent 55%),
-        var(--panel);
-    }
-
-    .interop-banner h2 { margin-bottom: 18px; }
-    .interop-banner p { margin-bottom: 0; color: var(--muted); }
-
-    .interop-note {
-      padding-left: 22px;
-      border-left: 2px solid var(--amber);
-      color: #c7d4d6;
-      font-size: 0.92rem;
-    }
-
-    .interop-note strong {
-      display: block;
-      margin-bottom: 8px;
-      color: var(--amber);
-      font: 700 0.72rem var(--mono);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    footer {
-      padding: 40px 0 56px;
-      border-top: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 0.86rem;
-    }
-
-    .footer-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 24px;
-      align-items: flex-start;
-    }
-
-    .footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
-    .footer-links a:hover { color: var(--ink); }
-
-    @media (max-width: 900px) {
-      .hero,
-      .section-intro,
-      .install,
-      .evidence { grid-template-columns: 1fr; }
-      .hero { padding-top: 80px; }
-      .signal-card { max-width: 640px; }
-      .feature-grid { grid-template-columns: repeat(2, 1fr); }
-      .architecture { grid-template-columns: repeat(2, 1fr); }
-      .layer:not(:last-child)::after { display: none; }
-    }
-
-    @media (max-width: 620px) {
-      .shell { width: min(100% - 26px, 1180px); }
-      .nav-links a:not(:last-child) { display: none; }
-      h1 { font-size: clamp(3rem, 18vw, 5rem); }
-      section { padding: 72px 0; }
-      .feature-grid,
-      .architecture,
-      .notice,
-      .interop-banner { grid-template-columns: 1fr; }
-      .signal-grid { grid-template-columns: 1fr; }
-      .footer-row { flex-direction: column; }
-      th, td { padding: 13px 12px; }
-      .evidence-table { overflow-x: auto; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      .button:hover { transform: none; }
-    }
-  </style>
+  <meta name="theme-color" content="#071315">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23071315'/%3E%3Cpath d='M18 21h18l10 11-10 11H18l9-11z' fill='none' stroke='%2369f0d0' stroke-width='5' stroke-linejoin='round'/%3E%3Ccircle cx='34' cy='32' r='3' fill='%23d7ff5f'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="site.js"></script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="shell nav">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <div class="wrap nav-row">
       <a class="brand" href="#top" aria-label="Swift-CBORLD home">
-        <span class="brand-mark" aria-hidden="true">{ }</span>
-        Swift-CBORLD
+        <span class="brand-mark" aria-hidden="true"><i></i></span>
+        <span>Swift‑CBORLD</span>
       </a>
-      <nav class="nav-links" aria-label="Primary navigation">
-        <a href="#install">Install</a>
-        <a href="#evidence">Evidence</a>
-        <a href="interop/">Interop Lab</a>
+      <nav aria-label="Primary navigation">
+        <a href="interop-lab.html">Interop Lab</a>
+        <a href="#proof">Proof</a>
+        <a href="#performance">Performance</a>
         <a href="#architecture">Architecture</a>
-        <a href="api/documentation/cborld/">API docs</a>
-        <a href="https://github.com/entertrainment/swift-cborld">GitHub ↗</a>
+        <a href="#install">Install</a>
       </nav>
+      <div class="nav-actions">
+        <span class="status-chip"><span aria-hidden="true"></span> 0.1.0 preview</span>
+        <button class="theme-button" type="button" aria-label="Use light theme" title="Change colour theme">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.36-6.36-1.42 1.42M7.06 16.94l-1.42 1.42m12.72 0-1.42-1.42M7.06 7.06 5.64 5.64M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/></svg>
+        </button>
+      </div>
     </div>
   </header>
 
-  <main id="top">
-    <div class="shell hero">
-      <div>
-        <p class="eyebrow">Source-first · Swift 6 · 0.1.0 preview</p>
-        <h1>CBOR-LD,<br><span>native to Swift.</span></h1>
-        <p class="lede">Compatible bytes by default. Deterministic profiles by choice. Strict decoding, pinned resources, and integrity evidence with explicit semantic boundaries.</p>
-        <div class="actions">
-          <a class="button primary" href="#install">Add the package</a>
-          <a class="button" href="https://github.com/entertrainment/swift-cborld">Inspect the source</a>
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">CBOR‑LD 1.0 · Swift 6 · Apple + Linux</p>
+          <h1>Linked data.<br><em>Exact bytes.</em><br>Native Swift.</h1>
+          <p class="hero-lead">Encode JSON‑LD-shaped values into compact CBOR‑LD, restore them under explicit limits, and inspect the evidence behind every compatibility claim. The dependency-free core stands alone; any future SemanticCompute integration will ship as a separate optional package.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#install">Add the package <span aria-hidden="true">→</span></a>
+            <a class="button secondary" href="interop-lab.html">Open Interop Lab</a>
+            <a class="button secondary" href="https://github.com/entertrainment/swift-cborld">View source</a>
+          </div>
+          <dl class="hero-facts">
+            <div><dt>Dependencies</dt><dd>0 in core</dd></div>
+            <div><dt>Platforms</dt><dd>Apple + Linux</dd></div>
+            <div><dt>Core licence</dt><dd>BSD‑3‑Clause</dd></div>
+          </dl>
+        </div>
+
+        <div class="codec-console" aria-label="CBOR-LD transformation example">
+          <div class="console-head">
+            <span class="console-title"><b></b> compatibility transform</span>
+            <span class="mono dim">registry 1</span>
+          </div>
+          <div class="console-flow">
+            <div class="console-pane">
+              <span class="pane-label">JSON‑LD input</span>
+              <pre><code><span class="punct">{</span><span class="punct">}</span></code></pre>
+            </div>
+            <div class="transform-line" aria-hidden="true"><span></span><b>encode</b><span></span></div>
+            <div class="console-pane bytes-pane">
+              <span class="pane-label">CBOR‑LD bytes</span>
+              <div class="byte-row" aria-label="Example hexadecimal bytes">
+                <span>d9</span><span>cb</span><span>1d</span><span>82</span><span>01</span><span>a0</span>
+              </div>
+              <div class="proof-line"><span class="proof-mark" aria-hidden="true">✓</span><div><strong>Exact fixture verified</strong><small>Registry 1 · empty map · six bytes.</small></div></div>
+            </div>
+          </div>
+          <div class="console-foot">
+            <span>encode → decode → compare</span>
+            <span class="mono signal">passed</span>
+          </div>
         </div>
       </div>
+      <div class="wrap metric-strip" aria-label="Current validation summary">
+        <div><strong>74</strong><span>release tests</span></div>
+        <div><strong>114/114</strong><span>retained cross-decodes passed</span></div>
+        <div><strong>11/11</strong><span>Swift CPU benchmark wins</span></div>
+        <div><strong>2.22×</strong><span>Swift CPU vs Rust CPU</span></div>
+      </div>
+    </section>
 
-      <aside class="signal-card" aria-label="CBOR-LD envelope summary">
-        <div class="signal-head">
-          <span>Wire inspection</span>
-          <span class="status">CBOR-LD 1.0</span>
-        </div>
-        <div class="signal-body">
-          <p class="bytes">d9 cb 1d 82 01 a0</p>
-          <div class="signal-grid">
-            <div class="signal-metric"><strong>0xcb1d</strong><span>semantic tag</span></div>
-            <div class="signal-metric"><strong>1</strong><span>registry entry</span></div>
-            <div class="signal-metric"><strong>SHA-2</strong><span>structured digest</span></div>
-            <div class="signal-metric"><strong>bounded</strong><span>parser contract</span></div>
-          </div>
-        </div>
-      </aside>
-    </div>
-
-    <section id="install" class="section-rule">
-      <div class="shell">
+    <section class="proof-section" id="proof">
+      <div class="wrap">
         <div class="section-intro">
-          <div>
-            <p class="eyebrow">Install</p>
-            <h2>One source package.<br>No runtime dependencies.</h2>
-          </div>
-          <p class="section-copy">The module and product stay concise: <code>CBORLD</code>. Compatibility serialization remains the default, so existing JavaScript vectors do not change when deterministic output is introduced elsewhere in an application.</p>
+          <p class="eyebrow">Interoperability evidence</p>
+          <h2>Compatibility is a result,<br>not a promise.</h2>
+          <p>The retained matrix crosses Swift, JavaScript, Rust, and Python CBOR‑LD encoders and decoders. A separate Go lane checks raw CBOR validity. Byte consensus stays distinct from semantic round‑trip agreement.</p>
         </div>
 
-        <div class="install">
-          <div class="code-card">
-            <div class="code-label">Package.swift</div>
-            <pre><span class="token">dependencies</span>: [
-  .<span class="call">package</span>(
+        <div class="evidence-layout">
+          <div class="matrix-card">
+            <div class="card-head"><span>shared fixture matrix</span><span class="badge-pass">overall · passed</span></div>
+            <div class="matrix-scroll">
+              <table>
+                <thead><tr><th>Fixture</th><th>Cross-decodes</th><th>Bytes</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td>empty / uncompressed</td><td class="mono">16 / 16</td><td><span class="yes">exact</span></td><td><span class="lamp">passed</span></td></tr>
+                  <tr><td>default table</td><td class="mono">16 / 16</td><td><span class="yes">exact</span></td><td><span class="lamp">passed</span></td></tr>
+                  <tr><td>inline context</td><td class="mono">16 / 16</td><td><span class="yes">exact</span></td><td><span class="lamp">passed</span></td></tr>
+                  <tr><td>custom type table</td><td class="mono">16 / 16</td><td><span class="yes">exact</span></td><td><span class="lamp">passed</span></td></tr>
+                  <tr><td>JSON shapes</td><td class="mono">16 / 16</td><td><span class="semantic">semantic</span></td><td><span class="lamp">passed</span></td></tr>
+                  <tr><td>Unicode + boundaries</td><td class="mono">16 / 16</td><td><span class="yes">exact</span></td><td><span class="lamp">passed</span></td></tr>
+                  <tr><td>legacy range</td><td class="mono">9 / 9</td><td><span class="yes">exact</span></td><td><span class="lamp">passed</span></td></tr>
+                  <tr><td>legacy singleton</td><td class="mono">9 / 9</td><td><span class="yes">exact</span></td><td><span class="lamp">passed</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="evidence-note">
+            <span class="note-index mono">01 / evidence boundary</span>
+            <h3>Every status says what was actually checked.</h3>
+            <ul>
+              <li><span class="legend runtime"></span><div><b>Runtime validated</b><small>Built and executed in the active environment.</small></div></li>
+              <li><span class="legend source"></span><div><b>Source present</b><small>Inventoried without an executable proof.</small></div></li>
+              <li><span class="legend pending"></span><div><b>Proposed</b><small>Kept outside measured capability totals.</small></div></li>
+            </ul>
+            <a href="interop-lab.html">Explore the live evidence surface <span aria-hidden="true">→</span></a>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="performance-section" id="performance">
+      <div class="wrap">
+        <div class="section-intro split">
+          <div>
+            <p class="eyebrow">Measured, release mode</p>
+            <h2>Swift scales with the document.</h2>
+          </div>
+          <p>Explore the retained Swift CPU versus Rust CPU in-process round-trip results. Each adapter warms up first, consumes every result through a barrier, and excludes process startup and protocol I/O.</p>
+        </div>
+
+        <div class="benchmark-panel">
+          <div class="benchmark-controls">
+            <label for="fixture-select">Fixture</label>
+            <select id="fixture-select">
+              <option value="small">JSON shapes · 67 B</option>
+              <option value="unicode">Unicode + boundaries · 53 B</option>
+              <option value="688">Records · 45.6 KB</option>
+              <option value="2720">Records · 183.7 KB</option>
+              <option value="10800">Records · 734.0 KB</option>
+              <option value="42200">Records · 2.90 MB</option>
+              <option value="166400" selected>Records · 11.74 MB</option>
+            </select>
+            <div class="fixture-meta"><span>round trips / second</span><strong id="speedup">2.17× faster</strong></div>
+          </div>
+
+          <div class="bar-chart" aria-live="polite">
+            <div class="bar-row">
+              <div class="bar-label"><span>Swift</span><strong id="swift-rate">4.2</strong></div>
+              <div class="bar-track"><div class="bar swift-bar" id="swift-bar" style="--bar:100%"><span>native</span></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-label"><span>Rust</span><strong id="rust-rate">1.9</strong></div>
+              <div class="bar-track"><div class="bar rust-bar" id="rust-bar" style="--bar:46%"><span>reference</span></div></div>
+            </div>
+          </div>
+
+          <div class="benchmark-footer">
+            <div><span>Corpus result</span><strong>2.22×</strong><small>Swift CPU vs Rust CPU round trip</small></div>
+            <div><span>Correctness gate</span><strong>11 / 11</strong><small>byte-identical measured fixtures</small></div>
+            <p>Evidence applies to the recorded fixtures, machine, toolchains, and in-process contract. It does not claim lower cold-start latency or a win for every isolated operation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="architecture-section" id="architecture">
+      <div class="wrap">
+        <div class="section-intro">
+          <p class="eyebrow">One core, explicit boundaries</p>
+          <h2>The document stays on the CPU.<br>The bounded work can travel.</h2>
+          <p>Recursive JSON trees, context inheritance, dynamic maps, and document loading remain in the native Swift core. The public contracts prepare dense, bounded byte and integer workloads for a future separately distributed SemanticCompute adapter.</p>
+        </div>
+
+        <div class="architecture-map" aria-label="Swift-CBORLD architecture">
+          <div class="arch-node app-node"><span>01</span><strong>Your Swift app</strong><small>JSON‑LD values · models · streams</small></div>
+          <div class="arch-connector"><i></i><b>async / sync API</b><i></i></div>
+          <div class="arch-core">
+            <div class="core-head"><span>02</span><strong>CBORLD core</strong><em>zero dependencies</em></div>
+            <div class="core-grid">
+              <div><b>Semantic transform</b><small>contexts, dictionaries, codecs</small></div>
+              <div><b>Strict CBOR</b><small>limits, duplicate keys, diagnostics</small></div>
+              <div><b>Deterministic output</b><small>compatibility + RFC 8949 profiles</small></div>
+              <div><b>Integrity</b><small>SHA‑2, fingerprints, manifests</small></div>
+            </div>
+          </div>
+          <div class="arch-branch">
+            <div class="branch-rule"><span></span><b>eligible bounded work</b><span></span></div>
+            <div class="arch-node sc-node">
+              <div><span>03 · future optional integration</span><strong>SemanticCompute companion package</strong><small>Not part of Swift‑CBORLD 0.1.0. Publication requires an identified binary, backend, hardware run, fallback status, and exact CPU parity.</small></div>
+              <span class="preview-badge">public evidence · pending</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="capability-grid">
+          <article><span class="cap-number">01</span><h3>Context aware</h3><p>Remote, embedded, imported, type-scoped, and property-scoped contexts with protected-term and propagation behavior.</p></article>
+          <article><span class="cap-number">02</span><h3>Untrusted-input limits</h3><p>Bound input bytes, nesting depth, container sizes, duplicate keys, indefinite lengths, and preferred-width validation.</p></article>
+          <article><span class="cap-number">03</span><h3>Prepared sessions</h3><p>Build dictionary indexes once, deduplicate context loads, and preserve per-document semantic isolation across concurrent work.</p></article>
+          <article><span class="cap-number">04</span><h3>Inspectable integrity</h3><p>Transport hashes, structural fingerprints, pinned resources, verification reports, and versioned out-of-band manifests.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="install-section" id="install">
+      <div class="wrap install-grid">
+        <div class="install-copy">
+          <p class="eyebrow">Swift Package Manager</p>
+          <h2>Add CBOR‑LD at the source.</h2>
+          <p>The core is a regular open-source Swift library. SwiftPM resolves its tagged source and chooses the appropriate linkage for your application.</p>
+          <div class="platform-row" aria-label="Supported platforms">
+            <span>macOS 13+</span><span>iOS 16+</span><span>tvOS 16+</span><span>watchOS 9+</span><span>visionOS 1+</span><span>Linux</span>
+          </div>
+          <div class="commercial-note">
+            <b>Commercial acceleration boundary</b>
+            <p>The planned adapter will require a separately distributed SemanticCompute binary and licence. It is not included in Swift‑CBORLD 0.1.0, and no accelerator result is included in the CPU benchmark above.</p>
+          </div>
+        </div>
+
+        <div class="code-card">
+          <div class="code-tabs" role="tablist" aria-label="Installation examples">
+            <button role="tab" aria-selected="true" data-code="package">Package.swift</button>
+            <button role="tab" aria-selected="false" data-code="usage">Encode + decode</button>
+            <button class="copy-button" type="button" aria-label="Copy code">Copy</button>
+          </div>
+          <pre id="package-code"><code><span class="keyword">dependencies</span>: [
+  .package(
     url: <span class="string">"https://github.com/entertrainment/swift-cborld.git"</span>,
     from: <span class="string">"0.1.0"</span>
   )
-]</pre>
-          </div>
-          <div class="code-card">
-            <div class="code-label">Round trip</div>
-            <pre><span class="token">import</span> CBORLD
+]</code></pre>
+          <pre id="usage-code" hidden><code><span class="keyword">import</span> CBORLD
 
-<span class="token">let</span> bytes = <span class="token">try await</span> <span class="call">CBORLDEncoder</span>()
-  .<span class="call">encode</span>(document)
+<span class="keyword">let</span> bytes = <span class="keyword">try await</span> CBORLD.encode(document)
+<span class="keyword">let</span> restored = <span class="keyword">try await</span> CBORLD.decode(bytes)
 
-<span class="token">let</span> restored = <span class="token">try await</span> <span class="call">CBORLDDecoder</span>()
-  .<span class="call">decode</span>(bytes)</pre>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section-rule">
-      <div class="shell">
-        <div class="section-intro">
-          <div>
-            <p class="eyebrow">Contract</p>
-            <h2>Precise where it matters.</h2>
-          </div>
-          <p class="section-copy">Encoding, identity, integrity, and authentication are separate concerns. Swift-CBORLD exposes each boundary instead of letting one checksum or serialization mode imply more than it proves.</p>
-        </div>
-
-        <div class="feature-grid">
-          <article class="feature"><span class="number">01 / WIRE</span><h3>Compatibility first</h3><p>Established JavaScript-compatible bytes remain the default representation.</p></article>
-          <article class="feature"><span class="number">02 / ORDER</span><h3>Determinism by choice</h3><p>Length-first and core deterministic RFC 8949 profiles are explicit opt-ins.</p></article>
-          <article class="feature"><span class="number">03 / LIMITS</span><h3>Bounded input</h3><p>Input size, nesting, container count, diagnostic retention, and indefinite items are controlled.</p></article>
-          <article class="feature"><span class="number">04 / PINS</span><h3>Frozen semantics</h3><p>Context and application dictionary fingerprints are checked before semantic use.</p></article>
-          <article class="feature"><span class="number">05 / HASH</span><h3>Named hash domains</h3><p>Transport, structure, contexts, and dictionaries never share an ambiguous digest meaning.</p></article>
-          <article class="feature"><span class="number">06 / VIEW</span><h3>Inspectable failure</h3><p>Envelope metadata, byte offsets, container paths, and aggregate verification reports make rejection explainable.</p></article>
-        </div>
-      </div>
-    </section>
-
-    <section id="evidence" class="section-rule">
-      <div class="shell">
-        <div class="section-intro">
-          <div>
-            <p class="eyebrow">Recorded evidence</p>
-            <h2>Measured, then bounded.</h2>
-          </div>
-          <p class="section-copy">The published report preserves the machine, toolchain, fixture, warm-up, and timing boundary. It supports a specific Swift CPU result—not a blanket “faster than Rust” claim and not a SemanticCompute result.</p>
-        </div>
-
-        <div class="evidence">
-          <article class="evidence-summary">
-            <div class="big-number">11/11</div>
-            <p class="big-label">Swift round-trip wins in the recorded corpus</p>
-            <p class="caveat">All 11 fixtures were correct and byte-identical. Aggregate in-process Swift CPU round-trip speedup: 2.22x on the recorded macOS/arm64 setup. Process startup is excluded. SemanticCompute did not participate.</p>
-          </article>
-          <div class="evidence-table">
-            <table>
-              <thead><tr><th>Evidence</th><th>State</th><th>Boundary</th></tr></thead>
-              <tbody>
-                <tr><td>CBOR-LD fixtures</td><td><span class="pass">11/11 passed</span></td><td>Swift ↔ Rust correctness and exact bytes</td></tr>
-                <tr><td>Strict decoder</td><td><span class="pass">tested</span></td><td>Malformed CBOR, duplicate keys, preferred widths</td></tr>
-                <tr><td>macOS release</td><td><span class="pass">local gate</span></td><td>Build, tests, symbols, report checksum</td></tr>
-                <tr><td>Linux release</td><td><span class="bounded">CI gate</span></td><td>Must pass on the exact public commit</td></tr>
-                <tr><td>SC acceleration</td><td><span class="bounded">separate</span></td><td>Core contracts only in 0.1.0</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="actions" style="margin-top: 22px">
-          <a class="button" href="evidence/performance-macos-arm64.json">Machine-readable report</a>
-          <a class="button" href="evidence/performance-macos-arm64.md">Readable report</a>
-          <a class="button" href="interop/">Open the Interop Lab</a>
-        </div>
-      </div>
-    </section>
-
-    <section class="section-rule">
-      <div class="shell">
-        <div class="interop-banner">
-          <div>
-            <p class="eyebrow">CBOR-LD Interop Lab</p>
-            <h2>Bring your hardest fixture.</h2>
-            <p>Run the same document through independent implementations, separate semantic agreement from exact byte identity, and publish the result. Eligible bounded operations may also use an optional compute provider, but every accepted result remains checked against the public CPU reference.</p>
-            <div class="actions" style="margin-top: 26px">
-              <a class="button primary" href="interop/">Explore the lab</a>
-              <a class="button" href="https://github.com/entertrainment/swift-cborld/blob/main/Interop/CHALLENGE_FIXTURES.md">Submit a challenge fixture</a>
-            </div>
-          </div>
-          <p class="interop-note"><strong>Commercial boundary</strong>SemanticCompute is a separately licensed commercial binary. It is not required to build, test, or use Swift-CBORLD core. Hardware results must identify the binary, backend, hardware, fallback state, and exact CPU-reference parity.</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="architecture" class="section-rule">
-      <div class="shell">
-        <div class="section-intro">
-          <div>
-            <p class="eyebrow">Architecture</p>
-            <h2>CPU-correct at the core.</h2>
-          </div>
-          <p class="section-copy">Whole-document CBOR-LD transformation stays in the native processor. Dense, independent byte and integer work can cross a versioned provider boundary only when its result survives package-side acceptance checks.</p>
-        </div>
-
-        <div class="architecture" aria-label="Swift-CBORLD architecture">
-          <article class="layer"><small>Application</small><strong>Swift model or JSONValue</strong><p>Async context policy and caller-selected limits.</p></article>
-          <article class="layer"><small>CBORLD core</small><strong>Semantic transform</strong><p>Context inheritance, codecs, dictionaries, envelopes.</p></article>
-          <article class="layer"><small>Validation</small><strong>CPU reference</strong><p>Exact bytes, integer semantics, diagnostics, digests.</p></article>
-          <article class="layer optional"><small>Optional backend</small><strong>Compute provider</strong><p>Bounded families accepted one result at a time.</p></article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section-rule">
-      <div class="shell">
-        <div class="section-intro">
-          <div>
-            <p class="eyebrow">Security boundary</p>
-            <h2>Integrity is not identity.</h2>
-          </div>
-          <p class="section-copy">A transport digest detects changed bytes. A structural fingerprint detects changed JSON-shaped structure. Neither proves who produced a document, and neither establishes RDF dataset equivalence.</p>
-        </div>
-        <div class="notice">
-          <article><h3>For untrusted input</h3><p>Set conservative byte, nesting, and container limits. Reject duplicate keys and indefinite-length items where a unique representation is required. Pin remote contexts and document dictionaries.</p></article>
-          <article><h3>For signed claims</h3><p>Canonicalize with a standards-appropriate JSON-LD/RDF algorithm and place signatures or MACs in an enclosing protocol with an explicit signing profile. Swift-CBORLD adds no authentication field to the wire envelope.</p></article>
+<span class="keyword">precondition</span>(restored == document)</code></pre>
+          <div class="code-foot"><span>Swift 6</span><span>core dependency count · <b>0</b></span></div>
         </div>
       </div>
     </section>
   </main>
 
   <footer>
-    <div class="shell footer-row">
-      <p>BSD-3-Clause · Independent Swift implementation · Not endorsed by Digital Bazaar or W3C</p>
+    <div class="wrap footer-grid">
+      <div>
+        <a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true"><i></i></span><span>Swift‑CBORLD</span></a>
+        <p>An independent native Swift implementation. Digital Bazaar’s CBOR‑LD project remains the JavaScript interoperability reference. The BSD licence covers Swift‑CBORLD; SemanticCompute remains a separate commercial binary product.</p>
+      </div>
       <div class="footer-links">
-        <a href="https://github.com/entertrainment/swift-cborld/blob/main/LICENSE">License</a>
-        <a href="https://github.com/entertrainment/swift-cborld/blob/main/SECURITY.md">Security</a>
-        <a href="https://github.com/entertrainment/swift-cborld/blob/main/THIRD_PARTY_NOTICES.md">Provenance</a>
+        <div><b>Project</b><a href="interop-lab.html">Interop Lab</a><a href="https://github.com/entertrainment/swift-cborld">GitHub</a><a href="#proof">Verification</a><a href="#performance">Benchmarks</a></div>
+        <div><b>Reference</b><a href="https://json-ld.github.io/cbor-ld-spec/">CBOR‑LD specification</a><a href="https://github.com/digitalbazaar/cborld">Digital Bazaar CBOR‑LD</a><a href="https://github.com/entertrainment/swift-cborld/blob/main/LICENSE">BSD‑3‑Clause</a></div>
       </div>
     </div>
+    <div class="wrap footer-bottom"><span>Evidence over assertion.</span><span>Built for deterministic, inspectable data interchange.</span></div>
   </footer>
 </body>
 </html>

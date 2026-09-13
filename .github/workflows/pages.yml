@@ -38,12 +38,13 @@ jobs:
       - name: Add published evidence
         run: |
           mkdir -p docs/evidence
-          mkdir -p docs/interop/data
+          mkdir -p docs/data
           cp Interop/reports/performance-macos-arm64.json docs/evidence/
           cp Interop/reports/performance-macos-arm64.md docs/evidence/
-          cp Interop/lab-status.json docs/interop/data/
-          cp Interop/schemas/lab-result.schema.json docs/interop/data/
-          cp Interop/schemas/lab-status.schema.json docs/interop/data/
+          cmp Interop/reports/interop-macos-arm64.json docs/interop-data.json
+          cp Interop/lab-status.json docs/data/
+          cp Interop/schemas/lab-result.schema.json docs/data/
+          cp Interop/schemas/lab-status.schema.json docs/data/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs

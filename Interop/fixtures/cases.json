@@ -1,0 +1,153 @@
+[
+  {
+    "id": "v1-empty-uncompressed",
+    "description": "CBOR-LD 1.0 envelope with the smallest uncompressed JSON object.",
+    "format": "cbor-ld-1.0",
+    "registryEntryID": 0,
+    "document": {},
+    "adapters": [
+      "swift",
+      "javascript",
+      "python",
+      "rust"
+    ],
+    "expectedHex": "d9cb1d8200a0"
+  },
+  {
+    "id": "v1-empty-default-table",
+    "description": "CBOR-LD 1.0 envelope using the default semantic table.",
+    "format": "cbor-ld-1.0",
+    "registryEntryID": 1,
+    "document": {},
+    "adapters": [
+      "swift",
+      "javascript",
+      "python",
+      "rust"
+    ],
+    "expectedHex": "d9cb1d8201a0"
+  },
+  {
+    "id": "v1-inline-context-compressed",
+    "description": "Registry-1 semantic compression with an embedded context and typed terms.",
+    "format": "cbor-ld-1.0",
+    "registryEntryID": 1,
+    "document": {
+      "@context": {
+        "name": "https://schema.org/name",
+        "homepage": {
+          "@id": "https://schema.org/url",
+          "@type": "@id"
+        }
+      },
+      "name": "Ada",
+      "homepage": "https://example.org/ada"
+    },
+    "adapters": [
+      "swift",
+      "javascript",
+      "python",
+      "rust"
+    ]
+  },
+  {
+    "id": "v1-custom-type-table",
+    "description": "Custom registry type-table loader and compressed scalar value.",
+    "format": "cbor-ld-1.0",
+    "registryEntryID": 42,
+    "typeTable": {
+      "none": {
+        "Ada": 100
+      }
+    },
+    "document": {
+      "@context": {
+        "name": "https://example.org/name"
+      },
+      "name": "Ada"
+    },
+    "adapters": [
+      "swift",
+      "javascript",
+      "python",
+      "rust"
+    ]
+  },
+  {
+    "id": "v1-json-shapes",
+    "description": "Uncompressed nested JSON shapes and scalar types.",
+    "format": "cbor-ld-1.0",
+    "registryEntryID": 0,
+    "document": {
+      "active": true,
+      "count": 7,
+      "items": [
+        null,
+        "hello",
+        -3,
+        1.5
+      ],
+      "nested": {
+        "a": 1,
+        "longer-key": "value"
+      }
+    },
+    "adapters": [
+      "swift",
+      "javascript",
+      "python",
+      "rust"
+    ]
+  },
+  {
+    "id": "v1-unicode-and-boundaries",
+    "description": "Unicode strings plus integers around compact CBOR-width boundaries.",
+    "format": "cbor-ld-1.0",
+    "registryEntryID": 0,
+    "document": {
+      "text": "CBOR-LD 🧩 café",
+      "integers": [
+        0,
+        23,
+        24,
+        255,
+        256,
+        -1,
+        -24,
+        -25
+      ]
+    },
+    "adapters": [
+      "swift",
+      "javascript",
+      "python",
+      "rust"
+    ]
+  },
+  {
+    "id": "legacy-range-empty",
+    "description": "Pre-1.0 range-tag compatibility surface.",
+    "format": "legacy-range",
+    "registryEntryID": 0,
+    "document": {},
+    "adapters": [
+      "swift",
+      "javascript",
+      "python"
+    ],
+    "expectedHex": "d90600a0"
+  },
+  {
+    "id": "legacy-singleton-uncompressed",
+    "description": "Legacy singleton tag with compression disabled.",
+    "format": "legacy-singleton",
+    "compressionMode": 0,
+    "document": {},
+    "adapters": [
+      "swift",
+      "javascript",
+      "python"
+    ],
+    "expectedHex": "d90500a0"
+  }
+]

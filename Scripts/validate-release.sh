@@ -22,8 +22,13 @@ if grep -R -n -E '/Users/|/var/folders/' \
 fi
 
 find Interop -type f -name '*.json' -print0 | xargs -0 -n1 jq -e . >/dev/null
+jq -e . docs/interop-data.json >/dev/null
 jq -e '.schemaVersion == 1 and (.implementations | length == 8)' \
   Interop/lab-status.json >/dev/null
+cmp -s Interop/reports/interop-macos-arm64.json docs/interop-data.json || {
+  echo "error: published interop data differs from the reviewed report" >&2
+  exit 1
+}
 
 swift package --disable-sandbox dump-package >/dev/null
 swift format lint --strict --recursive Sources Tests Package.swift

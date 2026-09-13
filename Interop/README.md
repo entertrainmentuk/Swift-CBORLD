@@ -32,6 +32,9 @@ is not byte identity. See [STATUS.md](STATUS.md) for the current matrix.
 
 ## Retained fixtures
 
+- `Interop/fixtures/cases.json` contains the eight-case input corpus used by
+  the retained cross-language snapshot: six four-way modern fixtures and two
+  three-way legacy fixtures.
 - `Tests/CBORLDTests/Fixtures/cborld-cross-language.json` contains ten small
   envelope vectors with source URL, compared version, source file, and license.
 - `Tests/CBORLDTests/Fixtures/rfc8949-curated.json` contains a small CBOR reader
@@ -41,6 +44,23 @@ The fixture tests validate exact bytes, envelope metadata, round-trip behavior,
 deterministic encoding, malformed input, and strict-policy rejection.
 `FIXTURE_SHA256SUMS` fixes the exact reviewed fixture bytes independently of
 their source metadata.
+
+## Recorded cross-language evidence
+
+`reports/interop-macos-arm64.json` is a scrubbed, machine-readable snapshot of
+the dated development-lab run used by the website. It records 114 successful
+cross-decodes out of 114 attempted across Swift, Digital Bazaar JavaScript,
+LDC Labs Rust, and Subfile Python, plus 63 RFC-valid raw-CBOR vectors and one
+expected legacy rejection checked by the fxamacker Go oracle. Seven of eight
+CBOR-LD fixtures had exact byte consensus; the JSON-shapes case had semantic
+consensus with permitted byte variation.
+
+The clean release retains the fixture inputs, output evidence, timestamps,
+environment, and checksums, but deliberately excludes adapters that depended
+on sibling development checkouts. This means the result is runtime-validated
+retained evidence, while rerunning the full external matrix from this checkout
+remains unavailable. The website copy at `docs/interop-data.json` must remain
+byte-for-byte identical to the reviewed report.
 
 ## Recorded performance evidence
 

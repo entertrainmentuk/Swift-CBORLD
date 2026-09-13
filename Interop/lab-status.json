@@ -13,6 +13,16 @@
           "classification": "source-present",
           "scope": "immutable comparator source",
           "evidence": "comparators.json records a commit-addressed archive and SHA-256"
+        },
+        {
+          "classification": "runtime-validated",
+          "scope": "retained macOS/arm64 cross-decode snapshot",
+          "evidence": "reports/interop-macos-arm64.json records all applicable JavaScript encode and decode combinations passing"
+        },
+        {
+          "classification": "semantically-equivalent",
+          "scope": "shared modern and legacy fixture corpus",
+          "evidence": "all applicable cross-decodes restored the expected JSON-shaped document"
         }
       ]
     },
@@ -82,6 +92,16 @@
           "classification": "source-present",
           "scope": "immutable comparator source",
           "evidence": "comparators.json records a commit-addressed archive and SHA-256"
+        },
+        {
+          "classification": "runtime-validated",
+          "scope": "retained macOS/arm64 cross-decode snapshot",
+          "evidence": "reports/interop-macos-arm64.json records all applicable Python encode and decode combinations passing"
+        },
+        {
+          "classification": "semantically-equivalent",
+          "scope": "shared modern and legacy fixture corpus",
+          "evidence": "all applicable cross-decodes restored the expected JSON-shaped document"
         }
       ]
     },
@@ -107,7 +127,12 @@
         {
           "classification": "source-present",
           "scope": "immutable comparator source",
-          "evidence": "comparators.json records a commit-addressed archive and SHA-256; runtime result unavailable"
+          "evidence": "comparators.json records a commit-addressed archive and SHA-256"
+        },
+        {
+          "classification": "runtime-validated",
+          "scope": "retained raw-CBOR vector snapshot",
+          "evidence": "63 of 64 selected vectors were RFC-valid and one legacy vector produced the expected rejection"
         }
       ]
     },

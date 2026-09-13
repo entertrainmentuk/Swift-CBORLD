@@ -1,0 +1,1493 @@
+{
+  "environment": {
+    "machine": "arm64",
+    "platform": "macOS-26.5-arm64-arm-64bit-Mach-O",
+    "python": "3.14.5",
+    "rustc": "rustc 1.92.0 (ded5c06cf 2025-12-08) (Homebrew)",
+    "swift": "Apple Swift version 6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)\nTarget: arm64-apple-macosx26.0"
+  },
+  "fixtures": [
+    {
+      "activeAdapters": [
+        "swift",
+        "javascript",
+        "python",
+        "rust"
+      ],
+      "byteConsensus": true,
+      "crossDecode": [
+        {
+          "decoder": "swift",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        }
+      ],
+      "crossDecodePassed": 16,
+      "crossDecodeTotal": 16,
+      "description": "CBOR-LD 1.0 envelope with the smallest uncompressed JSON object.",
+      "encodings": {
+        "javascript": {
+          "bytesHex": "d9cb1d8200a0",
+          "ok": true
+        },
+        "python": {
+          "bytesHex": "d9cb1d8200a0",
+          "ok": true
+        },
+        "rust": {
+          "bytesHex": "d9cb1d8200a0",
+          "ok": true
+        },
+        "swift": {
+          "bytesHex": "d9cb1d8200a0",
+          "ok": true
+        }
+      },
+      "id": "v1-empty-uncompressed",
+      "status": "passed"
+    },
+    {
+      "activeAdapters": [
+        "swift",
+        "javascript",
+        "python",
+        "rust"
+      ],
+      "byteConsensus": true,
+      "crossDecode": [
+        {
+          "decoder": "swift",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        }
+      ],
+      "crossDecodePassed": 16,
+      "crossDecodeTotal": 16,
+      "description": "CBOR-LD 1.0 envelope using the default semantic table.",
+      "encodings": {
+        "javascript": {
+          "bytesHex": "d9cb1d8201a0",
+          "ok": true
+        },
+        "python": {
+          "bytesHex": "d9cb1d8201a0",
+          "ok": true
+        },
+        "rust": {
+          "bytesHex": "d9cb1d8201a0",
+          "ok": true
+        },
+        "swift": {
+          "bytesHex": "d9cb1d8201a0",
+          "ok": true
+        }
+      },
+      "id": "v1-empty-default-table",
+      "status": "passed"
+    },
+    {
+      "activeAdapters": [
+        "swift",
+        "javascript",
+        "python",
+        "rust"
+      ],
+      "byteConsensus": true,
+      "crossDecode": [
+        {
+          "decoder": "swift",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        }
+      ],
+      "crossDecodePassed": 16,
+      "crossDecodeTotal": 16,
+      "description": "Registry-1 semantic compression with an embedded context and typed terms.",
+      "encodings": {
+        "javascript": {
+          "bytesHex": "d9cb1d8201a300a2646e616d657768747470733a2f2f736368656d612e6f72672f6e616d6568686f6d6570616765a2634069647668747470733a2f2f736368656d612e6f72672f75726c65407479706563406964186482026f6578616d706c652e6f72672f616461186663416461",
+          "ok": true
+        },
+        "python": {
+          "bytesHex": "d9cb1d8201a300a2646e616d657768747470733a2f2f736368656d612e6f72672f6e616d6568686f6d6570616765a2634069647668747470733a2f2f736368656d612e6f72672f75726c65407479706563406964186482026f6578616d706c652e6f72672f616461186663416461",
+          "ok": true
+        },
+        "rust": {
+          "bytesHex": "d9cb1d8201a300a2646e616d657768747470733a2f2f736368656d612e6f72672f6e616d6568686f6d6570616765a2634069647668747470733a2f2f736368656d612e6f72672f75726c65407479706563406964186482026f6578616d706c652e6f72672f616461186663416461",
+          "ok": true
+        },
+        "swift": {
+          "bytesHex": "d9cb1d8201a300a2646e616d657768747470733a2f2f736368656d612e6f72672f6e616d6568686f6d6570616765a2634069647668747470733a2f2f736368656d612e6f72672f75726c65407479706563406964186482026f6578616d706c652e6f72672f616461186663416461",
+          "ok": true
+        }
+      },
+      "id": "v1-inline-context-compressed",
+      "status": "passed"
+    },
+    {
+      "activeAdapters": [
+        "swift",
+        "javascript",
+        "python",
+        "rust"
+      ],
+      "byteConsensus": true,
+      "crossDecode": [
+        {
+          "decoder": "swift",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        }
+      ],
+      "crossDecodePassed": 16,
+      "crossDecodeTotal": 16,
+      "description": "Custom registry type-table loader and compressed scalar value.",
+      "encodings": {
+        "javascript": {
+          "bytesHex": "d9cb1d82182aa200a1646e616d65781868747470733a2f2f6578616d706c652e6f72672f6e616d6518644164",
+          "ok": true
+        },
+        "python": {
+          "bytesHex": "d9cb1d82182aa200a1646e616d65781868747470733a2f2f6578616d706c652e6f72672f6e616d6518644164",
+          "ok": true
+        },
+        "rust": {
+          "bytesHex": "d9cb1d82182aa200a1646e616d65781868747470733a2f2f6578616d706c652e6f72672f6e616d6518644164",
+          "ok": true
+        },
+        "swift": {
+          "bytesHex": "d9cb1d82182aa200a1646e616d65781868747470733a2f2f6578616d706c652e6f72672f6e616d6518644164",
+          "ok": true
+        }
+      },
+      "id": "v1-custom-type-table",
+      "status": "passed"
+    },
+    {
+      "activeAdapters": [
+        "swift",
+        "javascript",
+        "python",
+        "rust"
+      ],
+      "byteConsensus": false,
+      "crossDecode": [
+        {
+          "decoder": "swift",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        }
+      ],
+      "crossDecodePassed": 16,
+      "crossDecodeTotal": 16,
+      "description": "Uncompressed nested JSON shapes and scalar types.",
+      "encodings": {
+        "javascript": {
+          "bytesHex": "d9cb1d8200a465636f756e7407656974656d7384f66568656c6c6f22f93e0066616374697665f5666e6573746564a26161016a6c6f6e6765722d6b65796576616c7565",
+          "ok": true
+        },
+        "python": {
+          "bytesHex": "d9cb1d8200a466616374697665f565636f756e7407656974656d7384f66568656c6c6f22fb3ff8000000000000666e6573746564a26161016a6c6f6e6765722d6b65796576616c7565",
+          "ok": true
+        },
+        "rust": {
+          "bytesHex": "d9cb1d8200a465636f756e7407656974656d7384f66568656c6c6f22f93e0066616374697665f5666e6573746564a26161016a6c6f6e6765722d6b65796576616c7565",
+          "ok": true
+        },
+        "swift": {
+          "bytesHex": "d9cb1d8200a465636f756e7407656974656d7384f66568656c6c6f22f93e0066616374697665f5666e6573746564a26161016a6c6f6e6765722d6b65796576616c7565",
+          "ok": true
+        }
+      },
+      "id": "v1-json-shapes",
+      "status": "passed"
+    },
+    {
+      "activeAdapters": [
+        "swift",
+        "javascript",
+        "python",
+        "rust"
+      ],
+      "byteConsensus": true,
+      "crossDecode": [
+        {
+          "decoder": "swift",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "rust",
+          "encoder": "rust",
+          "errorCode": null,
+          "passed": true
+        }
+      ],
+      "crossDecodePassed": 16,
+      "crossDecodeTotal": 16,
+      "description": "Unicode strings plus integers around compact CBOR-width boundaries.",
+      "encodings": {
+        "javascript": {
+          "bytesHex": "d9cb1d8200a264746578747243424f522d4c4420f09fa7a920636166c3a968696e746567657273880017181818ff19010020373818",
+          "ok": true
+        },
+        "python": {
+          "bytesHex": "d9cb1d8200a264746578747243424f522d4c4420f09fa7a920636166c3a968696e746567657273880017181818ff19010020373818",
+          "ok": true
+        },
+        "rust": {
+          "bytesHex": "d9cb1d8200a264746578747243424f522d4c4420f09fa7a920636166c3a968696e746567657273880017181818ff19010020373818",
+          "ok": true
+        },
+        "swift": {
+          "bytesHex": "d9cb1d8200a264746578747243424f522d4c4420f09fa7a920636166c3a968696e746567657273880017181818ff19010020373818",
+          "ok": true
+        }
+      },
+      "id": "v1-unicode-and-boundaries",
+      "status": "passed"
+    },
+    {
+      "activeAdapters": [
+        "swift",
+        "javascript",
+        "python"
+      ],
+      "byteConsensus": true,
+      "crossDecode": [
+        {
+          "decoder": "swift",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        }
+      ],
+      "crossDecodePassed": 9,
+      "crossDecodeTotal": 9,
+      "description": "Pre-1.0 range-tag compatibility surface.",
+      "encodings": {
+        "javascript": {
+          "bytesHex": "d90600a0",
+          "ok": true
+        },
+        "python": {
+          "bytesHex": "d90600a0",
+          "ok": true
+        },
+        "swift": {
+          "bytesHex": "d90600a0",
+          "ok": true
+        }
+      },
+      "id": "legacy-range-empty",
+      "status": "passed"
+    },
+    {
+      "activeAdapters": [
+        "swift",
+        "javascript",
+        "python"
+      ],
+      "byteConsensus": true,
+      "crossDecode": [
+        {
+          "decoder": "swift",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "swift",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "javascript",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "swift",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "javascript",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        },
+        {
+          "decoder": "python",
+          "encoder": "python",
+          "errorCode": null,
+          "passed": true
+        }
+      ],
+      "crossDecodePassed": 9,
+      "crossDecodeTotal": 9,
+      "description": "Legacy singleton tag with compression disabled.",
+      "encodings": {
+        "javascript": {
+          "bytesHex": "d90500a0",
+          "ok": true
+        },
+        "python": {
+          "bytesHex": "d90500a0",
+          "ok": true
+        },
+        "swift": {
+          "bytesHex": "d90500a0",
+          "ok": true
+        }
+      },
+      "id": "legacy-singleton-uncompressed",
+      "status": "passed"
+    }
+  ],
+  "generatedFrom": {
+    "interop": "2026-09-12T19:34:04Z",
+    "performance": "2026-09-13T05:48:03Z"
+  },
+  "implementations": [
+    {
+      "id": "swift",
+      "name": "Swift-CBORLD",
+      "reason": null,
+      "status": "passed"
+    },
+    {
+      "id": "javascript",
+      "name": "Digital Bazaar JavaScript",
+      "reason": "source adapter; no build required",
+      "status": "passed"
+    },
+    {
+      "id": "python",
+      "name": "Subfile Python",
+      "reason": "local source and dependencies import successfully",
+      "status": "passed"
+    },
+    {
+      "id": "rust",
+      "name": "ldclabs Rust",
+      "reason": null,
+      "status": "passed"
+    },
+    {
+      "id": "go-fxamacker",
+      "name": "fxamacker Go CBOR oracle",
+      "reason": null,
+      "status": "passed"
+    }
+  ],
+  "measurementScope": "in-process codec throughput; process startup and JSON protocol I/O excluded",
+  "performance": [
+    {
+      "correct": true,
+      "description": "CBOR-LD 1.0 envelope with the smallest uncompressed JSON object.",
+      "id": "v1-empty-uncompressed",
+      "implementations": {
+        "rust": {
+          "decodeNanoseconds": 232.2541,
+          "encodeNanoseconds": 254.4541,
+          "encodedByteCount": 6,
+          "peakResidentBytes": 1933312,
+          "roundTripNanoseconds": 486.70820000000003,
+          "roundTripsPerSecond": 2054619.1742814276,
+          "sourceJSONByteCount": 2
+        },
+        "swift": {
+          "decodeNanoseconds": 136.7042,
+          "encodeNanoseconds": 172.0917,
+          "encodedByteCount": 6,
+          "peakResidentBytes": 7094272,
+          "roundTripNanoseconds": 308.79589999999996,
+          "roundTripsPerSecond": 3238384.9656034946,
+          "sourceJSONByteCount": 2
+        }
+      },
+      "iterationsPerSample": 10000,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.5761485175159389,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "CBOR-LD 1.0 envelope using the default semantic table.",
+      "id": "v1-empty-default-table",
+      "implementations": {
+        "rust": {
+          "decodeNanoseconds": 4687.2625,
+          "encodeNanoseconds": 2968.3167,
+          "encodedByteCount": 6,
+          "peakResidentBytes": 2310144,
+          "roundTripNanoseconds": 7655.5792,
+          "roundTripsPerSecond": 130623.68945252371,
+          "sourceJSONByteCount": 2
+        },
+        "swift": {
+          "decodeNanoseconds": 2481.2542,
+          "encodeNanoseconds": 2344.0125,
+          "encodedByteCount": 6,
+          "peakResidentBytes": 7438336,
+          "roundTripNanoseconds": 4825.2667,
+          "roundTripsPerSecond": 207242.43076553676,
+          "sourceJSONByteCount": 2
+        }
+      },
+      "iterationsPerSample": 10000,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.5865608423260833,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Registry-1 semantic compression with an embedded context and typed terms.",
+      "id": "v1-inline-context-compressed",
+      "implementations": {
+        "rust": {
+          "decodeNanoseconds": 23289.0958,
+          "encodeNanoseconds": 22008.575,
+          "encodedByteCount": 110,
+          "peakResidentBytes": 2539520,
+          "roundTripNanoseconds": 45297.6708,
+          "roundTripsPerSecond": 22076.190283938395,
+          "sourceJSONByteCount": 155
+        },
+        "swift": {
+          "decodeNanoseconds": 15698.65,
+          "encodeNanoseconds": 16683.4459,
+          "encodedByteCount": 110,
+          "peakResidentBytes": 7831552,
+          "roundTripNanoseconds": 32382.0959,
+          "roundTripsPerSecond": 30881.2623830195,
+          "sourceJSONByteCount": 155
+        }
+      },
+      "iterationsPerSample": 10000,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.3988492573144409,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Custom registry type-table loader and compressed scalar value.",
+      "id": "v1-custom-type-table",
+      "implementations": {
+        "rust": {
+          "decodeNanoseconds": 12531.7209,
+          "encodeNanoseconds": 10815.9875,
+          "encodedByteCount": 44,
+          "peakResidentBytes": 2506752,
+          "roundTripNanoseconds": 23347.7084,
+          "roundTripsPerSecond": 42830.75592977682,
+          "sourceJSONByteCount": 61
+        },
+        "swift": {
+          "decodeNanoseconds": 8324.8333,
+          "encodeNanoseconds": 8861.4417,
+          "encodedByteCount": 44,
+          "peakResidentBytes": 7733248,
+          "roundTripNanoseconds": 17186.275,
+          "roundTripsPerSecond": 58185.96525425084,
+          "sourceJSONByteCount": 61
+        }
+      },
+      "iterationsPerSample": 10000,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.3585089497287806,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Uncompressed nested JSON shapes and scalar types.",
+      "id": "v1-json-shapes",
+      "implementations": {
+        "rust": {
+          "decodeNanoseconds": 1614.2625,
+          "encodeNanoseconds": 2180.8875,
+          "encodedByteCount": 67,
+          "peakResidentBytes": 2129920,
+          "roundTripNanoseconds": 3795.1499999999996,
+          "roundTripsPerSecond": 263494.1965403212,
+          "sourceJSONByteCount": 93
+        },
+        "swift": {
+          "decodeNanoseconds": 1557.9042,
+          "encodeNanoseconds": 689.5833,
+          "encodedByteCount": 67,
+          "peakResidentBytes": 7323648,
+          "roundTripNanoseconds": 2247.4875,
+          "roundTripsPerSecond": 444941.2955578173,
+          "sourceJSONByteCount": 93
+        }
+      },
+      "iterationsPerSample": 10000,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.6886189578362503,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Unicode strings plus integers around compact CBOR-width boundaries.",
+      "id": "v1-unicode-and-boundaries",
+      "implementations": {
+        "rust": {
+          "decodeNanoseconds": 1117.0833,
+          "encodeNanoseconds": 1287.4542,
+          "encodedByteCount": 53,
+          "peakResidentBytes": 2097152,
+          "roundTripNanoseconds": 2404.5375,
+          "roundTripsPerSecond": 415880.392799031,
+          "sourceJSONByteCount": 69
+        },
+        "swift": {
+          "decodeNanoseconds": 887.2958,
+          "encodeNanoseconds": 425.9916,
+          "encodedByteCount": 53,
+          "peakResidentBytes": 7274496,
+          "roundTripNanoseconds": 1313.2874,
+          "roundTripsPerSecond": 761447.9511491545,
+          "sourceJSONByteCount": 69
+        }
+      },
+      "iterationsPerSample": 10000,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.8309301528363098,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Deterministic uncompressed scaling document with 688 records.",
+      "id": "performance-records-688",
+      "implementations": {
+        "rust": {
+          "decodeNanoseconds": 905208.2857142857,
+          "encodeNanoseconds": 1116113.142857143,
+          "encodedByteCount": 45566,
+          "peakResidentBytes": 4325376,
+          "roundTripNanoseconds": 2021321.4285714286,
+          "roundTripsPerSecond": 494.72586886230715,
+          "sourceJSONByteCount": 65467
+        },
+        "swift": {
+          "decodeNanoseconds": 683970.2857142857,
+          "encodeNanoseconds": 343113.14285714284,
+          "encodedByteCount": 45566,
+          "peakResidentBytes": 9551872,
+          "roundTripNanoseconds": 1027083.4285714285,
+          "roundTripsPerSecond": 973.6307413613918,
+          "sourceJSONByteCount": 65467
+        }
+      },
+      "iterationsPerSample": 7,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 1.9680206810296674,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Deterministic uncompressed scaling document with 2720 records.",
+      "id": "performance-records-2720",
+      "implementations": {
+        "rust": {
+          "decodeNanoseconds": 3424542.0,
+          "encodeNanoseconds": 4728042.0,
+          "encodedByteCount": 183742,
+          "peakResidentBytes": 10584064,
+          "roundTripNanoseconds": 8152584.0,
+          "roundTripsPerSecond": 122.66049635305812,
+          "sourceJSONByteCount": 262624
+        },
+        "swift": {
+          "decodeNanoseconds": 2603708,
+          "encodeNanoseconds": 1381583,
+          "encodedByteCount": 183742,
+          "peakResidentBytes": 13828096,
+          "roundTripNanoseconds": 3985291,
+          "roundTripsPerSecond": 250.92270551886926,
+          "sourceJSONByteCount": 262624
+        }
+      },
+      "iterationsPerSample": 1,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 2.0456684342498455,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Deterministic uncompressed scaling document with 10800 records.",
+      "id": "performance-records-10800",
+      "implementations": {
+        "rust": {
+          "decodeNanoseconds": 13325667.0,
+          "encodeNanoseconds": 19431542.0,
+          "encodedByteCount": 733982,
+          "peakResidentBytes": 35880960,
+          "roundTripNanoseconds": 32757209.0,
+          "roundTripsPerSecond": 30.527631337578242,
+          "sourceJSONByteCount": 1051477
+        },
+        "swift": {
+          "decodeNanoseconds": 9642750,
+          "encodeNanoseconds": 5646125,
+          "encodedByteCount": 733982,
+          "peakResidentBytes": 34357248,
+          "roundTripNanoseconds": 15288875,
+          "roundTripsPerSecond": 65.40703616191512,
+          "sourceJSONByteCount": 1051477
+        }
+      },
+      "iterationsPerSample": 1,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 2.1425519536264113,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Deterministic uncompressed scaling document with 42200 records.",
+      "id": "performance-records-42200",
+      "implementations": {
+        "rust": {
+          "decodeNanoseconds": 58880000.0,
+          "encodeNanoseconds": 87287750.0,
+          "encodedByteCount": 2900582,
+          "peakResidentBytes": 148242432,
+          "roundTripNanoseconds": 146167750.0,
+          "roundTripsPerSecond": 6.841454424796168,
+          "sourceJSONByteCount": 4201944
+        },
+        "swift": {
+          "decodeNanoseconds": 37603833,
+          "encodeNanoseconds": 22145041,
+          "encodedByteCount": 2900582,
+          "peakResidentBytes": 115195904,
+          "roundTripNanoseconds": 59748874,
+          "roundTripsPerSecond": 16.73671708022481,
+          "sourceJSONByteCount": 4201944
+        }
+      },
+      "iterationsPerSample": 1,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 2.44636827800303,
+      "wireBytesEqual": true
+    },
+    {
+      "correct": true,
+      "description": "Deterministic uncompressed scaling document with 166400 records.",
+      "id": "performance-records-166400",
+      "implementations": {
+        "rust": {
+          "decodeNanoseconds": 210483625.0,
+          "encodeNanoseconds": 303519667.0,
+          "encodedByteCount": 11738512,
+          "peakResidentBytes": 564264960,
+          "roundTripNanoseconds": 514003292.0,
+          "roundTripsPerSecond": 1.9455128314625658,
+          "sourceJSONByteCount": 16862544
+        },
+        "swift": {
+          "decodeNanoseconds": 146147291,
+          "encodeNanoseconds": 90873417,
+          "encodedByteCount": 11738512,
+          "peakResidentBytes": 430292992,
+          "roundTripNanoseconds": 237020708,
+          "roundTripsPerSecond": 4.219040641799112,
+          "sourceJSONByteCount": 16862544
+        }
+      },
+      "iterationsPerSample": 1,
+      "swiftRoundTripFaster": true,
+      "swiftRoundTripSpeedupOverRust": 2.1686007789665367,
+      "wireBytesEqual": true
+    }
+  ],
+  "schemaVersion": 1,
+  "semanticComputeFamilies": [
+    {
+      "acceptance": "CPU reference, semantic contract, legality, Metal/C/WGSL lowering, catalogue registration, NIST vectors, and exact doctor parity.",
+      "adapterStatus": "bridge-present",
+      "catalogueStatus": "source-verified",
+      "cborldStatus": "new-family",
+      "ids": [
+        "cborld.batched-sha256.v1"
+      ],
+      "name": "Batched SHA-256",
+      "priority": "high",
+      "scMeasurementStatus": "pending",
+      "whySC": "Large context stores, fixture corpora, and signed payload batches are parallel; exact CPU reference and byte-for-byte parity fit SC's verification contract."
+    },
+    {
+      "acceptance": "Exact integer CPU/backend parity, explicit unequal-length semantics, empty-input fixture, and first/last mismatch fixtures.",
+      "adapterStatus": "bridge-present",
+      "catalogueStatus": "source-verified",
+      "cborldStatus": "new-family",
+      "ids": [
+        "cborld.byte-diff.v1"
+      ],
+      "name": "Byte diff and first mismatch",
+      "priority": "high",
+      "scMeasurementStatus": "pending",
+      "whySC": "This turns binary parity into an inspectable exact family rather than host-side ad hoc loops."
+    },
+    {
+      "acceptance": "Exact offsets against a CPU reference, bounded reads, definite/indefinite fixtures, malformed truncations, and machine-readable executed/skipped/unavailable/failed backend status.",
+      "adapterStatus": "cpu-reference",
+      "catalogueStatus": "source-verified",
+      "cborldStatus": "new-family",
+      "ids": [
+        "cborld.cbor-structural-scan.v1"
+      ],
+      "name": "Batched CBOR structural scan",
+      "priority": "high",
+      "scMeasurementStatus": "pending",
+      "whySC": "Validation across large independent corpora is parallel even though parsing one variable-length document is sequential."
+    },
+    {
+      "acceptance": "Overflow policy, zero-length segments, exact CPU/backend parity, and composition test with batched varint encoding.",
+      "adapterStatus": "cpu-reference",
+      "catalogueStatus": "source-verified",
+      "cborldStatus": "needs-variant",
+      "ids": [
+        "cborld.uint-prefix-scan.v1",
+        "cborld.byte-compaction.v1"
+      ],
+      "name": "UInt prefix scan and stream compaction",
+      "priority": "high",
+      "scMeasurementStatus": "pending",
+      "whySC": "The algorithm exists conceptually, but CBOR needs exact integer variants and an exclusive mode rather than Float-only arithmetic."
+    },
+    {
+      "acceptance": "Counts sum to byte count exactly; empty and all-symbol fixtures; no Float bin-edge conversion.",
+      "adapterStatus": "cpu-reference",
+      "catalogueStatus": "source-verified",
+      "cborldStatus": "needs-variant",
+      "ids": [
+        "cborld.byte-statistics.v1"
+      ],
+      "name": "Byte histogram and entropy",
+      "priority": "medium",
+      "scMeasurementStatus": "pending",
+      "whySC": "Reuse Histogram and local entropy machinery with a byte-exact input/output contract."
+    },
+    {
+      "acceptance": "RFC 8949 ordering fixtures, duplicate-key policy, variable-length keys, stable ties, and exact output indices.",
+      "adapterStatus": "cpu-reference",
+      "catalogueStatus": "source-verified",
+      "cborldStatus": "new-family",
+      "ids": [
+        "cborld.canonical-key-ordering.v1"
+      ],
+      "name": "Segmented canonical-key ordering",
+      "priority": "medium",
+      "scMeasurementStatus": "pending",
+      "whySC": "Large maps and batches can amortize key generation and sorting; arbitrary small JSON-LD documents usually cannot."
+    },
+    {
+      "acceptance": "Unicode boundary corpus, split continuation cases, exact error offset, and no out-of-bounds reads.",
+      "adapterStatus": "bridge-present",
+      "catalogueStatus": "source-verified",
+      "cborldStatus": "new-family",
+      "ids": [
+        "cborld.utf8-validation.v1"
+      ],
+      "name": "Batched UTF-8 validation",
+      "priority": "medium",
+      "scMeasurementStatus": "pending",
+      "whySC": "Useful for large untrusted corpora and reusable outside CBOR-LD; exact integer semantics suit parity."
+    },
+    {
+      "acceptance": "Exact byte parity, leading-zero preservation, invalid alphabet offsets, maximum supported length, and empty payload semantics.",
+      "adapterStatus": "cpu-reference",
+      "catalogueStatus": "source-verified",
+      "cborldStatus": "new-family",
+      "ids": [
+        "cborld.multibase-codec.v1"
+      ],
+      "name": "Batched Base58 and multibase codec",
+      "priority": "medium",
+      "scMeasurementStatus": "pending",
+      "whySC": "Credential and DID batches may be large; single-document calls are too small to justify dispatch."
+    },
+    {
+      "acceptance": "Boundary vectors, overlong/truncated rejection, overflow handling, and exact composition with UInt prefix scan.",
+      "adapterStatus": "bridge-present",
+      "catalogueStatus": "source-verified",
+      "cborldStatus": "new-family",
+      "ids": [
+        "cborld.unsigned-varint.v1"
+      ],
+      "name": "Batched unsigned varint codec",
+      "priority": "low",
+      "scMeasurementStatus": "pending",
+      "whySC": "Only worthwhile for migration tools processing large legacy corpora; modern CBOR-LD 1.0 uses ordinary CBOR integers."
+    },
+    {
+      "acceptance": "Collision fixtures, miss semantics, immutable table digest, and exact UInt output parity.",
+      "adapterStatus": "cpu-reference",
+      "catalogueStatus": "source-verified",
+      "cborldStatus": "candidate",
+      "ids": [
+        "cborld.dictionary-probe.v1"
+      ],
+      "name": "Batched context/type-table probe",
+      "priority": "low",
+      "scMeasurementStatus": "pending",
+      "whySC": "Only frozen tables and large batches are suitable; dynamic context resolution remains on CPU."
+    },
+    {
+      "acceptance": "Round-trip and exact compatibility bytes against the Swift and JavaScript CPU oracles; bounded input/output; pinned dictionary and context verification; missing-resource behavior; recursive-depth limits; and machine-readable executed/skipped/unavailable/failed backend status.",
+      "adapterStatus": "cpu-reference",
+      "catalogueStatus": "source-verified",
+      "cborldStatus": "new-family",
+      "ids": [
+        "cborld.whole-document-transform.v1"
+      ],
+      "name": "Whole-document CBOR-LD transform",
+      "priority": "low",
+      "scMeasurementStatus": "pending",
+      "whySC": "SC is adding this as a family. The Swift boundary therefore requires bounded work items, pinned external resources, explicit output limits, and asynchronous dispatch while retaining the existing processor as the CPU oracle."
+    },
+    {
+      "acceptance": "Grammar, control, AST, and recursive validation parity against cddl-rs; exact UTF-8 diagnostic offsets; CBOR and JSON inputs; regex-policy cases; resource-limit failures; catalogue registration; backend lowering; and exact doctor parity.",
+      "adapterStatus": "cpu-reference",
+      "catalogueStatus": "source-verified",
+      "cborldStatus": "new-family",
+      "ids": [
+        "cborld.cddl-validation.v1"
+      ],
+      "name": "CDDL parser and validator",
+      "priority": "low",
+      "scMeasurementStatus": "pending",
+      "whySC": "SC is adding this as a family. The Swift ABI supplies bounded schema/document buffers, root-rule selection, regex policy, AST metrics, and byte-addressed diagnostics while retaining an independently injected CPU parser as the oracle."
+    }
+  ],
+  "status": {
+    "interop": "passed",
+    "performance": "passed",
+    "semanticComputeBinarySDK": "pending",
+    "semanticComputePublicTiming": "pending"
+  },
+  "summary": {
+    "byteConsensusFixtures": 7,
+    "byteIdenticalPerformanceFixtures": 11,
+    "crossDecodePassed": 114,
+    "crossDecodeTotal": 114,
+    "fixtureCount": 8,
+    "performanceFixtureCount": 11,
+    "selectedCBORVectors": 64,
+    "swiftPerformanceWins": 11,
+    "swiftRoundTripSpeedupOverRust": 2.2173466757682125,
+    "validCBORVectors": 63
+  }
+}

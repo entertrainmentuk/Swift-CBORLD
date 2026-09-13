@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>CBOR-LD Interop Lab — reproduce, compare, challenge</title>
+  <meta name="description" content="A public evidence surface for CBOR-LD compatibility, cross-decoding, performance, and the pending SemanticCompute acceleration track.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#071315">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23071315'/%3E%3Cpath d='M18 21h18l10 11-10 11H18l9-11z' fill='none' stroke='%2369f0d0' stroke-width='5' stroke-linejoin='round'/%3E%3Ccircle cx='34' cy='32' r='3' fill='%23d7ff5f'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="interop-lab.css">
+  <script defer src="interop-lab.js"></script>
+</head>
+<body class="lab-body">
+  <a class="skip-link" href="#main">Skip to evidence</a>
+  <header class="topbar">
+    <div class="wrap nav-row">
+      <a class="brand" href="index.html" aria-label="Swift-CBORLD home"><span class="brand-mark" aria-hidden="true"><i></i></span><span>Swift‑CBORLD</span></a>
+      <span class="lab-divider" aria-hidden="true"></span>
+      <a class="lab-name" href="#top">Interop Lab</a>
+      <nav aria-label="Lab navigation">
+        <a href="#implementations">Implementations</a>
+        <a href="#matrix">Matrix</a>
+        <a href="#speed">Performance</a>
+        <a href="#sc-track">SC track</a>
+      </nav>
+      <div class="nav-actions">
+        <span class="status-chip"><span class="passed-dot" aria-hidden="true"></span><b id="header-status">loading evidence</b></span>
+        <button class="theme-button" type="button" aria-label="Use light theme" title="Change colour theme">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.36-6.36-1.42 1.42M7.06 16.94l-1.42 1.42m12.72 0-1.42-1.42M7.06 7.06 5.64 5.64M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="lab-hero" id="top">
+      <div class="wrap lab-hero-grid">
+        <div>
+          <p class="eyebrow">Open fixtures · independent implementations · explicit status</p>
+          <h1>Bring your<br><em>hardest fixture.</em></h1>
+          <p class="hero-lead">Run the same CBOR‑LD document through Swift, JavaScript, Python, and Rust. See every cross-decode, separate semantic agreement from exact bytes, and inspect where commercial acceleration has—and has not—been measured.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#matrix">Explore the matrix <span aria-hidden="true">↓</span></a>
+            <a class="button secondary" href="https://github.com/entertrainment/swift-cborld/tree/main/Interop">Review evidence contract</a>
+            <a class="button secondary" href="https://github.com/entertrainment/swift-cborld/issues/new?template=challenge-fixture.yml">Submit a fixture</a>
+          </div>
+        </div>
+        <aside class="lab-readout" aria-label="Latest evidence summary">
+          <div class="readout-head"><span>latest public evidence</span><b id="evidence-time">loading</b></div>
+          <div class="readout-grid">
+            <div><span>Cross-decodes</span><strong id="summary-cross">—</strong><small id="summary-cross-status">loading</small></div>
+            <div><span>Byte consensus</span><strong id="summary-bytes">—</strong><small>interop fixtures</small></div>
+            <div><span>Swift wins</span><strong id="summary-wins">—</strong><small>measured round trips</small></div>
+            <div><span>SC public timing</span><strong class="pending-text">pending</strong><small>never inferred from source</small></div>
+          </div>
+          <p class="readout-boundary"><span aria-hidden="true">◆</span> Results load from a generated snapshot of the repository’s machine-readable reports.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="implementation-section" id="implementations">
+      <div class="wrap">
+        <div class="lab-section-head">
+          <div><p class="eyebrow">Participants</p><h2>One corpus. Equal rows.</h2></div>
+          <p>No implementation receives a preferred correctness rule. Every active encoder is crossed through every active decoder for the selected fixture.</p>
+        </div>
+        <div class="implementation-grid" id="implementation-grid" aria-live="polite">
+          <div class="lab-loading">Loading implementation status…</div>
+        </div>
+        <div class="oracle-strip">
+          <div><span class="oracle-icon" aria-hidden="true">◇</span><p><b>Raw CBOR oracle</b><small><span id="vector-count">—</span> selected vectors checked independently; legacy rejection remains explicit.</small></p></div>
+          <div><span class="oracle-icon pending" aria-hidden="true">△</span><p><b>Schema and alternate implementations</b><small>CDDL and Java resources remain source-present until their executable lanes run.</small></p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="matrix-section" id="matrix">
+      <div class="wrap">
+        <div class="lab-section-head">
+          <div><p class="eyebrow">Cross-decoding explorer</p><h2>Every encoder meets every decoder.</h2></div>
+          <p>Select a fixture to inspect its complete decode grid, emitted bytes, and exact-consensus status.</p>
+        </div>
+        <div class="lab-toolbar">
+          <label for="matrix-fixture">Fixture</label>
+          <select id="matrix-fixture" disabled><option>Loading fixtures…</option></select>
+          <div class="toolbar-verdict" id="matrix-verdict"><span class="state-dot"></span><b>Loading</b><small>evidence snapshot</small></div>
+        </div>
+        <div class="matrix-workbench">
+          <div class="decode-grid-card">
+            <div class="lab-card-head"><span>decoder ↓ / encoder →</span><b id="decode-score">—</b></div>
+            <div class="decode-grid-scroll"><table class="decode-grid" id="decode-grid"><tbody><tr><td>Loading cross-decodes…</td></tr></tbody></table></div>
+          </div>
+          <aside class="fixture-inspector">
+            <span class="inspector-label">Selected specimen</span>
+            <h3 id="fixture-name">—</h3>
+            <p id="fixture-description">Loading evidence.</p>
+            <dl>
+              <div><dt>Semantic round trip</dt><dd id="fixture-semantic">—</dd></div>
+              <div><dt>Exact byte consensus</dt><dd id="fixture-bytes">—</dd></div>
+              <div><dt>Active adapters</dt><dd id="fixture-adapters">—</dd></div>
+            </dl>
+            <div class="hex-sample"><span>Swift encoding</span><code id="fixture-hex">—</code></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="speed-section" id="speed">
+      <div class="wrap">
+        <div class="lab-section-head">
+          <div><p class="eyebrow">Release-mode measurements</p><h2>Inspect the operation, not only the headline.</h2></div>
+          <p id="measurement-scope">In-process measurements load from the latest report.</p>
+        </div>
+        <div class="speed-workbench">
+          <div class="lab-toolbar speed-toolbar">
+            <label for="speed-fixture">Fixture</label>
+            <select id="speed-fixture" disabled><option>Loading measurements…</option></select>
+            <div class="operation-tabs" role="tablist" aria-label="Benchmark operation">
+              <button type="button" role="tab" aria-selected="true" data-operation="roundTrip">Round trip</button>
+              <button type="button" role="tab" aria-selected="false" data-operation="encode">Encode</button>
+              <button type="button" role="tab" aria-selected="false" data-operation="decode">Decode</button>
+            </div>
+          </div>
+          <div class="speed-bars" aria-live="polite">
+            <div class="speed-row"><div class="speed-label"><span>Swift</span><strong id="speed-swift-value">—</strong><small id="speed-swift-rate">—</small></div><div class="speed-track"><div class="speed-bar swift" id="speed-swift-bar"><span></span></div></div></div>
+            <div class="speed-row"><div class="speed-label"><span>Rust</span><strong id="speed-rust-value">—</strong><small id="speed-rust-rate">—</small></div><div class="speed-track"><div class="speed-bar rust" id="speed-rust-bar"><span></span></div></div></div>
+            <div class="speed-row pending-row"><div class="speed-label"><span>Swift + SC</span><strong>pending</strong><small>binary SDK measurement absent</small></div><div class="speed-track"><div class="speed-bar pending"><span>not measured</span></div></div></div>
+          </div>
+          <div class="speed-verdicts">
+            <div><span>Current winner</span><strong id="speed-winner">—</strong></div>
+            <div><span>Exact output</span><strong id="speed-exact">—</strong></div>
+            <div><span>Iterations / sample</span><strong id="speed-iterations">—</strong></div>
+            <div><span>Environment</span><strong id="speed-environment">—</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sc-track-section" id="sc-track">
+      <div class="wrap">
+        <div class="lab-section-head">
+          <div><p class="eyebrow">Commercial acceleration · evidence held open</p><h2>SemanticCompute gets a track, not a free pass.</h2></div>
+          <p>Catalogue presence, adapter source, binary execution, parity, and performance are different claims. The lab will not convert one into another.</p>
+        </div>
+        <div class="sc-gates">
+          <div class="gate passed"><span>01</span><b>Public CBORLD contract</b><small>present</small></div>
+          <div class="gate passed"><span>02</span><b>Deterministic CPU reference</b><small>present</small></div>
+            <div class="gate partial"><span>03</span><b>Local adapter evidence</b><small>4 families · excluded tree</small></div>
+          <div class="gate pending"><span>04</span><b>Commercial binary SDK</b><small>pending</small></div>
+          <div class="gate pending"><span>05</span><b>Public SC-on timing</b><small>pending</small></div>
+        </div>
+        <div class="family-panel">
+          <div class="family-toolbar">
+            <span>CBOR‑LD family track</span>
+            <div role="group" aria-label="Filter families">
+              <button class="family-filter active" type="button" data-family-filter="all">All</button>
+              <button class="family-filter" type="button" data-family-filter="bridge-present">Local bridge evidence</button>
+              <button class="family-filter" type="button" data-family-filter="cpu-reference">CPU reference</button>
+            </div>
+          </div>
+          <div class="family-list" id="family-list"><div class="lab-loading">Loading family contracts…</div></div>
+        </div>
+        <div class="commercial-boundary">
+          <span class="boundary-mark" aria-hidden="true">SC</span>
+          <div><b>Separate commercial binary</b><p>SemanticCompute is not required to build, test, or use Swift‑CBORLD core. Any future accelerated result must identify the SC version, binary hash, backend, hardware, fallback status, and public CPU reference.</p></div>
+          <span class="boundary-state">distribution pending</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="challenge-section" id="challenge">
+      <div class="wrap challenge-grid">
+        <div><p class="eyebrow">Community challenge lane</p><h2>Make the corpus harder.</h2><p>Contribute a valid edge case, a malformed specimen, a context rule, a canonical-byte disagreement, or a scaling document. The value is a portable regression fixture—not a promotional issue.</p></div>
+        <div class="challenge-actions">
+          <a class="challenge-card" href="https://github.com/entertrainment/swift-cborld/issues/new?template=challenge-fixture.yml"><span>01</span><b>Submit a challenge fixture</b><small>Describe the semantic expectation and permitted byte variation.</small><i aria-hidden="true">→</i></a>
+          <a class="challenge-card" href="https://github.com/entertrainment/swift-cborld/blob/main/Interop/fixtures/cases.json"><span>02</span><b>Inspect the retained corpus</b><small>Review the exact documents, formats, registry IDs, and adapter sets.</small><i aria-hidden="true">→</i></a>
+          <a class="challenge-card" href="https://github.com/entertrainment/swift-cborld/blob/main/Interop/STATUS.md"><span>03</span><b>Audit the evidence boundary</b><small>See what is source-present, executed, measured, or unavailable.</small><i aria-hidden="true">→</i></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-grid">
+      <div><a class="brand footer-brand" href="index.html"><span class="brand-mark" aria-hidden="true"><i></i></span><span>Swift‑CBORLD</span></a><p>The Interop Lab is an independent evidence surface. Referenced implementations retain their own names, copyrights, and licences. SemanticCompute remains a separate commercial binary product.</p></div>
+      <div class="footer-links"><div><b>Lab</b><a href="#matrix">Cross-decodes</a><a href="#speed">Performance</a><a href="#sc-track">SC track</a></div><div><b>Project</b><a href="index.html">Product page</a><a href="https://github.com/entertrainment/swift-cborld">Repository</a><a href="https://json-ld.github.io/cbor-ld-spec/">Specification</a></div></div>
+    </div>
+    <div class="wrap footer-bottom"><span>Measured wins, washes, losses, and gaps.</span><span id="footer-generated">Evidence snapshot loading.</span></div>
+  </footer>
+</body>
+</html>

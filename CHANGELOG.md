@@ -27,6 +27,8 @@ Initial source-first preview.
 - A neutral CBOR-LD Interop Lab with immutable comparator pins, explicit
   evidence states, portable result schemas, a challenge-fixture intake, and a
   three-lane CPU/provider benchmark contract.
+- A responsive GitHub Pages product and Interop Lab experience backed by a
+  checksummed 114/114 cross-decode snapshot and exact retained fixture inputs.
 
 ### Release boundaries
 
