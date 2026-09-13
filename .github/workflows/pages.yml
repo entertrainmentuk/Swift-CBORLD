@@ -31,7 +31,7 @@ jobs:
           xcrun docc convert Sources/CBORLD/CBORLD.docc
           --additional-symbol-graph-dir .build/public-symbols
           --output-path docs/api
-          --hosting-base-path swift-cborld/api
+          --hosting-base-path Swift-CBORLD/api
           --warnings-as-errors
           --fallback-display-name Swift-CBORLD
           --fallback-bundle-identifier io.github.entertrainment.swift-cborld

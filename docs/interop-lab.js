@@ -8,7 +8,7 @@ else if (matchMedia('(prefers-color-scheme: light)').matches) root.dataset.theme
 function updateThemeControl() {
   const dark = root.dataset.theme === 'dark';
   themeButton.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
-  themeMeta.content = dark ? '#071315' : '#f4f6f2';
+  themeMeta.content = dark ? '#08080a' : '#f8f6f6';
 }
 themeButton.addEventListener('click', () => {
   root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';

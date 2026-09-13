@@ -46,7 +46,7 @@ if command -v xcrun >/dev/null 2>&1 && xcrun --find docc >/dev/null 2>&1; then
   xcrun docc convert Sources/CBORLD/CBORLD.docc \
     --additional-symbol-graph-dir .build/public-symbols \
     --output-path .build/docc-validation \
-    --hosting-base-path swift-cborld/api \
+    --hosting-base-path Swift-CBORLD/api \
     --warnings-as-errors \
     --fallback-display-name Swift-CBORLD \
     --fallback-bundle-identifier io.github.entertrainment.swift-cborld

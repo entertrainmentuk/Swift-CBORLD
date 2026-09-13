@@ -3,7 +3,7 @@
 All notable changes to Swift-CBORLD will be documented in this file. The
 project follows Semantic Versioning after the preview API has stabilized.
 
-## 0.1.0 - Unreleased
+## 0.1.0 - 2026-09-13
 
 Initial source-first preview.
 
@@ -29,6 +29,8 @@ Initial source-first preview.
   three-lane CPU/provider benchmark contract.
 - A responsive GitHub Pages product and Interop Lab experience backed by a
   checksummed 114/114 cross-decode snapshot and exact retained fixture inputs.
+- An opt-in, digest-only SemanticCompute Live byte-parity check with no core
+  dependency and no authentication or accelerator-execution claim.
 
 ### Release boundaries
 

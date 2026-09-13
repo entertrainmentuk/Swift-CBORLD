@@ -86,7 +86,7 @@
 .speed-track { height: 44px; }
 .speed-bar { width: var(--bar, 10%); min-width: 72px; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding: 0 11px; border-radius: 5px; transition: width .45s ease; }
 .speed-bar span { font: .58rem var(--mono); text-transform: uppercase; }
-.speed-bar.swift { color: var(--mint-ink); background: var(--mint); }.speed-bar.rust { color: #240e06; background: color-mix(in srgb, var(--rust) 82%, white); }
+.speed-bar.swift { color: var(--mint-ink); background: var(--mint); }.speed-bar.rust { color: #170f11; background: color-mix(in srgb, var(--rust) 82%, white); }
 .speed-bar.pending { width: 100%; min-width: 0; justify-content: center; color: var(--faint); border: 1px dashed var(--line); background: repeating-linear-gradient(135deg, transparent 0 9px, color-mix(in srgb, var(--line) 35%, transparent) 9px 10px); }
 .pending-row { opacity: .82; }
 .speed-verdicts { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); background: var(--bg-soft); }

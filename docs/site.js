@@ -12,7 +12,7 @@ if (savedTheme === 'light' || savedTheme === 'dark') {
 function updateThemeControl() {
   const isDark = root.dataset.theme === 'dark';
   themeButton.setAttribute('aria-label', isDark ? 'Use light theme' : 'Use dark theme');
-  themeMeta.setAttribute('content', isDark ? '#071315' : '#f4f6f2');
+  themeMeta.setAttribute('content', isDark ? '#08080a' : '#f8f6f6');
 }
 
 themeButton.addEventListener('click', () => {

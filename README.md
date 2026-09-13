@@ -286,6 +286,11 @@ swift build -c release -Xswiftc -warnings-as-errors \
 swift test -c release
 ```
 
+The default suite remains offline. An additional opt-in, digest-only
+SemanticCompute Live byte-parity check is documented in
+[SEMANTICCOMPUTE_LIVE.md](SEMANTICCOMPUTE_LIVE.md); it is integration evidence,
+not an authentication or accelerator-execution claim.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and
 [RELEASING.md](RELEASING.md) before proposing changes or a tag.
 
