@@ -1,0 +1,712 @@
+swift.class	CBORLDFileChunks.AsyncIterator	final class AsyncIterator
+swift.class	CBORLDFileSink	final class CBORLDFileSink
+swift.class	CBORLDResourceCache	actor CBORLDResourceCache
+swift.enum	CBORLD	enum CBORLD
+swift.enum	CBORLDBatchInputMeasure	enum CBORLDBatchInputMeasure
+swift.enum	CBORLDBatchOutcome	enum CBORLDBatchOutcome<Value> where Value : Sendable
+swift.enum	CBORLDBatchOutputMeasure	enum CBORLDBatchOutputMeasure
+swift.enum	CBORLDBatchResultOrder	enum CBORLDBatchResultOrder
+swift.enum	CBORLDDataItem	indirect enum CBORLDDataItem
+swift.enum	CBORLDFormat	enum CBORLDFormat
+swift.enum	CBORLDHashAlgorithm	enum CBORLDHashAlgorithm
+swift.enum	CBORLDHashDomain	enum CBORLDHashDomain
+swift.enum	CBORLDJSONEvent	enum CBORLDJSONEvent
+swift.enum	CBORLDSerializationMode	enum CBORLDSerializationMode
+swift.enum	CBORLDValueDecoder.DataDecodingStrategy	enum DataDecodingStrategy
+swift.enum	CBORLDValueDecoder.DateDecodingStrategy	enum DateDecodingStrategy
+swift.enum	CBORLDValueDecoder.KeyDecodingStrategy	enum KeyDecodingStrategy
+swift.enum	CBORLDValueDecoder.NonConformingFloatDecodingStrategy	enum NonConformingFloatDecodingStrategy
+swift.enum	CBORLDValueEncoder.DataEncodingStrategy	enum DataEncodingStrategy
+swift.enum	CBORLDValueEncoder.DateEncodingStrategy	enum DateEncodingStrategy
+swift.enum	CBORLDValueEncoder.KeyEncodingStrategy	enum KeyEncodingStrategy
+swift.enum	CBORLDValueEncoder.NonConformingFloatEncodingStrategy	enum NonConformingFloatEncodingStrategy
+swift.enum	CBORLDVerificationKind	enum CBORLDVerificationKind
+swift.enum	CBORLDVerificationStatus	enum CBORLDVerificationStatus
+swift.enum	JSONValue	enum JSONValue
+swift.enum.case	CBORLDBatchInputMeasure.callerDefined	case callerDefined
+swift.enum.case	CBORLDBatchInputMeasure.encodedBytes	case encodedBytes
+swift.enum.case	CBORLDBatchInputMeasure.structuralCost	case structuralCost
+swift.enum.case	CBORLDBatchOutcome.failure(_:)	case failure(CBORLDBatchFailure)
+swift.enum.case	CBORLDBatchOutcome.success(value:observation:)	case success(value: Value, observation: CBORLDBatchObservation?)
+swift.enum.case	CBORLDBatchOutputMeasure.encodedBytes	case encodedBytes
+swift.enum.case	CBORLDBatchOutputMeasure.jsonText	case jsonText
+swift.enum.case	CBORLDBatchResultOrder.completionOrder	case completionOrder
+swift.enum.case	CBORLDBatchResultOrder.inputOrder(maximumReorderBuffer:)	case inputOrder(maximumReorderBuffer: Int)
+swift.enum.case	CBORLDDataItem.array(_:)	case array([CBORLDDataItem])
+swift.enum.case	CBORLDDataItem.bool(_:)	case bool(Bool)
+swift.enum.case	CBORLDDataItem.bytes(_:)	case bytes(Data)
+swift.enum.case	CBORLDDataItem.float(_:)	case float(Double)
+swift.enum.case	CBORLDDataItem.map(_:)	case map([CBORLDMapEntry])
+swift.enum.case	CBORLDDataItem.negative(_:)	case negative(Int64)
+swift.enum.case	CBORLDDataItem.null	case null
+swift.enum.case	CBORLDDataItem.simple(_:)	case simple(UInt8)
+swift.enum.case	CBORLDDataItem.tagged(_:_:)	case tagged(UInt64, CBORLDDataItem)
+swift.enum.case	CBORLDDataItem.text(_:)	case text(String)
+swift.enum.case	CBORLDDataItem.unsigned(_:)	case unsigned(UInt64)
+swift.enum.case	CBORLDFormat.cborLD1	case cborLD1
+swift.enum.case	CBORLDFormat.legacyRange	case legacyRange
+swift.enum.case	CBORLDFormat.legacySingleton	case legacySingleton
+swift.enum.case	CBORLDHashAlgorithm.sha256	case sha256
+swift.enum.case	CBORLDHashAlgorithm.sha384	case sha384
+swift.enum.case	CBORLDHashAlgorithm.sha512	case sha512
+swift.enum.case	CBORLDHashDomain.contextDocument	case contextDocument
+swift.enum.case	CBORLDHashDomain.documentDictionary	case documentDictionary
+swift.enum.case	CBORLDHashDomain.documentStructure	case documentStructure
+swift.enum.case	CBORLDHashDomain.encodedBytes	case encodedBytes
+swift.enum.case	CBORLDJSONEvent.beginArray(count:)	case beginArray(count: Int?)
+swift.enum.case	CBORLDJSONEvent.beginObject(count:)	case beginObject(count: Int?)
+swift.enum.case	CBORLDJSONEvent.bool(_:)	case bool(Bool)
+swift.enum.case	CBORLDJSONEvent.endArray	case endArray
+swift.enum.case	CBORLDJSONEvent.endObject	case endObject
+swift.enum.case	CBORLDJSONEvent.integer(_:)	case integer(Int64)
+swift.enum.case	CBORLDJSONEvent.key(_:)	case key(String)
+swift.enum.case	CBORLDJSONEvent.null	case null
+swift.enum.case	CBORLDJSONEvent.number(_:)	case number(Double)
+swift.enum.case	CBORLDJSONEvent.string(_:)	case string(String)
+swift.enum.case	CBORLDSerializationMode.compatibility	case compatibility
+swift.enum.case	CBORLDSerializationMode.coreDeterministic	case coreDeterministic
+swift.enum.case	CBORLDSerializationMode.deterministic	case deterministic
+swift.enum.case	CBORLDSerializationMode.lengthFirstDeterministic	case lengthFirstDeterministic
+swift.enum.case	CBORLDValueDecoder.DataDecodingStrategy.base64	case base64
+swift.enum.case	CBORLDValueDecoder.DataDecodingStrategy.custom(_:)	case custom((any Decoder) throws -> Data)
+swift.enum.case	CBORLDValueDecoder.DataDecodingStrategy.deferredToData	case deferredToData
+swift.enum.case	CBORLDValueDecoder.DateDecodingStrategy.custom(_:)	case custom((any Decoder) throws -> Date)
+swift.enum.case	CBORLDValueDecoder.DateDecodingStrategy.deferredToDate	case deferredToDate
+swift.enum.case	CBORLDValueDecoder.DateDecodingStrategy.iso8601	case iso8601
+swift.enum.case	CBORLDValueDecoder.DateDecodingStrategy.millisecondsSince1970	case millisecondsSince1970
+swift.enum.case	CBORLDValueDecoder.DateDecodingStrategy.secondsSince1970	case secondsSince1970
+swift.enum.case	CBORLDValueDecoder.KeyDecodingStrategy.convertFromSnakeCase	case convertFromSnakeCase
+swift.enum.case	CBORLDValueDecoder.KeyDecodingStrategy.custom(_:)	case custom(([any CodingKey]) -> any CodingKey)
+swift.enum.case	CBORLDValueDecoder.KeyDecodingStrategy.useDefaultKeys	case useDefaultKeys
+swift.enum.case	CBORLDValueDecoder.NonConformingFloatDecodingStrategy.convertFromString(positiveInfinity:negativeInfinity:nan:)	case convertFromString(positiveInfinity: String, negativeInfinity: String, nan: String)
+swift.enum.case	CBORLDValueDecoder.NonConformingFloatDecodingStrategy.throw	case `throw`
+swift.enum.case	CBORLDValueEncoder.DataEncodingStrategy.base64	case base64
+swift.enum.case	CBORLDValueEncoder.DataEncodingStrategy.custom(_:)	case custom((Data, any Encoder) throws -> Void)
+swift.enum.case	CBORLDValueEncoder.DataEncodingStrategy.deferredToData	case deferredToData
+swift.enum.case	CBORLDValueEncoder.DateEncodingStrategy.custom(_:)	case custom((Date, any Encoder) throws -> Void)
+swift.enum.case	CBORLDValueEncoder.DateEncodingStrategy.deferredToDate	case deferredToDate
+swift.enum.case	CBORLDValueEncoder.DateEncodingStrategy.iso8601	case iso8601
+swift.enum.case	CBORLDValueEncoder.DateEncodingStrategy.millisecondsSince1970	case millisecondsSince1970
+swift.enum.case	CBORLDValueEncoder.DateEncodingStrategy.secondsSince1970	case secondsSince1970
+swift.enum.case	CBORLDValueEncoder.KeyEncodingStrategy.convertToSnakeCase	case convertToSnakeCase
+swift.enum.case	CBORLDValueEncoder.KeyEncodingStrategy.custom(_:)	case custom(([any CodingKey]) -> any CodingKey)
+swift.enum.case	CBORLDValueEncoder.KeyEncodingStrategy.useDefaultKeys	case useDefaultKeys
+swift.enum.case	CBORLDValueEncoder.NonConformingFloatEncodingStrategy.convertToString(positiveInfinity:negativeInfinity:nan:)	case convertToString(positiveInfinity: String, negativeInfinity: String, nan: String)
+swift.enum.case	CBORLDValueEncoder.NonConformingFloatEncodingStrategy.throw	case `throw`
+swift.enum.case	CBORLDVerificationKind.contextDocument	case contextDocument
+swift.enum.case	CBORLDVerificationKind.documentDecoding	case documentDecoding
+swift.enum.case	CBORLDVerificationKind.documentDictionary	case documentDictionary
+swift.enum.case	CBORLDVerificationKind.envelope	case envelope
+swift.enum.case	CBORLDVerificationKind.envelopeMetadata	case envelopeMetadata
+swift.enum.case	CBORLDVerificationKind.formatSupport	case formatSupport
+swift.enum.case	CBORLDVerificationKind.manifest	case manifest
+swift.enum.case	CBORLDVerificationKind.structuralFingerprint	case structuralFingerprint
+swift.enum.case	CBORLDVerificationKind.transportDigest	case transportDigest
+swift.enum.case	CBORLDVerificationStatus.invalid	case invalid
+swift.enum.case	CBORLDVerificationStatus.mismatch	case mismatch
+swift.enum.case	CBORLDVerificationStatus.notChecked	case notChecked
+swift.enum.case	CBORLDVerificationStatus.unavailable	case unavailable
+swift.enum.case	CBORLDVerificationStatus.verified	case verified
+swift.enum.case	JSONValue.array(_:)	case array([JSONValue])
+swift.enum.case	JSONValue.bool(_:)	case bool(Bool)
+swift.enum.case	JSONValue.integer(_:)	case integer(Int64)
+swift.enum.case	JSONValue.null	case null
+swift.enum.case	JSONValue.number(_:)	case number(Double)
+swift.enum.case	JSONValue.object(_:)	case object([String : JSONValue])
+swift.enum.case	JSONValue.string(_:)	case string(String)
+swift.func.op	JSONValue.==(_:_:)	static func == (lhs: JSONValue, rhs: JSONValue) -> Bool
+swift.init	CBORLDBatchFailure.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDBatchInputMeasure.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDBatchObservation.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDBatchOutputMeasure.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDCodecContext.init(type:term:registryEntryID:)	init(type: String, term: String, registryEntryID: UInt64?)
+swift.init	CBORLDCodecIdentifier.init(rawValue:)	init(rawValue: String)
+swift.init	CBORLDCodecIdentifier.init(stringLiteral:)	init(stringLiteral value: String)
+swift.init	CBORLDContextLoadingPolicy.init(from:)	init(from decoder: Decoder) throws
+swift.init	CBORLDContextLoadingPolicy.init(maximumContextDocuments:maximumContextBytes:maximumImportDepth:maximumRedirects:maximumTermDefinitions:requiresPinnedContexts:allowedURLSchemes:allowedHosts:allowedMediaTypes:)	init(maximumContextDocuments: Int = 128, maximumContextBytes: Int = 16 * 1_024 * 1_024, maximumImportDepth: Int = 8, maximumRedirects: Int = 8, maximumTermDefinitions: Int = 100_000, requiresPinnedContexts: Bool = false, allowedURLSchemes: Set<String>? = nil, allowedHosts: Set<String>? = nil, allowedMediaTypes: Set<String>? = nil)
+swift.init	CBORLDContextRegistry.init(documents:expectedFingerprints:contextFallback:)	init(documents: [String : JSONValue] = [:], expectedFingerprints: [String : CBORLDDigest] = [:], contextFallback: @escaping CBORLDContextDocumentLoader)
+swift.init	CBORLDContextRegistry.init(documents:expectedFingerprints:fallback:)	init(documents: [String : JSONValue] = [:], expectedFingerprints: [String : CBORLDDigest] = [:], fallback: CBORLDDocumentLoader? = nil)
+swift.init	CBORLDContextRequest.init(url:maximumByteCount:maximumRedirects:importDepth:)	init(url: String, maximumByteCount: Int, maximumRedirects: Int, importDepth: Int)
+swift.init	CBORLDDataSink.init()	init()
+swift.init	CBORLDDecoder.init(configuration:supportedFormats:dictionaries:requiredDictionaryFingerprints:legacyApplicationContextMap:documentLoader:diagnostic:codecs:allowsProvisionalRegistryEntries:contextPolicy:contextDocumentLoader:)	init(configuration: CBORLDDecodingConfiguration, supportedFormats: Set<CBORLDFormat> = Set(CBORLDFormat.allCases), dictionaries: [CBORLDDocumentDictionary] = [.unregistered], requiredDictionaryFingerprints: [UInt64 : CBORLDDigest] = [:], legacyApplicationContextMap: [String : UInt64]? = nil, documentLoader: CBORLDDocumentLoader? = nil, diagnostic: ((String) -> Void)? = nil, codecs: [any CBORLDTypedValueCodec] = [], allowsProvisionalRegistryEntries: Bool = true, contextPolicy: CBORLDContextLoadingPolicy = .init(), contextDocumentLoader: CBORLDContextDocumentLoader? = nil)
+swift.init	CBORLDDecoder.init(supportedFormats:dictionaries:requiredDictionaryFingerprints:legacyApplicationContextMap:documentLoader:limits:policy:diagnostic:codecs:allowsProvisionalRegistryEntries:contextPolicy:contextDocumentLoader:)	init(supportedFormats: Set<CBORLDFormat> = Set(CBORLDFormat.allCases), dictionaries: [CBORLDDocumentDictionary] = [.unregistered], requiredDictionaryFingerprints: [UInt64 : CBORLDDigest] = [:], legacyApplicationContextMap: [String : UInt64]? = nil, documentLoader: CBORLDDocumentLoader? = nil, limits: CBORLDDecodingLimits = .init(), policy: CBORLDDecodingPolicy = .init(), diagnostic: ((String) -> Void)? = nil, codecs: [any CBORLDTypedValueCodec] = [], allowsProvisionalRegistryEntries: Bool = true, contextPolicy: CBORLDContextLoadingPolicy = .init(), contextDocumentLoader: CBORLDContextDocumentLoader? = nil)
+swift.init	CBORLDDecodingConfiguration.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDDecodingConfiguration.init(limits:policy:)	init(limits: CBORLDDecodingLimits = .init(), policy: CBORLDDecodingPolicy = .init())
+swift.init	CBORLDDecodingLimits.init(from:)	init(from decoder: Decoder) throws
+swift.init	CBORLDDecodingLimits.init(maximumInputBytes:maximumNestingDepth:maximumContainerItems:rejectDuplicateMapKeys:allowsIndefiniteLengthItems:maximumDiagnosticNodes:cancellationCheckStride:)	init(maximumInputBytes: Int = 64 * 1_024 * 1_024, maximumNestingDepth: Int = 128, maximumContainerItems: Int = 1_000_000, rejectDuplicateMapKeys: Bool = false, allowsIndefiniteLengthItems: Bool = true, maximumDiagnosticNodes: Int = 10_000, cancellationCheckStride: Int = 1_024)
+swift.init	CBORLDDecodingOptions.init(configuration:documentLoader:typeTableLoader:applicationContextMap:diagnostic:registryEntryLoader:callerProvidedTypeTable:codecs:allowsProvisionalRegistryEntries:contextPolicy:contextDocumentLoader:)	init(configuration: CBORLDDecodingConfiguration, documentLoader: CBORLDDocumentLoader? = nil, typeTableLoader: CBORLDTypeTableLoader? = nil, applicationContextMap: [String : UInt64]? = nil, diagnostic: ((String) -> Void)? = nil, registryEntryLoader: CBORLDRegistryEntryLoader? = nil, callerProvidedTypeTable: CBORLDTypeTable? = nil, codecs: [any CBORLDTypedValueCodec] = [], allowsProvisionalRegistryEntries: Bool = true, contextPolicy: CBORLDContextLoadingPolicy = .init(), contextDocumentLoader: CBORLDContextDocumentLoader? = nil)
+swift.init	CBORLDDecodingOptions.init(documentLoader:typeTableLoader:applicationContextMap:limits:policy:diagnostic:registryEntryLoader:callerProvidedTypeTable:codecs:allowsProvisionalRegistryEntries:contextPolicy:contextDocumentLoader:)	init(documentLoader: CBORLDDocumentLoader? = nil, typeTableLoader: CBORLDTypeTableLoader? = nil, applicationContextMap: [String : UInt64]? = nil, limits: CBORLDDecodingLimits = .init(), policy: CBORLDDecodingPolicy = .init(), diagnostic: ((String) -> Void)? = nil, registryEntryLoader: CBORLDRegistryEntryLoader? = nil, callerProvidedTypeTable: CBORLDTypeTable? = nil, codecs: [any CBORLDTypedValueCodec] = [], allowsProvisionalRegistryEntries: Bool = true, contextPolicy: CBORLDContextLoadingPolicy = .init(), contextDocumentLoader: CBORLDContextDocumentLoader? = nil)
+swift.init	CBORLDDecodingPolicy.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDDecodingPolicy.init(rejectNonPreferredIntegerWidths:rejectNonPreferredLengthWidths:rejectNonPreferredFloatingPoint:requiredSerializationMode:allowsReservedSimpleValuesInLosslessMode:)	init(rejectNonPreferredIntegerWidths: Bool = false, rejectNonPreferredLengthWidths: Bool = false, rejectNonPreferredFloatingPoint: Bool = false, requiredSerializationMode: CBORLDSerializationMode? = nil, allowsReservedSimpleValuesInLosslessMode: Bool = false)
+swift.init	CBORLDDictionaryBinding.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDDictionaryBinding.init(registryEntryID:fingerprint:)	init(registryEntryID: UInt64, fingerprint: CBORLDDigest)
+swift.init	CBORLDDigest.init(algorithm:domain:version:bytes:)	init(algorithm: CBORLDHashAlgorithm, domain: CBORLDHashDomain, version: UInt8 = 1, bytes: Data) throws
+swift.init	CBORLDDigest.init(algorithm:domain:version:hex:)	init(algorithm: CBORLDHashAlgorithm, domain: CBORLDHashDomain, version: UInt8 = 1, hex: String) throws
+swift.init	CBORLDDigest.init(from:)	init(from decoder: Decoder) throws
+swift.init	CBORLDDocumentDictionary.init(code:profileName:profileVersion:contexts:typedValues:uris:untypedValues:processingModel:provisional:)	init(code: UInt64, profileName: String? = nil, profileVersion: String? = nil, contexts: [String : UInt64] = [:], typedValues: [String : CBORLDValueTable] = [:], uris: [String : UInt64] = [:], untypedValues: CBORLDValueTable = [:], processingModel: CBORLDProcessingModel? = nil, provisional: Bool = false)
+swift.init	CBORLDDocumentDictionary.init(from:)	init(from decoder: Decoder) throws
+swift.init	CBORLDEncoder.init(format:serializationMode:dictionary:documentLoader:diagnostic:codecs:limits:contextPolicy:contextDocumentLoader:)	init(format: CBORLDFormat = .cborLD1, serializationMode: CBORLDSerializationMode = .compatibility, dictionary: CBORLDDocumentDictionary = .unregistered, documentLoader: CBORLDDocumentLoader? = nil, diagnostic: ((String) -> Void)? = nil, codecs: [any CBORLDTypedValueCodec] = [], limits: CBORLDEncodingLimits = .init(), contextPolicy: CBORLDContextLoadingPolicy = .init(), contextDocumentLoader: CBORLDContextDocumentLoader? = nil)
+swift.init	CBORLDEncodingLimits.init(from:)	init(from decoder: Decoder) throws
+swift.init	CBORLDEncodingLimits.init(maximumOutputBytes:maximumNestingDepth:maximumContainerItems:cancellationCheckStride:)	init(maximumOutputBytes: Int = 64 * 1_024 * 1_024, maximumNestingDepth: Int = 128, maximumContainerItems: Int = 1_000_000, cancellationCheckStride: Int = 1_024)
+swift.init	CBORLDEncodingOptions.init(format:serializationMode:registryEntryID:documentLoader:typeTableLoader:applicationContextMap:compressionMode:diagnostic:registryEntryLoader:callerProvidedTypeTable:codecs:allowsProvisionalRegistryEntries:limits:contextPolicy:contextDocumentLoader:)	init(format: CBORLDFormat = .cborLD1, serializationMode: CBORLDSerializationMode = .compatibility, registryEntryID: UInt64? = nil, documentLoader: CBORLDDocumentLoader? = nil, typeTableLoader: CBORLDTypeTableLoader? = nil, applicationContextMap: [String : UInt64]? = nil, compressionMode: UInt8? = nil, diagnostic: ((String) -> Void)? = nil, registryEntryLoader: CBORLDRegistryEntryLoader? = nil, callerProvidedTypeTable: CBORLDTypeTable? = nil, codecs: [any CBORLDTypedValueCodec] = [], allowsProvisionalRegistryEntries: Bool = true, limits: CBORLDEncodingLimits = .init(), contextPolicy: CBORLDContextLoadingPolicy = .init(), contextDocumentLoader: CBORLDContextDocumentLoader? = nil)
+swift.init	CBORLDEnvelopeMetadata.init(format:registryEntryID:payloadIsCompressed:byteCount:)	init(format: CBORLDFormat, registryEntryID: UInt64?, payloadIsCompressed: Bool, byteCount: Int)
+swift.init	CBORLDEnvelopeMetadata.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDEnvelopeMetadata.init(inspection:)	init(inspection: CBORLDInspection)
+swift.init	CBORLDError.init(code:message:diagnostic:specificationCode:)	init(code: CBORLDErrorCode, message: String, diagnostic: CBORLDSourceDiagnostic? = nil, specificationCode: CBORLDErrorCode? = nil)
+swift.init	CBORLDErrorCode.init(rawValue:)	init(rawValue: String)
+swift.init	CBORLDErrorCode.init(stringLiteral:)	init(stringLiteral value: String)
+swift.init	CBORLDExecutionPolicy.init(maximumConcurrentTasks:minimumParallelDocumentCount:minimumParallelBytes:cancellationCheckStride:maximumDocumentCount:maximumTotalInputBytes:taskPriority:backendAlreadyParallel:recordsTiming:allocationByteCounter:encodeInputCost:measuresDecodedJSONTextSize:)	init(maximumConcurrentTasks: Int = min(ProcessInfo.processInfo.activeProcessorCount, 4), minimumParallelDocumentCount: Int = 4, minimumParallelBytes: Int = 8 * 1_024, cancellationCheckStride: Int = 1, maximumDocumentCount: Int = 100_000, maximumTotalInputBytes: Int = 256 * 1_024 * 1_024, taskPriority: TaskPriority? = nil, backendAlreadyParallel: Bool = false, recordsTiming: Bool = false, allocationByteCounter: (() -> UInt64?)? = nil, encodeInputCost: ((JSONValue) -> Int)? = nil, measuresDecodedJSONTextSize: Bool = false)
+swift.init	CBORLDFileChunks.init(url:chunkSize:)	init(url: URL, chunkSize: Int = 65_536)
+swift.init	CBORLDFileSink.init(url:)	init(url: URL) throws
+swift.init	CBORLDFormat.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDHashAlgorithm.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDHashDomain.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDIndexedOutcome.init(index:outcome:)	init(index: Int, outcome: CBORLDBatchOutcome<Value>)
+swift.init	CBORLDInspection.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDIntegrityManifest.init(formatVersion:createdAt:artifactName:producer:envelope:transportDigest:structuralFingerprint:dictionaryBinding:contextFingerprints:declaredSerializationMode:notes:)	init(formatVersion: UInt16 = Self.currentFormatVersion, createdAt: Date = Date(), artifactName: String? = nil, producer: String? = nil, envelope: CBORLDEnvelopeMetadata, transportDigest: CBORLDDigest, structuralFingerprint: CBORLDDigest? = nil, dictionaryBinding: CBORLDDictionaryBinding? = nil, contextFingerprints: [String : CBORLDDigest] = [:], declaredSerializationMode: CBORLDSerializationMode? = nil, notes: [String] = [])
+swift.init	CBORLDIntegrityManifest.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDLoadedDocument.init(document:requestedURL:canonicalURL:mediaType:byteCount:redirectChain:expectedFingerprint:)	init(document: JSONValue, requestedURL: String, canonicalURL: String? = nil, mediaType: String? = nil, byteCount: Int? = nil, redirectChain: [String] = [], expectedFingerprint: CBORLDDigest? = nil)
+swift.init	CBORLDLoadedDocument.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDMapEntry.init(key:value:)	init(key: CBORLDDataItem, value: CBORLDDataItem)
+swift.init	CBORLDPreparedDecoder.init(configuration:supportedFormats:dictionaries:requiredDictionaryFingerprints:legacyApplicationContextMap:contextRegistry:documentLoader:diagnostic:codecs:allowsProvisionalRegistryEntries:contextPolicy:contextDocumentLoader:resourceCache:)	init(configuration: CBORLDDecodingConfiguration, supportedFormats: Set<CBORLDFormat> = Set(CBORLDFormat.allCases), dictionaries: [CBORLDDocumentDictionary] = [.unregistered], requiredDictionaryFingerprints: [UInt64 : CBORLDDigest] = [:], legacyApplicationContextMap: [String : UInt64]? = nil, contextRegistry: CBORLDContextRegistry? = nil, documentLoader: CBORLDDocumentLoader? = nil, diagnostic: ((String) -> Void)? = nil, codecs: [any CBORLDTypedValueCodec] = [], allowsProvisionalRegistryEntries: Bool = true, contextPolicy: CBORLDContextLoadingPolicy = .init(), contextDocumentLoader: CBORLDContextDocumentLoader? = nil, resourceCache: CBORLDResourceCache? = nil) throws
+swift.init	CBORLDPreparedDecoder.init(supportedFormats:dictionaries:requiredDictionaryFingerprints:legacyApplicationContextMap:contextRegistry:documentLoader:limits:policy:diagnostic:codecs:allowsProvisionalRegistryEntries:contextPolicy:contextDocumentLoader:resourceCache:)	init(supportedFormats: Set<CBORLDFormat> = Set(CBORLDFormat.allCases), dictionaries: [CBORLDDocumentDictionary] = [.unregistered], requiredDictionaryFingerprints: [UInt64 : CBORLDDigest] = [:], legacyApplicationContextMap: [String : UInt64]? = nil, contextRegistry: CBORLDContextRegistry? = nil, documentLoader: CBORLDDocumentLoader? = nil, limits: CBORLDDecodingLimits = .init(), policy: CBORLDDecodingPolicy = .init(), diagnostic: ((String) -> Void)? = nil, codecs: [any CBORLDTypedValueCodec] = [], allowsProvisionalRegistryEntries: Bool = true, contextPolicy: CBORLDContextLoadingPolicy = .init(), contextDocumentLoader: CBORLDContextDocumentLoader? = nil, resourceCache: CBORLDResourceCache? = nil) throws
+swift.init	CBORLDPreparedEncoder.init(format:serializationMode:dictionary:contextRegistry:documentLoader:requiredDictionaryFingerprint:diagnostic:codecs:limits:contextPolicy:contextDocumentLoader:resourceCache:)	init(format: CBORLDFormat = .cborLD1, serializationMode: CBORLDSerializationMode = .compatibility, dictionary: CBORLDDocumentDictionary = .unregistered, contextRegistry: CBORLDContextRegistry? = nil, documentLoader: CBORLDDocumentLoader? = nil, requiredDictionaryFingerprint: CBORLDDigest? = nil, diagnostic: ((String) -> Void)? = nil, codecs: [any CBORLDTypedValueCodec] = [], limits: CBORLDEncodingLimits = .init(), contextPolicy: CBORLDContextLoadingPolicy = .init(), contextDocumentLoader: CBORLDContextDocumentLoader? = nil, resourceCache: CBORLDResourceCache? = nil) throws
+swift.init	CBORLDProcessingModel.init(from:)	init(from decoder: Decoder) throws
+swift.init	CBORLDProcessingModel.init(semanticCompression:codecs:)	init(semanticCompression: Bool = true, codecs: [String : CBORLDCodecIdentifier] = [:])
+swift.init	CBORLDRawNode.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDRegistryEntry.init(from:)	init(from decoder: Decoder) throws
+swift.init	CBORLDRegistryEntry.init(id:useCase:provisional:processingModel:typeTables:requiresCallerProvidedTypeTable:)	init(id: UInt64, useCase: String? = nil, provisional: Bool = false, processingModel: CBORLDProcessingModel? = nil, typeTables: CBORLDTypeTable = [:], requiresCallerProvidedTypeTable: Bool = false)
+swift.init	CBORLDResourceCache.init(registry:limits:)	convenience init(registry: CBORLDContextRegistry, limits: CBORLDResourceCacheLimits = .init())
+swift.init	CBORLDResourceCacheLimits.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDResourceCacheLimits.init(maximumEntries:maximumBytes:timeToLive:)	init(maximumEntries: Int = 256, maximumBytes: Int = 64 * 1_024 * 1_024, timeToLive: Duration? = nil)
+swift.init	CBORLDResourceCacheStatistics.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDResourceProvenance.init(dictionaryFingerprint:contextFingerprints:)	init(dictionaryFingerprint: CBORLDDigest? = nil, contextFingerprints: [String : CBORLDDigest] = [:])
+swift.init	CBORLDResourceProvenance.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDSerializationMode.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDSourceDiagnostic.init(byteOffset:endOffset:containerPath:jsonPath:majorType:additionalInformation:violation:relatedByteOffset:)	init(byteOffset: Int, endOffset: Int? = nil, containerPath: [String] = [], jsonPath: String? = nil, majorType: UInt8? = nil, additionalInformation: UInt8? = nil, violation: String? = nil, relatedByteOffset: Int? = nil)
+swift.init	CBORLDSourceDiagnostic.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDStreamValidation.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDStreamingResult.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDStructuralCost.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDStructuralCost.init(nodeCount:stringByteCount:maximumDepth:encodedByteCount:)	init(nodeCount: Int, stringByteCount: Int, maximumDepth: Int, encodedByteCount: Int)
+swift.init	CBORLDValueDecoder.init(userInfo:dateDecodingStrategy:dataDecodingStrategy:nonConformingFloatDecodingStrategy:keyDecodingStrategy:)	init(userInfo: [CodingUserInfoKey : any Sendable] = [:], dateDecodingStrategy: DateDecodingStrategy = .deferredToDate, dataDecodingStrategy: DataDecodingStrategy = .base64, nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy = .throw, keyDecodingStrategy: KeyDecodingStrategy = .useDefaultKeys)
+swift.init	CBORLDValueEncoder.init(dateEncodingStrategy:dataEncodingStrategy:nonConformingFloatEncodingStrategy:keyEncodingStrategy:userInfo:)	init(dateEncodingStrategy: DateEncodingStrategy = .deferredToDate, dataEncodingStrategy: DataEncodingStrategy = .base64, nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy = .throw, keyEncodingStrategy: KeyEncodingStrategy = .useDefaultKeys, userInfo: [CodingUserInfoKey : any Sendable] = [:])
+swift.init	CBORLDVerificationCheck.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDVerificationCheck.init(kind:subject:status:expectedDigest:observedDigest:message:)	init(kind: CBORLDVerificationKind, subject: String? = nil, status: CBORLDVerificationStatus, expectedDigest: CBORLDDigest? = nil, observedDigest: CBORLDDigest? = nil, message: String)
+swift.init	CBORLDVerificationKind.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDVerificationPolicy.init(expectedEnvelope:expectedTransportDigest:expectedStructuralFingerprint:dictionaries:requiredDictionaryFingerprints:contextRegistry:expectedContextFingerprints:supportedFormats:legacyApplicationContextMap:limits:)	init(expectedEnvelope: CBORLDEnvelopeMetadata? = nil, expectedTransportDigest: CBORLDDigest? = nil, expectedStructuralFingerprint: CBORLDDigest? = nil, dictionaries: [CBORLDDocumentDictionary] = [.unregistered], requiredDictionaryFingerprints: [UInt64 : CBORLDDigest] = [:], contextRegistry: CBORLDContextRegistry? = nil, expectedContextFingerprints: [String : CBORLDDigest] = [:], supportedFormats: Set<CBORLDFormat> = Set(CBORLDFormat.allCases), legacyApplicationContextMap: [String : UInt64]? = nil, limits: CBORLDDecodingLimits = .init())
+swift.init	CBORLDVerificationReport.init(checkedAt:inspection:checks:warnings:)	init(checkedAt: Date = Date(), inspection: CBORLDInspection?, checks: [CBORLDVerificationCheck], warnings: [String] = [])
+swift.init	CBORLDVerificationReport.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDVerificationStatus.init(rawValue:)	init?(rawValue: String)
+swift.init	JSONValue.init(arrayLiteral:)	init(arrayLiteral elements: JSONValue...)
+swift.init	JSONValue.init(booleanLiteral:)	init(booleanLiteral value: Bool)
+swift.init	JSONValue.init(data:)	init(data: Data) throws
+swift.init	JSONValue.init(dictionaryLiteral:)	init(dictionaryLiteral elements: (String, JSONValue)...)
+swift.init	JSONValue.init(floatLiteral:)	init(floatLiteral value: Double)
+swift.init	JSONValue.init(from:)	init(from decoder: Decoder) throws
+swift.init	JSONValue.init(integerLiteral:)	init(integerLiteral value: Int64)
+swift.init	JSONValue.init(nilLiteral:)	init(nilLiteral: ())
+swift.init	JSONValue.init(stringLiteral:)	init(stringLiteral value: String)
+swift.method	CBORLDBatchOutcomeStream.Iterator.next()	mutating func next() async throws -> CBORLDIndexedOutcome<Value>?
+swift.method	CBORLDBatchOutcomeStream.makeAsyncIterator()	func makeAsyncIterator() -> Iterator
+swift.method	CBORLDByteSink.write(_:)	mutating func write(_ chunk: Data) async throws
+swift.method	CBORLDContextRegistry.load(_:)	func load(_ url: String) async throws -> JSONValue
+swift.method	CBORLDContextRegistry.resolve(_:)	func resolve(_ request: CBORLDContextRequest) async throws -> CBORLDLoadedDocument
+swift.method	CBORLDDataSink.write(_:)	mutating func write(_ chunk: Data) async throws
+swift.method	CBORLDDecoder.decode(_:)	func decode(_ data: Data) async throws -> JSONValue
+swift.method	CBORLDDecoder.decode(_:from:valueDecoder:)	func decode<T>(_ type: T.Type, from data: Data, valueDecoder: CBORLDValueDecoder = .init()) async throws -> T where T : Decodable, T : Sendable
+swift.method	CBORLDDecoder.prepare(contextRegistry:)	func prepare(contextRegistry: CBORLDContextRegistry? = nil) throws -> CBORLDPreparedDecoder
+swift.method	CBORLDDigest.encode(to:)	func encode(to encoder: Encoder) throws
+swift.method	CBORLDDocumentDictionary.encode(to:)	func encode(to encoder: Encoder) throws
+swift.method	CBORLDDocumentDictionary.fingerprint(algorithm:)	func fingerprint(algorithm: CBORLDHashAlgorithm = .sha256) throws -> CBORLDDigest
+swift.method	CBORLDDocumentDictionary.validate()	func validate() throws
+swift.method	CBORLDDocumentDictionary.verifyFingerprint(_:)	func verifyFingerprint(_ expected: CBORLDDigest) throws
+swift.method	CBORLDEncoder.encode(_:)	func encode(_ document: JSONValue) async throws -> Data
+swift.method	CBORLDEncoder.encode(_:valueEncoder:)	func encode<T>(_ document: T, valueEncoder: CBORLDValueEncoder = .init()) async throws -> Data where T : Encodable, T : Sendable
+swift.method	CBORLDEncoder.prepare(contextRegistry:requiredDictionaryFingerprint:)	func prepare(contextRegistry: CBORLDContextRegistry? = nil, requiredDictionaryFingerprint: CBORLDDigest? = nil) throws -> CBORLDPreparedEncoder
+swift.method	CBORLDFileChunks.AsyncIterator.next()	func next() async throws -> Data?
+swift.method	CBORLDFileChunks.makeAsyncIterator()	func makeAsyncIterator() -> AsyncIterator
+swift.method	CBORLDFileSink.close()	func close() throws
+swift.method	CBORLDFileSink.write(_:)	func write(_ chunk: Data) async throws
+swift.method	CBORLDIntegrityManifest.validate()	func validate() throws
+swift.method	CBORLDPreparedDecoder.decode(_:)	func decode(_ data: Data) async throws -> JSONValue
+swift.method	CBORLDPreparedDecoder.decode(_:)	func decode(_ document: CBORLDValidatedDocument) async throws -> JSONValue
+swift.method	CBORLDPreparedDecoder.decode(_:from:valueDecoder:)	func decode<T>(_ type: T.Type, from data: Data, valueDecoder: CBORLDValueDecoder = .init()) async throws -> T where T : Decodable, T : Sendable
+swift.method	CBORLDPreparedDecoder.decodeBatch(_:policy:)	func decodeBatch(_ documents: [Data], policy: CBORLDExecutionPolicy = .init()) async throws -> [CBORLDBatchOutcome<JSONValue>]
+swift.method	CBORLDPreparedDecoder.decodeBatch(_:policy:)	func decodeBatch<Documents>(_ documents: Documents, policy: CBORLDExecutionPolicy = .init()) async throws -> [CBORLDBatchOutcome<JSONValue>] where Documents : Sendable, Documents : AsyncSequence, Documents.Element == Data
+swift.method	CBORLDPreparedDecoder.decodeBatchStream(_:policy:order:)	func decodeBatchStream<Documents>(_ documents: Documents, policy: CBORLDExecutionPolicy = .init(), order: CBORLDBatchResultOrder = .completionOrder) -> CBORLDBatchOutcomeStream<JSONValue> where Documents : Sendable, Documents : AsyncSequence, Documents.Element == Data
+swift.method	CBORLDPreparedEncoder.encode(_:)	func encode(_ document: JSONValue) async throws -> Data
+swift.method	CBORLDPreparedEncoder.encode(_:valueEncoder:)	func encode<T>(_ document: T, valueEncoder: CBORLDValueEncoder = .init()) async throws -> Data where T : Encodable, T : Sendable
+swift.method	CBORLDPreparedEncoder.encodeBatch(_:policy:)	func encodeBatch(_ documents: [JSONValue], policy: CBORLDExecutionPolicy = .init()) async throws -> [CBORLDBatchOutcome<Data>]
+swift.method	CBORLDPreparedEncoder.encodeBatchStream(_:policy:order:)	func encodeBatchStream<Documents>(_ documents: Documents, policy: CBORLDExecutionPolicy = .init(), order: CBORLDBatchResultOrder = .completionOrder) -> CBORLDBatchOutcomeStream<Data> where Documents : Sendable, Documents : AsyncSequence, Documents.Element == JSONValue
+swift.method	CBORLDProcessingModel.encode(to:)	func encode(to encoder: Encoder) throws
+swift.method	CBORLDProcessingModel.validate()	func validate() throws
+swift.method	CBORLDRegistryEntry.encode(to:)	func encode(to encoder: Encoder) throws
+swift.method	CBORLDRegistryEntry.validate()	func validate() throws
+swift.method	CBORLDResourceCache.load(_:)	func load(_ url: String) async throws -> JSONValue
+swift.method	CBORLDResourceCache.removeAll()	func removeAll()
+swift.method	CBORLDResourceCache.resolve(_:)	func resolve(_ request: CBORLDContextRequest) async throws -> CBORLDLoadedDocument
+swift.method	CBORLDTypedValueCodec.decode(_:context:)	func decode(_ item: CBORLDDataItem, context: CBORLDCodecContext) throws -> JSONValue?
+swift.method	CBORLDTypedValueCodec.encode(_:context:)	func encode(_ value: JSONValue, context: CBORLDCodecContext) throws -> CBORLDDataItem?
+swift.method	CBORLDValidatedDocument.bytes(for:)	func bytes(for node: CBORLDRawNode) throws -> Data
+swift.method	CBORLDValueDecoder.decode(_:from:)	func decode<T>(_ type: T.Type, from value: JSONValue) throws -> T where T : Decodable
+swift.method	CBORLDValueEncoder.encode(_:)	func encode<T>(_ value: T) throws -> JSONValue where T : Encodable
+swift.method	JSONValue.data(outputFormatting:)	func data(outputFormatting: JSONEncoder.OutputFormatting = []) throws -> Data
+swift.method	JSONValue.encode(to:)	func encode(to encoder: Encoder) throws
+swift.method	JSONValue.hash(into:)	func hash(into hasher: inout Hasher)
+swift.property	CBORLDBatchFailure.code	let code: CBORLDErrorCode
+swift.property	CBORLDBatchFailure.diagnostic	let diagnostic: CBORLDSourceDiagnostic?
+swift.property	CBORLDBatchFailure.message	let message: String
+swift.property	CBORLDBatchObservation.allocatedByteCount	let allocatedByteCount: UInt64?
+swift.property	CBORLDBatchObservation.durationNanoseconds	let durationNanoseconds: UInt64?
+swift.property	CBORLDBatchObservation.inputByteCount	let inputByteCount: Int
+swift.property	CBORLDBatchObservation.inputMeasure	let inputMeasure: CBORLDBatchInputMeasure
+swift.property	CBORLDBatchObservation.outputByteCount	let outputByteCount: Int?
+swift.property	CBORLDBatchObservation.outputMeasure	let outputMeasure: CBORLDBatchOutputMeasure?
+swift.property	CBORLDBatchOutcome.failure	var failure: CBORLDBatchFailure? { get }
+swift.property	CBORLDBatchOutcome.observation	var observation: CBORLDBatchObservation? { get }
+swift.property	CBORLDBatchOutcome.value	var value: Value? { get }
+swift.property	CBORLDCodecContext.registryEntryID	let registryEntryID: UInt64?
+swift.property	CBORLDCodecContext.term	let term: String
+swift.property	CBORLDCodecContext.type	let type: String
+swift.property	CBORLDCodecIdentifier.description	var description: String { get }
+swift.property	CBORLDCodecIdentifier.isBuiltIn	var isBuiltIn: Bool { get }
+swift.property	CBORLDCodecIdentifier.rawValue	let rawValue: String
+swift.property	CBORLDContextLoadingPolicy.allowedHosts	var allowedHosts: Set<String>?
+swift.property	CBORLDContextLoadingPolicy.allowedMediaTypes	var allowedMediaTypes: Set<String>?
+swift.property	CBORLDContextLoadingPolicy.allowedURLSchemes	var allowedURLSchemes: Set<String>?
+swift.property	CBORLDContextLoadingPolicy.maximumContextBytes	var maximumContextBytes: Int
+swift.property	CBORLDContextLoadingPolicy.maximumContextDocuments	var maximumContextDocuments: Int
+swift.property	CBORLDContextLoadingPolicy.maximumImportDepth	var maximumImportDepth: Int
+swift.property	CBORLDContextLoadingPolicy.maximumRedirects	var maximumRedirects: Int
+swift.property	CBORLDContextLoadingPolicy.maximumTermDefinitions	var maximumTermDefinitions: Int
+swift.property	CBORLDContextLoadingPolicy.requiresPinnedContexts	var requiresPinnedContexts: Bool
+swift.property	CBORLDContextRegistry.contextDocumentLoader	var contextDocumentLoader: CBORLDContextDocumentLoader { get }
+swift.property	CBORLDContextRegistry.contextFallback	let contextFallback: CBORLDContextDocumentLoader?
+swift.property	CBORLDContextRegistry.documentLoader	var documentLoader: CBORLDDocumentLoader { get }
+swift.property	CBORLDContextRegistry.documents	let documents: [String : JSONValue]
+swift.property	CBORLDContextRegistry.expectedFingerprints	let expectedFingerprints: [String : CBORLDDigest]
+swift.property	CBORLDContextRegistry.fallback	let fallback: CBORLDDocumentLoader?
+swift.property	CBORLDContextRequest.importDepth	let importDepth: Int
+swift.property	CBORLDContextRequest.maximumByteCount	let maximumByteCount: Int
+swift.property	CBORLDContextRequest.maximumRedirects	let maximumRedirects: Int
+swift.property	CBORLDContextRequest.url	let url: String
+swift.property	CBORLDDataSink.chunkSizes	var chunkSizes: [Int] { get }
+swift.property	CBORLDDataSink.data	var data: Data { get }
+swift.property	CBORLDDecoder.allowsProvisionalRegistryEntries	let allowsProvisionalRegistryEntries: Bool
+swift.property	CBORLDDecoder.codecs	let codecs: [any CBORLDTypedValueCodec]
+swift.property	CBORLDDecoder.configuration	var configuration: CBORLDDecodingConfiguration { get }
+swift.property	CBORLDDecoder.contextDocumentLoader	let contextDocumentLoader: CBORLDContextDocumentLoader?
+swift.property	CBORLDDecoder.contextPolicy	let contextPolicy: CBORLDContextLoadingPolicy
+swift.property	CBORLDDecoder.diagnostic	let diagnostic: ((String) -> Void)?
+swift.property	CBORLDDecoder.dictionaries	let dictionaries: [UInt64 : CBORLDDocumentDictionary]
+swift.property	CBORLDDecoder.documentLoader	let documentLoader: CBORLDDocumentLoader?
+swift.property	CBORLDDecoder.legacyApplicationContextMap	let legacyApplicationContextMap: [String : UInt64]?
+swift.property	CBORLDDecoder.limits	let limits: CBORLDDecodingLimits
+swift.property	CBORLDDecoder.policy	let policy: CBORLDDecodingPolicy
+swift.property	CBORLDDecoder.requiredDictionaryFingerprints	let requiredDictionaryFingerprints: [UInt64 : CBORLDDigest]
+swift.property	CBORLDDecoder.supportedFormats	let supportedFormats: Set<CBORLDFormat>
+swift.property	CBORLDDecodingConfiguration.limits	var limits: CBORLDDecodingLimits
+swift.property	CBORLDDecodingConfiguration.policy	var policy: CBORLDDecodingPolicy
+swift.property	CBORLDDecodingLimits.allowsIndefiniteLengthItems	var allowsIndefiniteLengthItems: Bool
+swift.property	CBORLDDecodingLimits.cancellationCheckStride	var cancellationCheckStride: Int
+swift.property	CBORLDDecodingLimits.maximumContainerItems	var maximumContainerItems: Int
+swift.property	CBORLDDecodingLimits.maximumDiagnosticNodes	var maximumDiagnosticNodes: Int
+swift.property	CBORLDDecodingLimits.maximumInputBytes	var maximumInputBytes: Int
+swift.property	CBORLDDecodingLimits.maximumNestingDepth	var maximumNestingDepth: Int
+swift.property	CBORLDDecodingLimits.rejectDuplicateMapKeys	var rejectDuplicateMapKeys: Bool
+swift.property	CBORLDDecodingOptions.allowsProvisionalRegistryEntries	var allowsProvisionalRegistryEntries: Bool
+swift.property	CBORLDDecodingOptions.applicationContextMap	var applicationContextMap: [String : UInt64]?
+swift.property	CBORLDDecodingOptions.callerProvidedTypeTable	var callerProvidedTypeTable: CBORLDTypeTable?
+swift.property	CBORLDDecodingOptions.codecs	var codecs: [any CBORLDTypedValueCodec]
+swift.property	CBORLDDecodingOptions.configuration	var configuration: CBORLDDecodingConfiguration { get set }
+swift.property	CBORLDDecodingOptions.contextDocumentLoader	var contextDocumentLoader: CBORLDContextDocumentLoader?
+swift.property	CBORLDDecodingOptions.contextPolicy	var contextPolicy: CBORLDContextLoadingPolicy
+swift.property	CBORLDDecodingOptions.diagnostic	var diagnostic: ((String) -> Void)?
+swift.property	CBORLDDecodingOptions.documentLoader	var documentLoader: CBORLDDocumentLoader?
+swift.property	CBORLDDecodingOptions.limits	var limits: CBORLDDecodingLimits
+swift.property	CBORLDDecodingOptions.policy	var policy: CBORLDDecodingPolicy
+swift.property	CBORLDDecodingOptions.registryEntryLoader	var registryEntryLoader: CBORLDRegistryEntryLoader?
+swift.property	CBORLDDecodingOptions.typeTableLoader	var typeTableLoader: CBORLDTypeTableLoader?
+swift.property	CBORLDDecodingPolicy.allowsReservedSimpleValuesInLosslessMode	var allowsReservedSimpleValuesInLosslessMode: Bool
+swift.property	CBORLDDecodingPolicy.rejectNonPreferredFloatingPoint	var rejectNonPreferredFloatingPoint: Bool
+swift.property	CBORLDDecodingPolicy.rejectNonPreferredIntegerWidths	var rejectNonPreferredIntegerWidths: Bool
+swift.property	CBORLDDecodingPolicy.rejectNonPreferredLengthWidths	var rejectNonPreferredLengthWidths: Bool
+swift.property	CBORLDDecodingPolicy.requiredSerializationMode	var requiredSerializationMode: CBORLDSerializationMode?
+swift.property	CBORLDDictionaryBinding.fingerprint	let fingerprint: CBORLDDigest
+swift.property	CBORLDDictionaryBinding.registryEntryID	let registryEntryID: UInt64
+swift.property	CBORLDDigest.algorithm	let algorithm: CBORLDHashAlgorithm
+swift.property	CBORLDDigest.base64URL	var base64URL: String { get }
+swift.property	CBORLDDigest.bytes	let bytes: Data
+swift.property	CBORLDDigest.description	var description: String { get }
+swift.property	CBORLDDigest.domain	let domain: CBORLDHashDomain
+swift.property	CBORLDDigest.hex	var hex: String { get }
+swift.property	CBORLDDigest.version	let version: UInt8
+swift.property	CBORLDDocumentDictionary.code	let code: UInt64
+swift.property	CBORLDDocumentDictionary.contexts	let contexts: [String : UInt64]
+swift.property	CBORLDDocumentDictionary.effectiveProcessingModel	var effectiveProcessingModel: CBORLDProcessingModel { get }
+swift.property	CBORLDDocumentDictionary.processingModel	let processingModel: CBORLDProcessingModel?
+swift.property	CBORLDDocumentDictionary.profileName	let profileName: String?
+swift.property	CBORLDDocumentDictionary.profileVersion	let profileVersion: String?
+swift.property	CBORLDDocumentDictionary.provisional	let provisional: Bool
+swift.property	CBORLDDocumentDictionary.registryEntry	var registryEntry: CBORLDRegistryEntry { get }
+swift.property	CBORLDDocumentDictionary.typeTable	var typeTable: CBORLDTypeTable { get }
+swift.property	CBORLDDocumentDictionary.typedValues	let typedValues: [String : CBORLDValueTable]
+swift.property	CBORLDDocumentDictionary.untypedValues	let untypedValues: CBORLDValueTable
+swift.property	CBORLDDocumentDictionary.uris	let uris: [String : UInt64]
+swift.property	CBORLDEncoder.codecs	let codecs: [any CBORLDTypedValueCodec]
+swift.property	CBORLDEncoder.contextDocumentLoader	let contextDocumentLoader: CBORLDContextDocumentLoader?
+swift.property	CBORLDEncoder.contextPolicy	let contextPolicy: CBORLDContextLoadingPolicy
+swift.property	CBORLDEncoder.diagnostic	let diagnostic: ((String) -> Void)?
+swift.property	CBORLDEncoder.dictionary	let dictionary: CBORLDDocumentDictionary
+swift.property	CBORLDEncoder.documentLoader	let documentLoader: CBORLDDocumentLoader?
+swift.property	CBORLDEncoder.format	let format: CBORLDFormat
+swift.property	CBORLDEncoder.limits	let limits: CBORLDEncodingLimits
+swift.property	CBORLDEncoder.serializationMode	let serializationMode: CBORLDSerializationMode
+swift.property	CBORLDEncodingLimits.cancellationCheckStride	var cancellationCheckStride: Int
+swift.property	CBORLDEncodingLimits.maximumContainerItems	var maximumContainerItems: Int
+swift.property	CBORLDEncodingLimits.maximumNestingDepth	var maximumNestingDepth: Int
+swift.property	CBORLDEncodingLimits.maximumOutputBytes	var maximumOutputBytes: Int
+swift.property	CBORLDEncodingOptions.allowsProvisionalRegistryEntries	var allowsProvisionalRegistryEntries: Bool
+swift.property	CBORLDEncodingOptions.applicationContextMap	var applicationContextMap: [String : UInt64]?
+swift.property	CBORLDEncodingOptions.callerProvidedTypeTable	var callerProvidedTypeTable: CBORLDTypeTable?
+swift.property	CBORLDEncodingOptions.codecs	var codecs: [any CBORLDTypedValueCodec]
+swift.property	CBORLDEncodingOptions.compressionMode	var compressionMode: UInt8?
+swift.property	CBORLDEncodingOptions.contextDocumentLoader	var contextDocumentLoader: CBORLDContextDocumentLoader?
+swift.property	CBORLDEncodingOptions.contextPolicy	var contextPolicy: CBORLDContextLoadingPolicy
+swift.property	CBORLDEncodingOptions.diagnostic	var diagnostic: ((String) -> Void)?
+swift.property	CBORLDEncodingOptions.documentLoader	var documentLoader: CBORLDDocumentLoader?
+swift.property	CBORLDEncodingOptions.format	var format: CBORLDFormat
+swift.property	CBORLDEncodingOptions.limits	var limits: CBORLDEncodingLimits
+swift.property	CBORLDEncodingOptions.registryEntryID	var registryEntryID: UInt64?
+swift.property	CBORLDEncodingOptions.registryEntryLoader	var registryEntryLoader: CBORLDRegistryEntryLoader?
+swift.property	CBORLDEncodingOptions.serializationMode	var serializationMode: CBORLDSerializationMode
+swift.property	CBORLDEncodingOptions.typeTableLoader	var typeTableLoader: CBORLDTypeTableLoader?
+swift.property	CBORLDEnvelopeMetadata.byteCount	let byteCount: Int
+swift.property	CBORLDEnvelopeMetadata.format	let format: CBORLDFormat
+swift.property	CBORLDEnvelopeMetadata.payloadIsCompressed	let payloadIsCompressed: Bool
+swift.property	CBORLDEnvelopeMetadata.registryEntryID	let registryEntryID: UInt64?
+swift.property	CBORLDError.code	let code: CBORLDErrorCode
+swift.property	CBORLDError.description	var description: String { get }
+swift.property	CBORLDError.diagnostic	let diagnostic: CBORLDSourceDiagnostic?
+swift.property	CBORLDError.errorDescription	var errorDescription: String? { get }
+swift.property	CBORLDError.failureReason	var failureReason: String? { get }
+swift.property	CBORLDError.message	let message: String
+swift.property	CBORLDError.specificationCode	var specificationCode: CBORLDErrorCode? { get }
+swift.property	CBORLDErrorCode.description	var description: String { get }
+swift.property	CBORLDErrorCode.isDefinedBySpecification	var isDefinedBySpecification: Bool { get }
+swift.property	CBORLDErrorCode.rawValue	let rawValue: String
+swift.property	CBORLDExecutionPolicy.allocationByteCounter	var allocationByteCounter: (() -> UInt64?)?
+swift.property	CBORLDExecutionPolicy.backendAlreadyParallel	var backendAlreadyParallel: Bool
+swift.property	CBORLDExecutionPolicy.cancellationCheckStride	var cancellationCheckStride: Int
+swift.property	CBORLDExecutionPolicy.encodeInputCost	var encodeInputCost: ((JSONValue) -> Int)?
+swift.property	CBORLDExecutionPolicy.maximumConcurrentTasks	var maximumConcurrentTasks: Int
+swift.property	CBORLDExecutionPolicy.maximumDocumentCount	var maximumDocumentCount: Int
+swift.property	CBORLDExecutionPolicy.maximumTotalInputBytes	var maximumTotalInputBytes: Int
+swift.property	CBORLDExecutionPolicy.measuresDecodedJSONTextSize	var measuresDecodedJSONTextSize: Bool
+swift.property	CBORLDExecutionPolicy.minimumParallelBytes	var minimumParallelBytes: Int
+swift.property	CBORLDExecutionPolicy.minimumParallelDocumentCount	var minimumParallelDocumentCount: Int
+swift.property	CBORLDExecutionPolicy.recordsTiming	var recordsTiming: Bool
+swift.property	CBORLDExecutionPolicy.taskPriority	var taskPriority: TaskPriority?
+swift.property	CBORLDFileChunks.chunkSize	let chunkSize: Int
+swift.property	CBORLDFileChunks.url	let url: URL
+swift.property	CBORLDIndexedOutcome.index	let index: Int
+swift.property	CBORLDIndexedOutcome.outcome	let outcome: CBORLDBatchOutcome<Value>
+swift.property	CBORLDInspection.byteCount	let byteCount: Int
+swift.property	CBORLDInspection.format	let format: CBORLDFormat
+swift.property	CBORLDInspection.payloadDescription	let payloadDescription: String
+swift.property	CBORLDInspection.payloadIsCompressed	let payloadIsCompressed: Bool
+swift.property	CBORLDInspection.registryEntryID	let registryEntryID: UInt64?
+swift.property	CBORLDInspection.transportDigest	let transportDigest: CBORLDDigest
+swift.property	CBORLDIntegrityManifest.artifactName	let artifactName: String?
+swift.property	CBORLDIntegrityManifest.contextFingerprints	let contextFingerprints: [String : CBORLDDigest]
+swift.property	CBORLDIntegrityManifest.createdAt	let createdAt: Date
+swift.property	CBORLDIntegrityManifest.declaredSerializationMode	let declaredSerializationMode: CBORLDSerializationMode?
+swift.property	CBORLDIntegrityManifest.dictionaryBinding	let dictionaryBinding: CBORLDDictionaryBinding?
+swift.property	CBORLDIntegrityManifest.envelope	let envelope: CBORLDEnvelopeMetadata
+swift.property	CBORLDIntegrityManifest.formatVersion	let formatVersion: UInt16
+swift.property	CBORLDIntegrityManifest.notes	let notes: [String]
+swift.property	CBORLDIntegrityManifest.producer	let producer: String?
+swift.property	CBORLDIntegrityManifest.structuralFingerprint	let structuralFingerprint: CBORLDDigest?
+swift.property	CBORLDIntegrityManifest.transportDigest	let transportDigest: CBORLDDigest
+swift.property	CBORLDLoadedDocument.byteCount	var byteCount: Int
+swift.property	CBORLDLoadedDocument.byteCountIsMeasured	var byteCountIsMeasured: Bool
+swift.property	CBORLDLoadedDocument.canonicalURL	var canonicalURL: String
+swift.property	CBORLDLoadedDocument.document	var document: JSONValue
+swift.property	CBORLDLoadedDocument.expectedFingerprint	var expectedFingerprint: CBORLDDigest?
+swift.property	CBORLDLoadedDocument.mediaType	var mediaType: String?
+swift.property	CBORLDLoadedDocument.redirectChain	var redirectChain: [String]
+swift.property	CBORLDLoadedDocument.requestedURL	var requestedURL: String
+swift.property	CBORLDMapEntry.key	var key: CBORLDDataItem
+swift.property	CBORLDMapEntry.value	var value: CBORLDDataItem
+swift.property	CBORLDPreparedDecoder.allowsProvisionalRegistryEntries	let allowsProvisionalRegistryEntries: Bool
+swift.property	CBORLDPreparedDecoder.configuration	var configuration: CBORLDDecodingConfiguration { get }
+swift.property	CBORLDPreparedDecoder.contextPolicy	let contextPolicy: CBORLDContextLoadingPolicy
+swift.property	CBORLDPreparedDecoder.limits	let limits: CBORLDDecodingLimits
+swift.property	CBORLDPreparedDecoder.policy	let policy: CBORLDDecodingPolicy
+swift.property	CBORLDPreparedDecoder.provenance	let provenance: [UInt64 : CBORLDResourceProvenance]
+swift.property	CBORLDPreparedDecoder.supportedFormats	let supportedFormats: Set<CBORLDFormat>
+swift.property	CBORLDPreparedEncoder.contextPolicy	let contextPolicy: CBORLDContextLoadingPolicy
+swift.property	CBORLDPreparedEncoder.dictionary	let dictionary: CBORLDDocumentDictionary
+swift.property	CBORLDPreparedEncoder.format	let format: CBORLDFormat
+swift.property	CBORLDPreparedEncoder.limits	let limits: CBORLDEncodingLimits
+swift.property	CBORLDPreparedEncoder.provenance	let provenance: CBORLDResourceProvenance
+swift.property	CBORLDPreparedEncoder.serializationMode	let serializationMode: CBORLDSerializationMode
+swift.property	CBORLDProcessingModel.codecs	var codecs: [String : CBORLDCodecIdentifier]
+swift.property	CBORLDProcessingModel.semanticCompression	var semanticCompression: Bool
+swift.property	CBORLDRawNode.additionalInformation	let additionalInformation: UInt8
+swift.property	CBORLDRawNode.byteCount	var byteCount: Int { get }
+swift.property	CBORLDRawNode.byteOffset	let byteOffset: Int
+swift.property	CBORLDRawNode.containerPath	let containerPath: [String]
+swift.property	CBORLDRawNode.endOffset	let endOffset: Int
+swift.property	CBORLDRawNode.isIndefiniteLength	let isIndefiniteLength: Bool
+swift.property	CBORLDRawNode.jsonPath	let jsonPath: String?
+swift.property	CBORLDRawNode.majorType	let majorType: UInt8
+swift.property	CBORLDRawNode.preferredSerializationViolations	let preferredSerializationViolations: [String]
+swift.property	CBORLDRegistryEntry.effectiveProcessingModel	var effectiveProcessingModel: CBORLDProcessingModel { get }
+swift.property	CBORLDRegistryEntry.id	let id: UInt64
+swift.property	CBORLDRegistryEntry.processingModel	let processingModel: CBORLDProcessingModel?
+swift.property	CBORLDRegistryEntry.provisional	let provisional: Bool
+swift.property	CBORLDRegistryEntry.requiresCallerProvidedTypeTable	let requiresCallerProvidedTypeTable: Bool
+swift.property	CBORLDRegistryEntry.typeTables	let typeTables: CBORLDTypeTable
+swift.property	CBORLDRegistryEntry.useCase	let useCase: String?
+swift.property	CBORLDResourceCache.contextDocumentLoader	nonisolated var contextDocumentLoader: CBORLDContextDocumentLoader { get }
+swift.property	CBORLDResourceCache.documentLoader	nonisolated var documentLoader: CBORLDDocumentLoader { get }
+swift.property	CBORLDResourceCache.limits	nonisolated let limits: CBORLDResourceCacheLimits
+swift.property	CBORLDResourceCache.statistics	var statistics: CBORLDResourceCacheStatistics { get }
+swift.property	CBORLDResourceCacheLimits.maximumBytes	var maximumBytes: Int
+swift.property	CBORLDResourceCacheLimits.maximumEntries	var maximumEntries: Int
+swift.property	CBORLDResourceCacheLimits.timeToLive	var timeToLive: Duration?
+swift.property	CBORLDResourceCacheStatistics.byteCount	var byteCount: Int
+swift.property	CBORLDResourceCacheStatistics.entryCount	var entryCount: Int
+swift.property	CBORLDResourceCacheStatistics.evictions	var evictions: Int
+swift.property	CBORLDResourceCacheStatistics.expirations	var expirations: Int
+swift.property	CBORLDResourceCacheStatistics.hits	var hits: Int
+swift.property	CBORLDResourceCacheStatistics.loads	var loads: Int
+swift.property	CBORLDResourceCacheStatistics.misses	var misses: Int
+swift.property	CBORLDResourceProvenance.contextFingerprints	let contextFingerprints: [String : CBORLDDigest]
+swift.property	CBORLDResourceProvenance.dictionaryFingerprint	let dictionaryFingerprint: CBORLDDigest?
+swift.property	CBORLDSourceDiagnostic.additionalInformation	let additionalInformation: UInt8?
+swift.property	CBORLDSourceDiagnostic.byteOffset	let byteOffset: Int
+swift.property	CBORLDSourceDiagnostic.containerPath	let containerPath: [String]
+swift.property	CBORLDSourceDiagnostic.description	var description: String { get }
+swift.property	CBORLDSourceDiagnostic.endOffset	let endOffset: Int?
+swift.property	CBORLDSourceDiagnostic.jsonPath	let jsonPath: String?
+swift.property	CBORLDSourceDiagnostic.majorType	let majorType: UInt8?
+swift.property	CBORLDSourceDiagnostic.relatedByteOffset	let relatedByteOffset: Int?
+swift.property	CBORLDSourceDiagnostic.violation	let violation: String?
+swift.property	CBORLDStreamValidation.byteCount	let byteCount: Int
+swift.property	CBORLDStreamValidation.format	let format: CBORLDFormat
+swift.property	CBORLDStreamValidation.itemCount	let itemCount: Int
+swift.property	CBORLDStreamValidation.maximumDepth	let maximumDepth: Int
+swift.property	CBORLDStreamValidation.payloadIsCompressed	let payloadIsCompressed: Bool
+swift.property	CBORLDStreamValidation.registryEntryID	let registryEntryID: UInt64?
+swift.property	CBORLDStreamValidation.transportDigest	let transportDigest: CBORLDDigest
+swift.property	CBORLDStreamedDocument.document	let document: JSONValue
+swift.property	CBORLDStreamedDocument.validation	let validation: CBORLDStreamValidation
+swift.property	CBORLDStreamingResult.byteCount	let byteCount: Int
+swift.property	CBORLDStreamingResult.chunkCount	let chunkCount: Int
+swift.property	CBORLDStreamingResult.transportDigest	let transportDigest: CBORLDDigest
+swift.property	CBORLDStructuralCost.encodedByteCount	var encodedByteCount: Int
+swift.property	CBORLDStructuralCost.maximumDepth	var maximumDepth: Int
+swift.property	CBORLDStructuralCost.nodeCount	var nodeCount: Int
+swift.property	CBORLDStructuralCost.stringByteCount	var stringByteCount: Int
+swift.property	CBORLDTypedValueCodec.identifier	var identifier: CBORLDCodecIdentifier { get }
+swift.property	CBORLDValidatedDocument.inspection	let inspection: CBORLDInspection
+swift.property	CBORLDValidatedDocument.nodes	let nodes: [CBORLDRawNode]
+swift.property	CBORLDValidatedDocument.nodesWereTruncated	let nodesWereTruncated: Bool
+swift.property	CBORLDValidatedDocument.originalBytes	let originalBytes: Data
+swift.property	CBORLDValidatedDocument.provenance	let provenance: CBORLDResourceProvenance
+swift.property	CBORLDValidatedDocument.validationPolicy	let validationPolicy: CBORLDDecodingPolicy
+swift.property	CBORLDValueDecoder.dataDecodingStrategy	var dataDecodingStrategy: DataDecodingStrategy
+swift.property	CBORLDValueDecoder.dateDecodingStrategy	var dateDecodingStrategy: DateDecodingStrategy
+swift.property	CBORLDValueDecoder.keyDecodingStrategy	var keyDecodingStrategy: KeyDecodingStrategy
+swift.property	CBORLDValueDecoder.nonConformingFloatDecodingStrategy	var nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy
+swift.property	CBORLDValueDecoder.userInfo	var userInfo: [CodingUserInfoKey : any Sendable]
+swift.property	CBORLDValueEncoder.dataEncodingStrategy	var dataEncodingStrategy: DataEncodingStrategy
+swift.property	CBORLDValueEncoder.dateEncodingStrategy	var dateEncodingStrategy: DateEncodingStrategy
+swift.property	CBORLDValueEncoder.keyEncodingStrategy	var keyEncodingStrategy: KeyEncodingStrategy
+swift.property	CBORLDValueEncoder.nonConformingFloatEncodingStrategy	var nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy
+swift.property	CBORLDValueEncoder.userInfo	var userInfo: [CodingUserInfoKey : any Sendable]
+swift.property	CBORLDVerificationCheck.expectedDigest	let expectedDigest: CBORLDDigest?
+swift.property	CBORLDVerificationCheck.kind	let kind: CBORLDVerificationKind
+swift.property	CBORLDVerificationCheck.message	let message: String
+swift.property	CBORLDVerificationCheck.observedDigest	let observedDigest: CBORLDDigest?
+swift.property	CBORLDVerificationCheck.status	let status: CBORLDVerificationStatus
+swift.property	CBORLDVerificationCheck.subject	let subject: String?
+swift.property	CBORLDVerificationPolicy.contextRegistry	var contextRegistry: CBORLDContextRegistry?
+swift.property	CBORLDVerificationPolicy.dictionaries	var dictionaries: [CBORLDDocumentDictionary]
+swift.property	CBORLDVerificationPolicy.expectedContextFingerprints	var expectedContextFingerprints: [String : CBORLDDigest]
+swift.property	CBORLDVerificationPolicy.expectedEnvelope	var expectedEnvelope: CBORLDEnvelopeMetadata?
+swift.property	CBORLDVerificationPolicy.expectedStructuralFingerprint	var expectedStructuralFingerprint: CBORLDDigest?
+swift.property	CBORLDVerificationPolicy.expectedTransportDigest	var expectedTransportDigest: CBORLDDigest?
+swift.property	CBORLDVerificationPolicy.legacyApplicationContextMap	var legacyApplicationContextMap: [String : UInt64]?
+swift.property	CBORLDVerificationPolicy.limits	var limits: CBORLDDecodingLimits
+swift.property	CBORLDVerificationPolicy.requiredDictionaryFingerprints	var requiredDictionaryFingerprints: [UInt64 : CBORLDDigest]
+swift.property	CBORLDVerificationPolicy.supportedFormats	var supportedFormats: Set<CBORLDFormat>
+swift.property	CBORLDVerificationReport.checkedAt	let checkedAt: Date
+swift.property	CBORLDVerificationReport.checks	let checks: [CBORLDVerificationCheck]
+swift.property	CBORLDVerificationReport.inspection	let inspection: CBORLDInspection?
+swift.property	CBORLDVerificationReport.isValid	var isValid: Bool { get }
+swift.property	CBORLDVerificationReport.problems	var problems: [CBORLDVerificationCheck] { get }
+swift.property	CBORLDVerificationReport.warnings	let warnings: [String]
+swift.property	JSONValue.arrayValue	var arrayValue: [JSONValue]? { get }
+swift.property	JSONValue.objectValue	var objectValue: [String : JSONValue]? { get }
+swift.property	JSONValue.stringValue	var stringValue: String? { get }
+swift.property	JSONValue.structuralCost	var structuralCost: CBORLDStructuralCost { get }
+swift.protocol	CBORLDByteSink	protocol CBORLDByteSink
+swift.protocol	CBORLDTypedValueCodec	protocol CBORLDTypedValueCodec : Sendable
+swift.struct	CBORLDBatchFailure	struct CBORLDBatchFailure
+swift.struct	CBORLDBatchObservation	struct CBORLDBatchObservation
+swift.struct	CBORLDBatchOutcomeStream	struct CBORLDBatchOutcomeStream<Value> where Value : Sendable
+swift.struct	CBORLDBatchOutcomeStream.Iterator	struct Iterator
+swift.struct	CBORLDCodecContext	struct CBORLDCodecContext
+swift.struct	CBORLDCodecIdentifier	struct CBORLDCodecIdentifier
+swift.struct	CBORLDContextLoadingPolicy	struct CBORLDContextLoadingPolicy
+swift.struct	CBORLDContextRegistry	struct CBORLDContextRegistry
+swift.struct	CBORLDContextRequest	struct CBORLDContextRequest
+swift.struct	CBORLDDataSink	struct CBORLDDataSink
+swift.struct	CBORLDDecoder	struct CBORLDDecoder
+swift.struct	CBORLDDecodingConfiguration	struct CBORLDDecodingConfiguration
+swift.struct	CBORLDDecodingLimits	struct CBORLDDecodingLimits
+swift.struct	CBORLDDecodingOptions	struct CBORLDDecodingOptions
+swift.struct	CBORLDDecodingPolicy	struct CBORLDDecodingPolicy
+swift.struct	CBORLDDictionaryBinding	struct CBORLDDictionaryBinding
+swift.struct	CBORLDDigest	struct CBORLDDigest
+swift.struct	CBORLDDocumentDictionary	struct CBORLDDocumentDictionary
+swift.struct	CBORLDEncoder	struct CBORLDEncoder
+swift.struct	CBORLDEncodingLimits	struct CBORLDEncodingLimits
+swift.struct	CBORLDEncodingOptions	struct CBORLDEncodingOptions
+swift.struct	CBORLDEnvelopeMetadata	struct CBORLDEnvelopeMetadata
+swift.struct	CBORLDError	struct CBORLDError
+swift.struct	CBORLDErrorCode	struct CBORLDErrorCode
+swift.struct	CBORLDExecutionPolicy	struct CBORLDExecutionPolicy
+swift.struct	CBORLDFileChunks	struct CBORLDFileChunks
+swift.struct	CBORLDIndexedOutcome	struct CBORLDIndexedOutcome<Value> where Value : Sendable
+swift.struct	CBORLDInspection	struct CBORLDInspection
+swift.struct	CBORLDIntegrityManifest	struct CBORLDIntegrityManifest
+swift.struct	CBORLDLoadedDocument	struct CBORLDLoadedDocument
+swift.struct	CBORLDMapEntry	struct CBORLDMapEntry
+swift.struct	CBORLDPreparedDecoder	struct CBORLDPreparedDecoder
+swift.struct	CBORLDPreparedEncoder	struct CBORLDPreparedEncoder
+swift.struct	CBORLDProcessingModel	struct CBORLDProcessingModel
+swift.struct	CBORLDRawNode	struct CBORLDRawNode
+swift.struct	CBORLDRegistryEntry	struct CBORLDRegistryEntry
+swift.struct	CBORLDResourceCacheLimits	struct CBORLDResourceCacheLimits
+swift.struct	CBORLDResourceCacheStatistics	struct CBORLDResourceCacheStatistics
+swift.struct	CBORLDResourceProvenance	struct CBORLDResourceProvenance
+swift.struct	CBORLDSourceDiagnostic	struct CBORLDSourceDiagnostic
+swift.struct	CBORLDStreamValidation	struct CBORLDStreamValidation
+swift.struct	CBORLDStreamedDocument	struct CBORLDStreamedDocument
+swift.struct	CBORLDStreamingResult	struct CBORLDStreamingResult
+swift.struct	CBORLDStructuralCost	struct CBORLDStructuralCost
+swift.struct	CBORLDValidatedDocument	struct CBORLDValidatedDocument
+swift.struct	CBORLDValueDecoder	struct CBORLDValueDecoder
+swift.struct	CBORLDValueEncoder	struct CBORLDValueEncoder
+swift.struct	CBORLDVerificationCheck	struct CBORLDVerificationCheck
+swift.struct	CBORLDVerificationPolicy	struct CBORLDVerificationPolicy
+swift.struct	CBORLDVerificationReport	struct CBORLDVerificationReport
+swift.type.method	CBORLD.contextFingerprint(of:algorithm:)	static func contextFingerprint(of document: JSONValue, algorithm: CBORLDHashAlgorithm = .sha256) throws -> CBORLDDigest
+swift.type.method	CBORLD.decode(_:from:options:valueDecoder:)	static func decode<T>(_ type: T.Type, from data: Data, options: CBORLDDecodingOptions = .init(), valueDecoder: CBORLDValueDecoder = .init()) async throws -> T where T : Decodable, T : Sendable
+swift.type.method	CBORLD.decode(_:options:)	static func decode(_ data: Data, options: CBORLDDecodingOptions = .init()) async throws -> JSONValue
+swift.type.method	CBORLD.decode(_:options:)	static func decode(_ document: CBORLDValidatedDocument, options: CBORLDDecodingOptions = .init()) async throws -> JSONValue
+swift.type.method	CBORLD.decodeUncompressed(_:limits:)	static func decodeUncompressed(_ data: Data, limits: CBORLDDecodingLimits = .init()) throws -> JSONValue
+swift.type.method	CBORLD.decodeUncompressedEvents(_:limits:policy:digestAlgorithm:handler:)	static func decodeUncompressedEvents<Chunks>(_ chunks: Chunks, limits: CBORLDDecodingLimits = .init(), policy: CBORLDDecodingPolicy = .init(), digestAlgorithm: CBORLDHashAlgorithm = .sha256, handler: (CBORLDJSONEvent) throws -> Void) async throws -> CBORLDStreamValidation where Chunks : AsyncSequence, Chunks.Element == Data
+swift.type.method	CBORLD.decodeUncompressedStream(_:limits:policy:digestAlgorithm:)	static func decodeUncompressedStream<Chunks>(_ chunks: Chunks, limits: CBORLDDecodingLimits = .init(), policy: CBORLDDecodingPolicy = .init(), digestAlgorithm: CBORLDHashAlgorithm = .sha256) async throws -> CBORLDStreamedDocument where Chunks : AsyncSequence, Chunks.Element == Data
+swift.type.method	CBORLD.encode(_:options:)	static func encode(_ document: JSONValue, options: CBORLDEncodingOptions = .init()) async throws -> Data
+swift.type.method	CBORLD.encode(_:options:valueEncoder:)	static func encode<T>(_ document: T, options: CBORLDEncodingOptions = .init(), valueEncoder: CBORLDValueEncoder = .init()) async throws -> Data where T : Encodable, T : Sendable
+swift.type.method	CBORLD.encodeUncompressed(_:serializationMode:limits:)	static func encodeUncompressed(_ document: JSONValue, serializationMode: CBORLDSerializationMode = .compatibility, limits: CBORLDEncodingLimits = .init()) throws -> Data
+swift.type.method	CBORLD.encodeUncompressed(_:to:serializationMode:limits:chunkSize:digestAlgorithm:)	static func encodeUncompressed<Sink>(_ document: JSONValue, to sink: inout Sink, serializationMode: CBORLDSerializationMode = .compatibility, limits: CBORLDEncodingLimits = .init(), chunkSize: Int = 65_536, digestAlgorithm: CBORLDHashAlgorithm = .sha256) async throws -> CBORLDStreamingResult where Sink : CBORLDByteSink
+swift.type.method	CBORLD.inspect(_:configuration:)	static func inspect(_ data: Data, configuration: CBORLDDecodingConfiguration) throws -> CBORLDInspection
+swift.type.method	CBORLD.inspect(_:limits:policy:)	static func inspect(_ data: Data, limits: CBORLDDecodingLimits = .init(), policy: CBORLDDecodingPolicy = .init()) throws -> CBORLDInspection
+swift.type.method	CBORLD.integrityManifest(for:document:dictionary:contextDocuments:declaredSerializationMode:artifactName:producer:createdAt:notes:limits:)	static func integrityManifest(for data: Data, document: JSONValue? = nil, dictionary: CBORLDDocumentDictionary? = nil, contextDocuments: [String : JSONValue] = [:], declaredSerializationMode: CBORLDSerializationMode? = nil, artifactName: String? = nil, producer: String? = nil, createdAt: Date = Date(), notes: [String] = [], limits: CBORLDDecodingLimits = .init()) throws -> CBORLDIntegrityManifest
+swift.type.method	CBORLD.structuralFingerprint(of:algorithm:)	static func structuralFingerprint(of document: JSONValue, algorithm: CBORLDHashAlgorithm = .sha256) throws -> CBORLDDigest
+swift.type.method	CBORLD.transportDigest(chunks:algorithm:)	static func transportDigest<Chunks>(chunks: Chunks, algorithm: CBORLDHashAlgorithm = .sha256) -> CBORLDDigest where Chunks : Sequence, Chunks.Element == Data
+swift.type.method	CBORLD.transportDigest(of:algorithm:)	static func transportDigest(of data: Data, algorithm: CBORLDHashAlgorithm = .sha256) -> CBORLDDigest
+swift.type.method	CBORLD.transportDigest(ofFile:algorithm:chunkSize:)	static func transportDigest(ofFile url: URL, algorithm: CBORLDHashAlgorithm = .sha256, chunkSize: Int = 1_048_576) throws -> CBORLDDigest
+swift.type.method	CBORLD.validateLossless(_:limits:policy:provenance:)	static func validateLossless(_ data: Data, limits: CBORLDDecodingLimits = .init(), policy: CBORLDDecodingPolicy = .init(), provenance: CBORLDResourceProvenance = .init()) throws -> CBORLDValidatedDocument
+swift.type.method	CBORLD.validateStream(_:limits:policy:digestAlgorithm:)	static func validateStream<Chunks>(_ chunks: Chunks, limits: CBORLDDecodingLimits = .init(), policy: CBORLDDecodingPolicy = .init(), digestAlgorithm: CBORLDHashAlgorithm = .sha256) async throws -> CBORLDStreamValidation where Chunks : AsyncSequence, Chunks.Element == Data
+swift.type.method	CBORLD.verificationReport(for:against:dictionaries:contextRegistry:supportedFormats:legacyApplicationContextMap:limits:)	static func verificationReport(for data: Data, against manifest: CBORLDIntegrityManifest, dictionaries: [CBORLDDocumentDictionary] = [.unregistered], contextRegistry: CBORLDContextRegistry? = nil, supportedFormats: Set<CBORLDFormat> = Set(CBORLDFormat.allCases), legacyApplicationContextMap: [String : UInt64]? = nil, limits: CBORLDDecodingLimits = .init()) async -> CBORLDVerificationReport
+swift.type.method	CBORLD.verificationReport(for:policy:)	static func verificationReport(for data: Data, policy: CBORLDVerificationPolicy = .init()) async -> CBORLDVerificationReport
+swift.type.method	CBORLD.verify(_:against:)	static func verify(_ data: Data, against expected: CBORLDDigest) throws
+swift.type.method	CBORLD.verifyContext(_:against:)	static func verifyContext(_ document: JSONValue, against expected: CBORLDDigest) throws
+swift.type.method	CBORLD.verifyDocument(_:against:)	static func verifyDocument(_ document: JSONValue, against expected: CBORLDDigest) throws
+swift.type.property	CBORLD.legacyTypeTable	static var legacyTypeTable: CBORLDTypeTable { get }
+swift.type.property	CBORLDCodecIdentifier.builtIn	static let builtIn: Set<`Self`>
+swift.type.property	CBORLDCodecIdentifier.multibase	static let multibase: `Self`
+swift.type.property	CBORLDCodecIdentifier.url	static let url: `Self`
+swift.type.property	CBORLDCodecIdentifier.xsdDate	static let xsdDate: `Self`
+swift.type.property	CBORLDCodecIdentifier.xsdDateTime	static let xsdDateTime: `Self`
+swift.type.property	CBORLDContextLoadingPolicy.strict	static let strict: CBORLDContextLoadingPolicy
+swift.type.property	CBORLDDecodingConfiguration.permissive	static let permissive: CBORLDDecodingConfiguration
+swift.type.property	CBORLDDecodingConfiguration.untrustedCompatible	static let untrustedCompatible: CBORLDDecodingConfiguration
+swift.type.property	CBORLDDecodingConfiguration.untrustedDeterministic	static let untrustedDeterministic: CBORLDDecodingConfiguration
+swift.type.property	CBORLDDecodingLimits.strict	static let strict: CBORLDDecodingLimits
+swift.type.property	CBORLDDecodingPolicy.strict	static let strict: CBORLDDecodingPolicy
+swift.type.property	CBORLDDocumentDictionary.unregistered	static let unregistered: CBORLDDocumentDictionary
+swift.type.property	CBORLDErrorCode.ambiguousValue	static let ambiguousValue: `Self`
+swift.type.property	CBORLDErrorCode.batchItem	static let batchItem: `Self`
+swift.type.property	CBORLDErrorCode.batchLimit	static let batchLimit: `Self`
+swift.type.property	CBORLDErrorCode.codecNotInvertible	static let codecNotInvertible: `Self`
+swift.type.property	CBORLDErrorCode.compressionValueTooLarge	static let compressionValueTooLarge: `Self`
+swift.type.property	CBORLDErrorCode.computeFamilyUnavailable	static let computeFamilyUnavailable: `Self`
+swift.type.property	CBORLDErrorCode.contextNotAllowed	static let contextNotAllowed: `Self`
+swift.type.property	CBORLDErrorCode.integerOverflow	static let integerOverflow: `Self`
+swift.type.property	CBORLDErrorCode.integrityMismatch	static let integrityMismatch: `Self`
+swift.type.property	CBORLDErrorCode.invalidComputeOutput	static let invalidComputeOutput: `Self`
+swift.type.property	CBORLDErrorCode.invalidContext	static let invalidContext: `Self`
+swift.type.property	CBORLDErrorCode.invalidDictionary	static let invalidDictionary: `Self`
+swift.type.property	CBORLDErrorCode.invalidDigest	static let invalidDigest: `Self`
+swift.type.property	CBORLDErrorCode.invalidEncodedContext	static let invalidEncodedContext: `Self`
+swift.type.property	CBORLDErrorCode.invalidExecutionPolicy	static let invalidExecutionPolicy: `Self`
+swift.type.property	CBORLDErrorCode.invalidInput	static let invalidInput: `Self`
+swift.type.property	CBORLDErrorCode.invalidManifest	static let invalidManifest: `Self`
+swift.type.property	CBORLDErrorCode.invalidPayloadStructure	static let invalidPayloadStructure: `Self`
+swift.type.property	CBORLDErrorCode.invalidProcessingModel	static let invalidProcessingModel: `Self`
+swift.type.property	CBORLDErrorCode.invalidRegistryEntry	static let invalidRegistryEntry: `Self`
+swift.type.property	CBORLDErrorCode.invalidTermDefinition	static let invalidTermDefinition: `Self`
+swift.type.property	CBORLDErrorCode.invalidTypeTable	static let invalidTypeTable: `Self`
+swift.type.property	CBORLDErrorCode.noDocumentLoader	static let noDocumentLoader: `Self`
+swift.type.property	CBORLDErrorCode.noTypeTable	static let noTypeTable: `Self`
+swift.type.property	CBORLDErrorCode.nonCBORLDTag	static let nonCBORLDTag: `Self`
+swift.type.property	CBORLDErrorCode.nonPreferredCBOR	static let nonPreferredCBOR: `Self`
+swift.type.property	CBORLDErrorCode.nonPreferredFloat	static let nonPreferredFloat: `Self`
+swift.type.property	CBORLDErrorCode.nonPreferredInteger	static let nonPreferredInteger: `Self`
+swift.type.property	CBORLDErrorCode.nonPreferredLength	static let nonPreferredLength: `Self`
+swift.type.property	CBORLDErrorCode.notCBOR	static let notCBOR: `Self`
+swift.type.property	CBORLDErrorCode.notCBORLD	static let notCBORLD: `Self`
+swift.type.property	CBORLDErrorCode.policyMismatch	static let policyMismatch: `Self`
+swift.type.property	CBORLDErrorCode.protectedTermRedefinition	static let protectedTermRedefinition: `Self`
+swift.type.property	CBORLDErrorCode.provisionalRegistryEntry	static let provisionalRegistryEntry: `Self`
+swift.type.property	CBORLDErrorCode.reservedSimpleValue	static let reservedSimpleValue: `Self`
+swift.type.property	CBORLDErrorCode.resourceLimit	static let resourceLimit: `Self`
+swift.type.property	CBORLDErrorCode.shadowParityMismatch	static let shadowParityMismatch: `Self`
+swift.type.property	CBORLDErrorCode.specificationCodes	static let specificationCodes: Set<`Self`>
+swift.type.property	CBORLDErrorCode.undefinedCompressedContext	static let undefinedCompressedContext: `Self`
+swift.type.property	CBORLDErrorCode.unknownCBORLDTermID	static let unknownCBORLDTermID: `Self`
+swift.type.property	CBORLDErrorCode.unknownCodec	static let unknownCodec: `Self`
+swift.type.property	CBORLDErrorCode.unknownCompressedValue	static let unknownCompressedValue: `Self`
+swift.type.property	CBORLDErrorCode.unknownContext	static let unknownContext: `Self`
+swift.type.property	CBORLDErrorCode.unpinnedContext	static let unpinnedContext: `Self`
+swift.type.property	CBORLDErrorCode.unpinnedDictionary	static let unpinnedDictionary: `Self`
+swift.type.property	CBORLDErrorCode.unrecognizedBytes	static let unrecognizedBytes: `Self`
+swift.type.property	CBORLDErrorCode.unsupportedFormat	static let unsupportedFormat: `Self`
+swift.type.property	CBORLDErrorCode.unsupportedJSONType	static let unsupportedJSONType: `Self`
+swift.type.property	CBORLDErrorCode.unsupportedLiteralType	static let unsupportedLiteralType: `Self`
+swift.type.property	CBORLDIntegrityManifest.currentFormatVersion	static let currentFormatVersion: UInt16
+swift.type.property	CBORLDProcessingModel.default	static let `default`: CBORLDProcessingModel
+swift.type.property	CBORLDProcessingModel.multibaseType	static let multibaseType: String
+swift.type.property	CBORLDProcessingModel.uncompressed	static let uncompressed: CBORLDProcessingModel
+swift.type.property	CBORLDProcessingModel.urlType	static let urlType: String
+swift.type.property	CBORLDProcessingModel.xsdDateTimeType	static let xsdDateTimeType: String
+swift.type.property	CBORLDProcessingModel.xsdDateType	static let xsdDateType: String
+swift.type.property	CBORLDRegistryEntry.compressed	static let compressed: CBORLDRegistryEntry
+swift.type.property	CBORLDRegistryEntry.uncompressed	static let uncompressed: CBORLDRegistryEntry
+swift.typealias	CBORLDBatchOutcomeStream.Element	typealias Element = CBORLDIndexedOutcome<Value>
+swift.typealias	CBORLDContextDocumentLoader	typealias CBORLDContextDocumentLoader = (CBORLDContextRequest) async throws -> CBORLDLoadedDocument
+swift.typealias	CBORLDDocumentLoader	typealias CBORLDDocumentLoader = (String) async throws -> JSONValue
+swift.typealias	CBORLDFileChunks.Element	typealias Element = Data
+swift.typealias	CBORLDRegistryEntryLoader	typealias CBORLDRegistryEntryLoader = (UInt64) async throws -> CBORLDRegistryEntry?
+swift.typealias	CBORLDTypeTable	typealias CBORLDTypeTable = [String : CBORLDValueTable]
+swift.typealias	CBORLDTypeTableLoader	typealias CBORLDTypeTableLoader = (UInt64) async throws -> CBORLDTypeTable?
+swift.typealias	CBORLDValueTable	typealias CBORLDValueTable = [JSONValue : UInt64]

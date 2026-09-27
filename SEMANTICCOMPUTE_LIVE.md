@@ -30,6 +30,15 @@ compatibility, and declares a `digest-only` attestation. The
 `SC_LIVE_EXPECTED_TARGET` when using a runner other than the beta
 `cpu-reference` target.
 
+The same check runs in CI only on demand, through the `SemanticCompute Live`
+workflow in `.github/workflows/semanticcompute-live.yml`. Store `SC_LIVE_URL`
+and `SC_LIVE_TOKEN` as secrets of the `semanticcompute-live` environment, whose
+protection rules can require a reviewer before the secrets are used. The
+workflow's optional inputs set `SC_LIVE_EXPECTED_ENGINE` and
+`SC_LIVE_EXPECTED_TARGET`, and an empty value leaves the corresponding check at
+its default. The job fails when the URL secret is missing or the test skips,
+so a passing run always means the service answered and the bytes matched.
+
 Keep `SC_LIVE_TOKEN` in CI secrets; do not commit it or put it in a repository
 manifest. A future signed-receipt gate must cryptographically verify the
 signature against an explicitly trusted key. Merely receiving a non-empty

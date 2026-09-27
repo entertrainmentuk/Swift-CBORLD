@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Swift-CBORLD — deterministic CBOR-LD for Swift</title>
-  <meta name="description" content="A native Swift CBOR-LD implementation with deterministic encoding, strict decoding, cross-language verification, and an optional SemanticCompute adapter.">
+  <meta name="description" content="A native Swift CBOR-LD implementation with deterministic encoding, registry processing models, strict and streaming decoding, cross-language verification, and verifiable compute-family contracts.">
   <meta name="color-scheme" content="dark light">
   <meta name="theme-color" content="#08080a">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2308080a'/%3E%3Cpath d='M18 21h18l10 11-10 11H18l9-11z' fill='none' stroke='%23ff4b5f' stroke-width='5' stroke-linejoin='round'/%3E%3Ccircle cx='34' cy='32' r='3' fill='%23ff9aa8'/%3E%3C/svg%3E">
@@ -42,7 +42,7 @@
         <div class="hero-copy">
           <p class="eyebrow">CBOR‑LD 1.0 · Swift 6 · Apple + Linux</p>
           <h1>Linked data.<br><em>Exact bytes.</em><br>Native Swift.</h1>
-          <p class="hero-lead">Encode JSON‑LD into compact CBOR‑LD, restore it under explicit limits, and inspect the evidence behind every compatibility claim. The open core stands alone; optional GPU acceleration connects to the separately licensed SemanticCompute binary.</p>
+          <p class="hero-lead">Encode JSON‑LD into compact CBOR‑LD, restore it under explicit limits, and inspect the evidence behind every compatibility claim. The open core stands alone; a separately licensed SemanticCompute acceleration companion is planned and is not part of this release.</p>
           <div class="hero-actions">
             <a class="button primary" href="#install">Add the package <span aria-hidden="true">→</span></a>
             <a class="button secondary" href="interop-lab.html">Open Interop Lab</a>
@@ -85,7 +85,7 @@
         </div>
       </div>
       <div class="wrap metric-strip" aria-label="Current validation summary">
-        <div><strong>74</strong><span>release tests</span></div>
+        <div><strong>163</strong><span>release tests</span></div>
         <div><strong>16/16</strong><span>four-way cross-decodes</span></div>
         <div><strong>11/11</strong><span>benchmark fixtures won</span></div>
         <div><strong>2.22×</strong><span>measured round-trip speedup</span></div>
@@ -182,7 +182,7 @@
         <div class="section-intro">
           <p class="eyebrow">One core, explicit boundaries</p>
           <h2>The document stays on the CPU.<br>The bounded work can travel.</h2>
-          <p>Recursive JSON trees, context inheritance, dynamic maps, and document loading remain in the native Swift core. Dense, bounded byte and integer workloads can use a separately installed, commercially licensed SemanticCompute binary through the optional adapter.</p>
+          <p>Recursive JSON trees, context inheritance, dynamic maps, and document loading remain in the native Swift core. Dense, bounded byte and integer workloads have versioned contracts in CBORLDCompute, so any backend can take them on and be checked against the CPU reference. A commercially licensed SemanticCompute adapter is planned as a separate package.</p>
         </div>
 
         <div class="architecture-map" aria-label="Swift-CBORLD architecture">
@@ -191,7 +191,7 @@
           <div class="arch-core">
             <div class="core-head"><span>02</span><strong>CBORLD core</strong><em>zero dependencies</em></div>
             <div class="core-grid">
-              <div><b>Semantic transform</b><small>contexts, dictionaries, codecs</small></div>
+              <div><b>Semantic transform</b><small>contexts, processing models, codecs</small></div>
               <div><b>Strict CBOR</b><small>limits, duplicate keys, diagnostics</small></div>
               <div><b>Deterministic output</b><small>compatibility + RFC 8949 profiles</small></div>
               <div><b>Integrity</b><small>SHA‑2, fingerprints, manifests</small></div>
@@ -200,16 +200,16 @@
           <div class="arch-branch">
             <div class="branch-rule"><span></span><b>eligible bounded work</b><span></span></div>
             <div class="arch-node sc-node">
-              <div><span>03 · optional integration</span><strong>SemanticCompute binary adapter</strong><small>Links the signed commercial binary for exact UInt32 and byte families. SemanticCompute implementation source is not included.</small></div>
-              <span class="preview-badge">commercial · SC 1.23</span>
+              <div><span>03 · planned companion</span><strong>SemanticCompute binary adapter</strong><small>A separate package, not part of 0.1.0, that would link the signed commercial binary for exact UInt32 and byte families once SemanticCompute 1.23.0 is publicly resolvable. SemanticCompute source is not included.</small></div>
+              <span class="preview-badge">planned · SC 1.23.0</span>
             </div>
           </div>
         </div>
 
         <div class="capability-grid">
-          <article><span class="cap-number">01</span><h3>Context aware</h3><p>Remote, embedded, imported, type-scoped, and property-scoped contexts with protected-term and propagation behavior.</p></article>
-          <article><span class="cap-number">02</span><h3>Untrusted-input limits</h3><p>Bound input bytes, nesting depth, container sizes, duplicate keys, indefinite lengths, and preferred-width validation.</p></article>
-          <article><span class="cap-number">03</span><h3>Prepared sessions</h3><p>Build dictionary indexes once, deduplicate context loads, and preserve per-document semantic isolation across concurrent work.</p></article>
+          <article><span class="cap-number">01</span><h3>Context aware</h3><p>Remote, embedded, imported, type-scoped, and property-scoped contexts with protected-term and propagation behavior, loaded only from sources you supply and bounded per operation.</p></article>
+          <article><span class="cap-number">02</span><h3>Untrusted-input limits</h3><p>Presets and explicit bounds for input bytes, nesting depth, container sizes, duplicate keys, indefinite lengths, preferred widths, and encoded output size.</p></article>
+          <article><span class="cap-number">03</span><h3>Prepared sessions</h3><p>Build dictionary indexes once, share a bounded context cache, stream batch results, and preserve per-document semantic isolation across concurrent work.</p></article>
           <article><span class="cap-number">04</span><h3>Inspectable integrity</h3><p>Transport hashes, structural fingerprints, pinned resources, verification reports, and versioned out-of-band manifests.</p></article>
         </div>
       </div>
@@ -226,7 +226,7 @@
           </div>
           <div class="commercial-note">
             <b>Commercial acceleration boundary</b>
-            <p>The optional adapter requires the SemanticCompute binary package and a SemanticCompute licence. Its CPU fallback preserves results when a dispatch is unsuitable; it does not remove the build, link, or redistribution requirement after the adapter is imported.</p>
+            <p>The planned adapter will require the SemanticCompute binary package and a SemanticCompute licence; Swift‑CBORLD 0.1.0 neither includes nor needs it. Its CPU fallback will preserve results when a dispatch is unsuitable, but will not remove the build, link, or redistribution requirement once the adapter is imported.</p>
           </div>
         </div>
 
@@ -262,7 +262,7 @@
       </div>
       <div class="footer-links">
         <div><b>Project</b><a href="interop-lab.html">Interop Lab</a><a href="https://github.com/entertrainment/swift-cborld">GitHub</a><a href="#proof">Verification</a><a href="#performance">Benchmarks</a></div>
-        <div><b>Reference</b><a href="https://json-ld.github.io/cbor-ld-spec/">CBOR‑LD specification</a><a href="https://github.com/digitalbazaar/cborld">Digital Bazaar CBOR‑LD</a><a href="https://github.com/entertrainment/swift-cborld/blob/main/LICENSE">BSD‑3‑Clause</a></div>
+        <div><b>Reference</b><a href="api/documentation/cborld/">API reference</a><a href="api-compute/documentation/cborldcompute/">Compute API</a><a href="https://w3c.github.io/cbor-ld/">CBOR‑LD 1.0 editor’s draft</a><a href="https://github.com/digitalbazaar/cborld">Digital Bazaar CBOR‑LD</a><a href="https://github.com/entertrainment/swift-cborld/blob/main/LICENSE">BSD‑3‑Clause</a></div>
       </div>
     </div>
     <div class="wrap footer-bottom"><span>Evidence over assertion.</span><span>Built for deterministic, inspectable data interchange.</span></div>

@@ -1,0 +1,414 @@
+swift.enum	CBORLDCDDLDiagnosticPhase	enum CBORLDCDDLDiagnosticPhase
+swift.enum	CBORLDCDDLDiagnosticSeverity	enum CBORLDCDDLDiagnosticSeverity
+swift.enum	CBORLDCDDLDocumentEncoding	enum CBORLDCDDLDocumentEncoding
+swift.enum	CBORLDCDDLRegexPolicy	enum CBORLDCDDLRegexPolicy
+swift.enum	CBORLDCanonicalKeyOrdering	enum CBORLDCanonicalKeyOrdering
+swift.enum	CBORLDComputeCPUReferenceKind	enum CBORLDComputeCPUReferenceKind
+swift.enum	CBORLDComputeExecutionKind	enum CBORLDComputeExecutionKind
+swift.enum	CBORLDComputeFamilyAvailability	enum CBORLDComputeFamilyAvailability
+swift.enum	CBORLDComputeFamilyID	enum CBORLDComputeFamilyID
+swift.enum	CBORLDComputeFamilyPriority	enum CBORLDComputeFamilyPriority
+swift.enum	CBORLDMultibaseEncoding	enum CBORLDMultibaseEncoding
+swift.enum	CBORLDShadowMismatchAction	enum CBORLDShadowMismatchAction
+swift.enum	CBORLDShadowParityStatus	enum CBORLDShadowParityStatus
+swift.enum	CBORLDShadowVerificationPolicy	enum CBORLDShadowVerificationPolicy
+swift.enum	CBORLDWholeDocumentTransformOperation	enum CBORLDWholeDocumentTransformOperation
+swift.enum.case	CBORLDCDDLDiagnosticPhase.control	case control
+swift.enum.case	CBORLDCDDLDiagnosticPhase.lexing	case lexing
+swift.enum.case	CBORLDCDDLDiagnosticPhase.parsing	case parsing
+swift.enum.case	CBORLDCDDLDiagnosticPhase.validation	case validation
+swift.enum.case	CBORLDCDDLDiagnosticSeverity.error	case error
+swift.enum.case	CBORLDCDDLDiagnosticSeverity.information	case information
+swift.enum.case	CBORLDCDDLDiagnosticSeverity.warning	case warning
+swift.enum.case	CBORLDCDDLDocumentEncoding.cbor	case cbor
+swift.enum.case	CBORLDCDDLDocumentEncoding.json	case json
+swift.enum.case	CBORLDCDDLRegexPolicy.anchoredOnly	case anchoredOnly
+swift.enum.case	CBORLDCDDLRegexPolicy.disabled	case disabled
+swift.enum.case	CBORLDCDDLRegexPolicy.enabled	case enabled
+swift.enum.case	CBORLDCanonicalKeyOrdering.bytewise	case bytewise
+swift.enum.case	CBORLDCanonicalKeyOrdering.lengthFirst	case lengthFirst
+swift.enum.case	CBORLDComputeCPUReferenceKind.existingProcessor	case existingProcessor
+swift.enum.case	CBORLDComputeCPUReferenceKind.inPackage	case inPackage
+swift.enum.case	CBORLDComputeCPUReferenceKind.injectedOracle	case injectedOracle
+swift.enum.case	CBORLDComputeExecutionKind.cpu	case cpu
+swift.enum.case	CBORLDComputeExecutionKind.cpuFallback	case cpuFallback
+swift.enum.case	CBORLDComputeExecutionKind.cpuReference	case cpuReference
+swift.enum.case	CBORLDComputeExecutionKind.gpu	case gpu
+swift.enum.case	CBORLDComputeExecutionKind.metal	case metal
+swift.enum.case	CBORLDComputeExecutionKind.remote	case remote
+swift.enum.case	CBORLDComputeExecutionKind.unknown	case unknown
+swift.enum.case	CBORLDComputeFamilyAvailability.available	case available
+swift.enum.case	CBORLDComputeFamilyAvailability.unavailable	case unavailable
+swift.enum.case	CBORLDComputeFamilyID.batchedSHA256	case batchedSHA256
+swift.enum.case	CBORLDComputeFamilyID.byteCompaction	case byteCompaction
+swift.enum.case	CBORLDComputeFamilyID.byteDiff	case byteDiff
+swift.enum.case	CBORLDComputeFamilyID.byteStatistics	case byteStatistics
+swift.enum.case	CBORLDComputeFamilyID.canonicalKeyOrdering	case canonicalKeyOrdering
+swift.enum.case	CBORLDComputeFamilyID.cddlValidation	case cddlValidation
+swift.enum.case	CBORLDComputeFamilyID.dictionaryProbe	case dictionaryProbe
+swift.enum.case	CBORLDComputeFamilyID.multibaseCodec	case multibaseCodec
+swift.enum.case	CBORLDComputeFamilyID.prefixScan	case prefixScan
+swift.enum.case	CBORLDComputeFamilyID.structuralScan	case structuralScan
+swift.enum.case	CBORLDComputeFamilyID.unsignedVarint	case unsignedVarint
+swift.enum.case	CBORLDComputeFamilyID.utf8Validation	case utf8Validation
+swift.enum.case	CBORLDComputeFamilyID.wholeDocumentTransform	case wholeDocumentTransform
+swift.enum.case	CBORLDComputeFamilyPriority.high	case high
+swift.enum.case	CBORLDComputeFamilyPriority.low	case low
+swift.enum.case	CBORLDComputeFamilyPriority.medium	case medium
+swift.enum.case	CBORLDMultibaseEncoding.base58BTC	case base58BTC
+swift.enum.case	CBORLDMultibaseEncoding.base64	case base64
+swift.enum.case	CBORLDMultibaseEncoding.base64URL	case base64URL
+swift.enum.case	CBORLDShadowMismatchAction.returnReference	case returnReference
+swift.enum.case	CBORLDShadowMismatchAction.throwError	case throwError
+swift.enum.case	CBORLDShadowParityStatus.candidateFailed	case candidateFailed
+swift.enum.case	CBORLDShadowParityStatus.match	case match
+swift.enum.case	CBORLDShadowParityStatus.mismatch	case mismatch
+swift.enum.case	CBORLDShadowParityStatus.notSampled	case notSampled
+swift.enum.case	CBORLDShadowParityStatus.referenceUnavailable	case referenceUnavailable
+swift.enum.case	CBORLDShadowVerificationPolicy.always	case always
+swift.enum.case	CBORLDShadowVerificationPolicy.deterministicSample(rate:seed:)	case deterministicSample(rate: Double, seed: UInt64)
+swift.enum.case	CBORLDShadowVerificationPolicy.disabled	case disabled
+swift.enum.case	CBORLDWholeDocumentTransformOperation.decode	case decode
+swift.enum.case	CBORLDWholeDocumentTransformOperation.encode	case encode
+swift.init	CBORLDByteCompactionResult.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDByteCompactionResult.init(offsets:bytes:)	init(offsets: [UInt64], bytes: Data)
+swift.init	CBORLDByteDiffResult.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDByteDiffResult.init(leftByteCount:rightByteCount:mismatchCount:firstMismatchOffset:)	init(leftByteCount: Int, rightByteCount: Int, mismatchCount: UInt64, firstMismatchOffset: Int?)
+swift.init	CBORLDBytePair.init(_:_:)	init(_ left: Data, _ right: Data)
+swift.init	CBORLDBytePair.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDByteStatistics.init(byteCount:histogram:shannonEntropyBitsPerByte:)	init(byteCount: UInt64, histogram: [UInt64], shannonEntropyBitsPerByte: Double)
+swift.init	CBORLDByteStatistics.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDCDDLDiagnostic.init(code:severity:phase:message:path:rule:schemaByteOffset:documentByteOffset:)	init(code: String, severity: CBORLDCDDLDiagnosticSeverity, phase: CBORLDCDDLDiagnosticPhase, message: String, path: String? = nil, rule: String? = nil, schemaByteOffset: Int? = nil, documentByteOffset: Int? = nil)
+swift.init	CBORLDCDDLDiagnostic.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDCDDLDiagnosticPhase.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDCDDLDiagnosticSeverity.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDCDDLDocumentEncoding.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDCDDLRegexPolicy.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDCDDLValidationLimits.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDCDDLValidationLimits.init(maximumSchemaBytes:maximumDocumentBytes:maximumASTNodes:maximumRecursionDepth:maximumDiagnostics:regexPolicy:)	init(maximumSchemaBytes: Int = 1_048_576, maximumDocumentBytes: Int = 64 * 1_024 * 1_024, maximumASTNodes: Int = 1_000_000, maximumRecursionDepth: Int = 256, maximumDiagnostics: Int = 100, regexPolicy: CBORLDCDDLRegexPolicy = .disabled)
+swift.init	CBORLDCDDLValidationRequest.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDCDDLValidationRequest.init(schema:rootRule:document:documentEncoding:limits:)	init(schema: String, rootRule: String? = nil, document: Data, documentEncoding: CBORLDCDDLDocumentEncoding, limits: CBORLDCDDLValidationLimits = .init())
+swift.init	CBORLDCDDLValidationResult.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDCDDLValidationResult.init(schemaByteCount:documentByteCount:schemaIsValid:documentIsValid:astNodeCount:maximumValidationDepth:flatInstructionCount:failedInstructionIndex:diagnostics:)	init(schemaByteCount: Int, documentByteCount: Int, schemaIsValid: Bool, documentIsValid: Bool, astNodeCount: Int, maximumValidationDepth: Int, flatInstructionCount: Int? = nil, failedInstructionIndex: Int? = nil, diagnostics: [CBORLDCDDLDiagnostic])
+swift.init	CBORLDCPUComputeProvider.init(documentLoader:cddlOracle:)	init(documentLoader: CBORLDDocumentLoader? = nil, cddlOracle: (any CBORLDCDDLCPUOracle)? = nil)
+swift.init	CBORLDCanonicalKeyOrderResult.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDCanonicalKeyOrderResult.init(orderedIndices:)	init(orderedIndices: [Int])
+swift.init	CBORLDCanonicalKeyOrdering.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDComputeBackendIdentity.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDComputeBackendIdentity.init(name:version:buildIdentifier:binaryDigest:executionKind:hardwareExecutionObserved:)	init(name: String, version: String? = nil, buildIdentifier: String? = nil, binaryDigest: CBORLDDigest? = nil, executionKind: CBORLDComputeExecutionKind, hardwareExecutionObserved: Bool = false)
+swift.init	CBORLDComputeByteSpan.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDComputeByteSpan.init(offset:length:)	init(offset: UInt32, length: UInt32)
+swift.init	CBORLDComputeCPUReferenceKind.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDComputeExecutionKind.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDComputeFamilyAvailability.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDComputeFamilyCapability.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDComputeFamilyCapability.init(id:availability:implementation:constraints:)	init(id: CBORLDComputeFamilyID, availability: CBORLDComputeFamilyAvailability, implementation: String, constraints: [String : String] = [:])
+swift.init	CBORLDComputeFamilyContract.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDComputeFamilyContract.init(id:priority:workItem:exactSemantics:cpuReference:)	init(id: CBORLDComputeFamilyID, priority: CBORLDComputeFamilyPriority, workItem: String, exactSemantics: String, cpuReference: CBORLDComputeCPUReferenceKind = .inPackage)
+swift.init	CBORLDComputeFamilyID.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDComputeFamilyPriority.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDComputePackedByteBatch.init(bytes:spans:)	init(bytes: [UInt32], spans: [CBORLDComputeByteSpan]) throws
+swift.init	CBORLDComputePackedByteBatch.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDComputePackedByteBatch.init(slices:)	init(slices: [Data]) throws
+swift.init	CBORLDDictionaryProbe.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDDictionaryProbe.init(table:value:)	init(table: String, value: JSONValue)
+swift.init	CBORLDDictionaryProbeResult.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDDictionaryProbeResult.init(table:value:identifier:)	init(table: String, value: JSONValue, identifier: UInt64?)
+swift.init	CBORLDExclusiveScanUInt32Result.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDExclusiveScanUInt32Result.init(offsets:total:)	init(offsets: [UInt32], total: UInt32)
+swift.init	CBORLDExclusiveScanUInt64Result.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDExclusiveScanUInt64Result.init(offsets:total:)	init(offsets: [UInt64], total: UInt64)
+swift.init	CBORLDMultibaseDecodeResult.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDMultibaseDecodeResult.init(input:decoded:firstInvalidByteOffset:message:)	init(input: String, decoded: Data?, firstInvalidByteOffset: Int?, message: String?)
+swift.init	CBORLDMultibaseEncoding.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDSHA256Result.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDSHA256Result.init(inputByteCount:stateWords:digest:)	init(inputByteCount: Int, stateWords: [UInt32], digest: CBORLDDigest)
+swift.init	CBORLDShadowMismatch.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDShadowParityStatus.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDShadowVerificationReceipt.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDShadowVerifyingProvider.init(candidate:reference:policy:onMismatch:maximumRetainedReceipts:receiptHandler:)	init(candidate: Candidate, reference: CBORLDCPUComputeProvider = .init(), policy: CBORLDShadowVerificationPolicy = .always, onMismatch: CBORLDShadowMismatchAction = .throwError, maximumRetainedReceipts: Int = 1_024, receiptHandler: ((CBORLDShadowVerificationReceipt) -> Void)? = nil)
+swift.init	CBORLDStructuralScanResult.init(byteCount:isValid:firstErrorOffset:maximumDepth:itemCount:errorCode:message:)	init(byteCount: Int, isValid: Bool, firstErrorOffset: Int?, maximumDepth: Int, itemCount: UInt64, errorCode: CBORLDErrorCode?, message: String?)
+swift.init	CBORLDStructuralScanResult.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDUTF8ValidationResult.init(byteCount:isValid:firstInvalidByteOffset:)	init(byteCount: Int, isValid: Bool, firstInvalidByteOffset: Int?)
+swift.init	CBORLDUTF8ValidationResult.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDUnsignedVarintDecodeResult.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDUnsignedVarintDecodeResult.init(value:bytesConsumed:firstErrorOffset:message:)	init(value: UInt64?, bytesConsumed: Int, firstErrorOffset: Int?, message: String?)
+swift.init	CBORLDWholeDocumentTransformConfiguration.init(format:serializationMode:dictionary:requiredDictionaryFingerprint:contextDocuments:requiredContextFingerprints:decodingLimits:maximumOutputBytes:)	init(format: CBORLDFormat = .cborLD1, serializationMode: CBORLDSerializationMode = .compatibility, dictionary: CBORLDDocumentDictionary = .init(code: 0), requiredDictionaryFingerprint: CBORLDDigest? = nil, contextDocuments: [String : JSONValue] = [:], requiredContextFingerprints: [String : CBORLDDigest] = [:], decodingLimits: CBORLDDecodingLimits = .init(), maximumOutputBytes: Int = 64 * 1_024 * 1_024)
+swift.init	CBORLDWholeDocumentTransformConfiguration.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDWholeDocumentTransformOperation.init(rawValue:)	init?(rawValue: String)
+swift.init	CBORLDWholeDocumentTransformRequest.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDWholeDocumentTransformRequest.init(operation:jsonLDDocument:cborldBytes:configuration:)	init(operation: CBORLDWholeDocumentTransformOperation, jsonLDDocument: JSONValue? = nil, cborldBytes: Data? = nil, configuration: CBORLDWholeDocumentTransformConfiguration = .init())
+swift.init	CBORLDWholeDocumentTransformResult.init(from:)	init(from decoder: any Decoder) throws
+swift.init	CBORLDWholeDocumentTransformResult.init(operation:jsonLDDocument:cborldBytes:outputByteCount:transportDigest:inspection:)	init(operation: CBORLDWholeDocumentTransformOperation, jsonLDDocument: JSONValue? = nil, cborldBytes: Data? = nil, outputByteCount: Int, transportDigest: CBORLDDigest, inspection: CBORLDInspection)
+swift.method	CBORLDBatchedSHA256Computing.batchedSHA256(_:)	func batchedSHA256(_ slices: [Data]) async throws -> [CBORLDSHA256Result]
+swift.method	CBORLDByteCompactionResult.validate(input:)	func validate(input: [Data]) throws
+swift.method	CBORLDByteDiffComputing.batchedByteDiff(_:)	func batchedByteDiff(_ pairs: [CBORLDBytePair]) async throws -> [CBORLDByteDiffResult]
+swift.method	CBORLDByteDiffResult.validate(expectedLeftByteCount:expectedRightByteCount:)	func validate(expectedLeftByteCount: Int, expectedRightByteCount: Int) throws
+swift.method	CBORLDByteStatistics.validate(expectedByteCount:)	func validate(expectedByteCount: Int) throws
+swift.method	CBORLDByteStatisticsComputing.batchedByteStatistics(_:)	func batchedByteStatistics(_ slices: [Data]) async throws -> [CBORLDByteStatistics]
+swift.method	CBORLDCDDLCPUOracle.validateCDDL(_:)	func validateCDDL(_ request: CBORLDCDDLValidationRequest) async throws -> CBORLDCDDLValidationResult
+swift.method	CBORLDCDDLValidationComputing.batchedCDDLValidation(_:)	func batchedCDDLValidation(_ requests: [CBORLDCDDLValidationRequest]) async throws -> [CBORLDCDDLValidationResult]
+swift.method	CBORLDCDDLValidationLimits.validate()	func validate() throws
+swift.method	CBORLDCDDLValidationRequest.validate()	func validate() throws
+swift.method	CBORLDCDDLValidationResult.validate(for:)	func validate(for request: CBORLDCDDLValidationRequest) throws
+swift.method	CBORLDCPUComputeProvider.batchedByteDiff(_:)	func batchedByteDiff(_ pairs: [CBORLDBytePair]) async throws -> [CBORLDByteDiffResult]
+swift.method	CBORLDCPUComputeProvider.batchedByteStatistics(_:)	func batchedByteStatistics(_ slices: [Data]) async throws -> [CBORLDByteStatistics]
+swift.method	CBORLDCPUComputeProvider.batchedCBORStructuralScan(_:limits:)	func batchedCBORStructuralScan(_ documents: [Data], limits: CBORLDDecodingLimits = .init()) async throws -> [CBORLDStructuralScanResult]
+swift.method	CBORLDCPUComputeProvider.batchedCDDLValidation(_:)	func batchedCDDLValidation(_ requests: [CBORLDCDDLValidationRequest]) async throws -> [CBORLDCDDLValidationResult]
+swift.method	CBORLDCPUComputeProvider.batchedDictionaryProbe(_:dictionary:requiredFingerprint:)	func batchedDictionaryProbe(_ probes: [CBORLDDictionaryProbe], dictionary: CBORLDDocumentDictionary, requiredFingerprint: CBORLDDigest) async throws -> [CBORLDDictionaryProbeResult]
+swift.method	CBORLDCPUComputeProvider.batchedMultibaseDecode(_:maximumInputBytes:)	func batchedMultibaseDecode(_ values: [String], maximumInputBytes: Int = 1_048_576) async throws -> [CBORLDMultibaseDecodeResult]
+swift.method	CBORLDCPUComputeProvider.batchedMultibaseEncode(_:as:maximumInputBytes:)	func batchedMultibaseEncode(_ values: [Data], as encoding: CBORLDMultibaseEncoding, maximumInputBytes: Int = 1_048_576) async throws -> [String]
+swift.method	CBORLDCPUComputeProvider.batchedSHA256(_:)	func batchedSHA256(_ slices: [Data]) async throws -> [CBORLDSHA256Result]
+swift.method	CBORLDCPUComputeProvider.batchedUTF8Validation(_:)	func batchedUTF8Validation(_ slices: [Data]) async throws -> [CBORLDUTF8ValidationResult]
+swift.method	CBORLDCPUComputeProvider.batchedUnsignedVarintDecode(_:)	func batchedUnsignedVarintDecode(_ values: [Data]) async throws -> [CBORLDUnsignedVarintDecodeResult]
+swift.method	CBORLDCPUComputeProvider.batchedUnsignedVarintEncode(_:)	func batchedUnsignedVarintEncode(_ values: [UInt64]) async throws -> [Data]
+swift.method	CBORLDCPUComputeProvider.batchedWholeDocumentTransform(_:)	func batchedWholeDocumentTransform(_ requests: [CBORLDWholeDocumentTransformRequest]) async throws -> [CBORLDWholeDocumentTransformResult]
+swift.method	CBORLDCPUComputeProvider.compactByteSlices(_:)	func compactByteSlices(_ slices: [Data]) async throws -> CBORLDByteCompactionResult
+swift.method	CBORLDCPUComputeProvider.exclusiveScanUInt32(_:)	func exclusiveScanUInt32(_ values: [UInt32]) async throws -> CBORLDExclusiveScanUInt32Result
+swift.method	CBORLDCPUComputeProvider.exclusiveScanUInt64(_:)	func exclusiveScanUInt64(_ values: [UInt64]) async throws -> CBORLDExclusiveScanUInt64Result
+swift.method	CBORLDCPUComputeProvider.segmentedCanonicalKeyOrder(_:ordering:)	func segmentedCanonicalKeyOrder(_ segments: [[Data]], ordering: CBORLDCanonicalKeyOrdering) async throws -> [CBORLDCanonicalKeyOrderResult]
+swift.method	CBORLDCanonicalKeyOrderResult.validate(keyCount:)	func validate(keyCount: Int) throws
+swift.method	CBORLDCanonicalKeyOrderingComputing.segmentedCanonicalKeyOrder(_:ordering:)	func segmentedCanonicalKeyOrder(_ segments: [[Data]], ordering: CBORLDCanonicalKeyOrdering) async throws -> [CBORLDCanonicalKeyOrderResult]
+swift.method	CBORLDComputeBackendDescribing.backendIdentity(for:)	func backendIdentity(for family: CBORLDComputeFamilyID) async -> CBORLDComputeBackendIdentity
+swift.method	CBORLDComputePackedByteBatch.slices()	func slices() throws -> [Data]
+swift.method	CBORLDComputePackedByteBatch.validate()	func validate() throws
+swift.method	CBORLDDictionaryProbeComputing.batchedDictionaryProbe(_:dictionary:requiredFingerprint:)	func batchedDictionaryProbe(_ probes: [CBORLDDictionaryProbe], dictionary: CBORLDDocumentDictionary, requiredFingerprint: CBORLDDigest) async throws -> [CBORLDDictionaryProbeResult]
+swift.method	CBORLDDictionaryProbeResult.validate(expected:)	func validate(expected: CBORLDDictionaryProbe) throws
+swift.method	CBORLDExclusiveScanUInt32Result.validate(input:)	func validate(input: [UInt32]) throws
+swift.method	CBORLDExclusiveScanUInt64Result.validate(input:)	func validate(input: [UInt64]) throws
+swift.method	CBORLDMultibaseComputing.batchedMultibaseDecode(_:maximumInputBytes:)	func batchedMultibaseDecode(_ values: [String], maximumInputBytes: Int) async throws -> [CBORLDMultibaseDecodeResult]
+swift.method	CBORLDMultibaseComputing.batchedMultibaseEncode(_:as:maximumInputBytes:)	func batchedMultibaseEncode(_ values: [Data], as encoding: CBORLDMultibaseEncoding, maximumInputBytes: Int) async throws -> [String]
+swift.method	CBORLDMultibaseDecodeResult.validate(expectedInput:)	func validate(expectedInput: String) throws
+swift.method	CBORLDPrefixScanComputing.compactByteSlices(_:)	func compactByteSlices(_ slices: [Data]) async throws -> CBORLDByteCompactionResult
+swift.method	CBORLDPrefixScanComputing.exclusiveScanUInt32(_:)	func exclusiveScanUInt32(_ values: [UInt32]) async throws -> CBORLDExclusiveScanUInt32Result
+swift.method	CBORLDPrefixScanComputing.exclusiveScanUInt64(_:)	func exclusiveScanUInt64(_ values: [UInt64]) async throws -> CBORLDExclusiveScanUInt64Result
+swift.method	CBORLDSHA256Result.validate(expectedInputByteCount:)	func validate(expectedInputByteCount: Int) throws
+swift.method	CBORLDShadowVerifyingProvider.batchedByteDiff(_:)	func batchedByteDiff(_ pairs: [CBORLDBytePair]) async throws -> [CBORLDByteDiffResult]
+swift.method	CBORLDShadowVerifyingProvider.batchedByteStatistics(_:)	func batchedByteStatistics(_ slices: [Data]) async throws -> [CBORLDByteStatistics]
+swift.method	CBORLDShadowVerifyingProvider.batchedCBORStructuralScan(_:limits:)	func batchedCBORStructuralScan(_ documents: [Data], limits: CBORLDDecodingLimits) async throws -> [CBORLDStructuralScanResult]
+swift.method	CBORLDShadowVerifyingProvider.batchedCDDLValidation(_:)	func batchedCDDLValidation(_ requests: [CBORLDCDDLValidationRequest]) async throws -> [CBORLDCDDLValidationResult]
+swift.method	CBORLDShadowVerifyingProvider.batchedDictionaryProbe(_:dictionary:requiredFingerprint:)	func batchedDictionaryProbe(_ probes: [CBORLDDictionaryProbe], dictionary: CBORLDDocumentDictionary, requiredFingerprint: CBORLDDigest) async throws -> [CBORLDDictionaryProbeResult]
+swift.method	CBORLDShadowVerifyingProvider.batchedMultibaseDecode(_:maximumInputBytes:)	func batchedMultibaseDecode(_ values: [String], maximumInputBytes: Int) async throws -> [CBORLDMultibaseDecodeResult]
+swift.method	CBORLDShadowVerifyingProvider.batchedMultibaseEncode(_:as:maximumInputBytes:)	func batchedMultibaseEncode(_ values: [Data], as encoding: CBORLDMultibaseEncoding, maximumInputBytes: Int) async throws -> [String]
+swift.method	CBORLDShadowVerifyingProvider.batchedSHA256(_:)	func batchedSHA256(_ slices: [Data]) async throws -> [CBORLDSHA256Result]
+swift.method	CBORLDShadowVerifyingProvider.batchedUTF8Validation(_:)	func batchedUTF8Validation(_ slices: [Data]) async throws -> [CBORLDUTF8ValidationResult]
+swift.method	CBORLDShadowVerifyingProvider.batchedUnsignedVarintDecode(_:)	func batchedUnsignedVarintDecode(_ values: [Data]) async throws -> [CBORLDUnsignedVarintDecodeResult]
+swift.method	CBORLDShadowVerifyingProvider.batchedUnsignedVarintEncode(_:)	func batchedUnsignedVarintEncode(_ values: [UInt64]) async throws -> [Data]
+swift.method	CBORLDShadowVerifyingProvider.batchedWholeDocumentTransform(_:)	func batchedWholeDocumentTransform(_ requests: [CBORLDWholeDocumentTransformRequest]) async throws -> [CBORLDWholeDocumentTransformResult]
+swift.method	CBORLDShadowVerifyingProvider.compactByteSlices(_:)	func compactByteSlices(_ slices: [Data]) async throws -> CBORLDByteCompactionResult
+swift.method	CBORLDShadowVerifyingProvider.exclusiveScanUInt32(_:)	func exclusiveScanUInt32(_ values: [UInt32]) async throws -> CBORLDExclusiveScanUInt32Result
+swift.method	CBORLDShadowVerifyingProvider.exclusiveScanUInt64(_:)	func exclusiveScanUInt64(_ values: [UInt64]) async throws -> CBORLDExclusiveScanUInt64Result
+swift.method	CBORLDShadowVerifyingProvider.receipts()	func receipts() -> [CBORLDShadowVerificationReceipt]
+swift.method	CBORLDShadowVerifyingProvider.segmentedCanonicalKeyOrder(_:ordering:)	func segmentedCanonicalKeyOrder(_ segments: [[Data]], ordering: CBORLDCanonicalKeyOrdering) async throws -> [CBORLDCanonicalKeyOrderResult]
+swift.method	CBORLDStructuralScanComputing.batchedCBORStructuralScan(_:limits:)	func batchedCBORStructuralScan(_ documents: [Data], limits: CBORLDDecodingLimits) async throws -> [CBORLDStructuralScanResult]
+swift.method	CBORLDStructuralScanResult.validate(expectedByteCount:)	func validate(expectedByteCount: Int) throws
+swift.method	CBORLDUTF8ValidationComputing.batchedUTF8Validation(_:)	func batchedUTF8Validation(_ slices: [Data]) async throws -> [CBORLDUTF8ValidationResult]
+swift.method	CBORLDUTF8ValidationResult.validate(expectedByteCount:)	func validate(expectedByteCount: Int) throws
+swift.method	CBORLDUnsignedVarintComputing.batchedUnsignedVarintDecode(_:)	func batchedUnsignedVarintDecode(_ values: [Data]) async throws -> [CBORLDUnsignedVarintDecodeResult]
+swift.method	CBORLDUnsignedVarintComputing.batchedUnsignedVarintEncode(_:)	func batchedUnsignedVarintEncode(_ values: [UInt64]) async throws -> [Data]
+swift.method	CBORLDUnsignedVarintDecodeResult.validate(expectedByteCount:)	func validate(expectedByteCount: Int) throws
+swift.method	CBORLDWholeDocumentTransformComputing.batchedWholeDocumentTransform(_:)	func batchedWholeDocumentTransform(_ requests: [CBORLDWholeDocumentTransformRequest]) async throws -> [CBORLDWholeDocumentTransformResult]
+swift.method	CBORLDWholeDocumentTransformConfiguration.validate()	func validate() throws
+swift.method	CBORLDWholeDocumentTransformRequest.validate()	func validate() throws
+swift.method	CBORLDWholeDocumentTransformResult.validate(for:)	func validate(for request: CBORLDWholeDocumentTransformRequest) throws
+swift.property	CBORLDByteCompactionResult.bytes	let bytes: Data
+swift.property	CBORLDByteCompactionResult.offsets	let offsets: [UInt64]
+swift.property	CBORLDByteDiffResult.firstMismatchOffset	let firstMismatchOffset: Int?
+swift.property	CBORLDByteDiffResult.leftByteCount	let leftByteCount: Int
+swift.property	CBORLDByteDiffResult.mismatchCount	let mismatchCount: UInt64
+swift.property	CBORLDByteDiffResult.rightByteCount	let rightByteCount: Int
+swift.property	CBORLDBytePair.left	let left: Data
+swift.property	CBORLDBytePair.right	let right: Data
+swift.property	CBORLDByteStatistics.byteCount	let byteCount: UInt64
+swift.property	CBORLDByteStatistics.histogram	let histogram: [UInt64]
+swift.property	CBORLDByteStatistics.shannonEntropyBitsPerByte	let shannonEntropyBitsPerByte: Double
+swift.property	CBORLDCDDLDiagnostic.code	let code: String
+swift.property	CBORLDCDDLDiagnostic.documentByteOffset	let documentByteOffset: Int?
+swift.property	CBORLDCDDLDiagnostic.message	let message: String
+swift.property	CBORLDCDDLDiagnostic.path	let path: String?
+swift.property	CBORLDCDDLDiagnostic.phase	let phase: CBORLDCDDLDiagnosticPhase
+swift.property	CBORLDCDDLDiagnostic.rule	let rule: String?
+swift.property	CBORLDCDDLDiagnostic.schemaByteOffset	let schemaByteOffset: Int?
+swift.property	CBORLDCDDLDiagnostic.severity	let severity: CBORLDCDDLDiagnosticSeverity
+swift.property	CBORLDCDDLValidationLimits.maximumASTNodes	var maximumASTNodes: Int
+swift.property	CBORLDCDDLValidationLimits.maximumDiagnostics	var maximumDiagnostics: Int
+swift.property	CBORLDCDDLValidationLimits.maximumDocumentBytes	var maximumDocumentBytes: Int
+swift.property	CBORLDCDDLValidationLimits.maximumRecursionDepth	var maximumRecursionDepth: Int
+swift.property	CBORLDCDDLValidationLimits.maximumSchemaBytes	var maximumSchemaBytes: Int
+swift.property	CBORLDCDDLValidationLimits.regexPolicy	var regexPolicy: CBORLDCDDLRegexPolicy
+swift.property	CBORLDCDDLValidationRequest.document	let document: Data
+swift.property	CBORLDCDDLValidationRequest.documentEncoding	let documentEncoding: CBORLDCDDLDocumentEncoding
+swift.property	CBORLDCDDLValidationRequest.limits	let limits: CBORLDCDDLValidationLimits
+swift.property	CBORLDCDDLValidationRequest.rootRule	let rootRule: String?
+swift.property	CBORLDCDDLValidationRequest.schema	let schema: String
+swift.property	CBORLDCDDLValidationRequest.schemaByteCount	var schemaByteCount: Int { get }
+swift.property	CBORLDCDDLValidationResult.astNodeCount	let astNodeCount: Int
+swift.property	CBORLDCDDLValidationResult.diagnostics	let diagnostics: [CBORLDCDDLDiagnostic]
+swift.property	CBORLDCDDLValidationResult.documentByteCount	let documentByteCount: Int
+swift.property	CBORLDCDDLValidationResult.documentIsValid	let documentIsValid: Bool
+swift.property	CBORLDCDDLValidationResult.failedInstructionIndex	let failedInstructionIndex: Int?
+swift.property	CBORLDCDDLValidationResult.flatInstructionCount	let flatInstructionCount: Int?
+swift.property	CBORLDCDDLValidationResult.maximumValidationDepth	let maximumValidationDepth: Int
+swift.property	CBORLDCDDLValidationResult.schemaByteCount	let schemaByteCount: Int
+swift.property	CBORLDCDDLValidationResult.schemaIsValid	let schemaIsValid: Bool
+swift.property	CBORLDCPUComputeProvider.cborldComputeCapabilities	var cborldComputeCapabilities: [CBORLDComputeFamilyCapability] { get }
+swift.property	CBORLDCanonicalKeyOrderResult.orderedIndices	let orderedIndices: [Int]
+swift.property	CBORLDComputeBackendIdentity.binaryDigest	var binaryDigest: CBORLDDigest?
+swift.property	CBORLDComputeBackendIdentity.buildIdentifier	var buildIdentifier: String?
+swift.property	CBORLDComputeBackendIdentity.executionKind	var executionKind: CBORLDComputeExecutionKind
+swift.property	CBORLDComputeBackendIdentity.hardwareExecutionObserved	var hardwareExecutionObserved: Bool
+swift.property	CBORLDComputeBackendIdentity.name	var name: String
+swift.property	CBORLDComputeBackendIdentity.version	var version: String?
+swift.property	CBORLDComputeByteSpan.length	let length: UInt32
+swift.property	CBORLDComputeByteSpan.offset	let offset: UInt32
+swift.property	CBORLDComputeCapabilityReporting.cborldComputeCapabilities	var cborldComputeCapabilities: [CBORLDComputeFamilyCapability] { get }
+swift.property	CBORLDComputeExecutionKind.isAccelerator	var isAccelerator: Bool { get }
+swift.property	CBORLDComputeFamilyCapability.availability	let availability: CBORLDComputeFamilyAvailability
+swift.property	CBORLDComputeFamilyCapability.constraints	let constraints: [String : String]
+swift.property	CBORLDComputeFamilyCapability.id	let id: CBORLDComputeFamilyID
+swift.property	CBORLDComputeFamilyCapability.implementation	let implementation: String
+swift.property	CBORLDComputeFamilyContract.cpuReference	let cpuReference: CBORLDComputeCPUReferenceKind
+swift.property	CBORLDComputeFamilyContract.exactSemantics	let exactSemantics: String
+swift.property	CBORLDComputeFamilyContract.id	let id: CBORLDComputeFamilyID
+swift.property	CBORLDComputeFamilyContract.priority	let priority: CBORLDComputeFamilyPriority
+swift.property	CBORLDComputeFamilyContract.workItem	let workItem: String
+swift.property	CBORLDComputeFamilyID.contractVersion	var contractVersion: Int { get }
+swift.property	CBORLDComputePackedByteBatch.bytes	let bytes: [UInt32]
+swift.property	CBORLDComputePackedByteBatch.spans	let spans: [CBORLDComputeByteSpan]
+swift.property	CBORLDDictionaryProbe.table	let table: String
+swift.property	CBORLDDictionaryProbe.value	let value: JSONValue
+swift.property	CBORLDDictionaryProbeResult.identifier	let identifier: UInt64?
+swift.property	CBORLDDictionaryProbeResult.table	let table: String
+swift.property	CBORLDDictionaryProbeResult.value	let value: JSONValue
+swift.property	CBORLDExclusiveScanUInt32Result.offsets	let offsets: [UInt32]
+swift.property	CBORLDExclusiveScanUInt32Result.total	let total: UInt32
+swift.property	CBORLDExclusiveScanUInt64Result.offsets	let offsets: [UInt64]
+swift.property	CBORLDExclusiveScanUInt64Result.total	let total: UInt64
+swift.property	CBORLDMultibaseDecodeResult.decoded	let decoded: Data?
+swift.property	CBORLDMultibaseDecodeResult.firstInvalidByteOffset	let firstInvalidByteOffset: Int?
+swift.property	CBORLDMultibaseDecodeResult.input	let input: String
+swift.property	CBORLDMultibaseDecodeResult.message	let message: String?
+swift.property	CBORLDSHA256Result.digest	let digest: CBORLDDigest
+swift.property	CBORLDSHA256Result.inputByteCount	let inputByteCount: Int
+swift.property	CBORLDSHA256Result.stateWords	let stateWords: [UInt32]
+swift.property	CBORLDShadowMismatch.cardinalityDiffers	let cardinalityDiffers: Bool
+swift.property	CBORLDShadowMismatch.field	let field: String?
+swift.property	CBORLDShadowMismatch.workItemIndex	let workItemIndex: Int?
+swift.property	CBORLDShadowVerificationReceipt.candidate	let candidate: CBORLDComputeBackendIdentity
+swift.property	CBORLDShadowVerificationReceipt.candidateDurationNanoseconds	let candidateDurationNanoseconds: UInt64?
+swift.property	CBORLDShadowVerificationReceipt.contractVersion	let contractVersion: Int
+swift.property	CBORLDShadowVerificationReceipt.family	let family: CBORLDComputeFamilyID
+swift.property	CBORLDShadowVerificationReceipt.firstMismatch	let firstMismatch: CBORLDShadowMismatch?
+swift.property	CBORLDShadowVerificationReceipt.isAccelerationEvidence	var isAccelerationEvidence: Bool { get }
+swift.property	CBORLDShadowVerificationReceipt.isCPUExecution	var isCPUExecution: Bool { get }
+swift.property	CBORLDShadowVerificationReceipt.parity	let parity: CBORLDShadowParityStatus
+swift.property	CBORLDShadowVerificationReceipt.referenceDurationNanoseconds	let referenceDurationNanoseconds: UInt64?
+swift.property	CBORLDShadowVerificationReceipt.workItemCount	let workItemCount: Int
+swift.property	CBORLDShadowVerifyingProvider.candidate	let candidate: Candidate
+swift.property	CBORLDShadowVerifyingProvider.cborldComputeCapabilities	var cborldComputeCapabilities: [CBORLDComputeFamilyCapability] { get }
+swift.property	CBORLDShadowVerifyingProvider.onMismatch	let onMismatch: CBORLDShadowMismatchAction
+swift.property	CBORLDShadowVerifyingProvider.policy	let policy: CBORLDShadowVerificationPolicy
+swift.property	CBORLDShadowVerifyingProvider.reference	let reference: CBORLDCPUComputeProvider
+swift.property	CBORLDStructuralScanResult.byteCount	let byteCount: Int
+swift.property	CBORLDStructuralScanResult.errorCode	let errorCode: CBORLDErrorCode?
+swift.property	CBORLDStructuralScanResult.firstErrorOffset	let firstErrorOffset: Int?
+swift.property	CBORLDStructuralScanResult.isValid	let isValid: Bool
+swift.property	CBORLDStructuralScanResult.itemCount	let itemCount: UInt64
+swift.property	CBORLDStructuralScanResult.maximumDepth	let maximumDepth: Int
+swift.property	CBORLDStructuralScanResult.message	let message: String?
+swift.property	CBORLDUTF8ValidationResult.byteCount	let byteCount: Int
+swift.property	CBORLDUTF8ValidationResult.firstInvalidByteOffset	let firstInvalidByteOffset: Int?
+swift.property	CBORLDUTF8ValidationResult.isValid	let isValid: Bool
+swift.property	CBORLDUnsignedVarintDecodeResult.bytesConsumed	let bytesConsumed: Int
+swift.property	CBORLDUnsignedVarintDecodeResult.firstErrorOffset	let firstErrorOffset: Int?
+swift.property	CBORLDUnsignedVarintDecodeResult.message	let message: String?
+swift.property	CBORLDUnsignedVarintDecodeResult.value	let value: UInt64?
+swift.property	CBORLDWholeDocumentTransformConfiguration.contextDocuments	var contextDocuments: [String : JSONValue]
+swift.property	CBORLDWholeDocumentTransformConfiguration.decodingLimits	var decodingLimits: CBORLDDecodingLimits
+swift.property	CBORLDWholeDocumentTransformConfiguration.dictionary	var dictionary: CBORLDDocumentDictionary
+swift.property	CBORLDWholeDocumentTransformConfiguration.format	var format: CBORLDFormat
+swift.property	CBORLDWholeDocumentTransformConfiguration.maximumOutputBytes	var maximumOutputBytes: Int
+swift.property	CBORLDWholeDocumentTransformConfiguration.requiredContextFingerprints	var requiredContextFingerprints: [String : CBORLDDigest]
+swift.property	CBORLDWholeDocumentTransformConfiguration.requiredDictionaryFingerprint	var requiredDictionaryFingerprint: CBORLDDigest?
+swift.property	CBORLDWholeDocumentTransformConfiguration.serializationMode	var serializationMode: CBORLDSerializationMode
+swift.property	CBORLDWholeDocumentTransformRequest.cborldBytes	let cborldBytes: Data?
+swift.property	CBORLDWholeDocumentTransformRequest.configuration	let configuration: CBORLDWholeDocumentTransformConfiguration
+swift.property	CBORLDWholeDocumentTransformRequest.jsonLDDocument	let jsonLDDocument: JSONValue?
+swift.property	CBORLDWholeDocumentTransformRequest.operation	let operation: CBORLDWholeDocumentTransformOperation
+swift.property	CBORLDWholeDocumentTransformResult.cborldBytes	let cborldBytes: Data?
+swift.property	CBORLDWholeDocumentTransformResult.inspection	let inspection: CBORLDInspection
+swift.property	CBORLDWholeDocumentTransformResult.jsonLDDocument	let jsonLDDocument: JSONValue?
+swift.property	CBORLDWholeDocumentTransformResult.operation	let operation: CBORLDWholeDocumentTransformOperation
+swift.property	CBORLDWholeDocumentTransformResult.outputByteCount	let outputByteCount: Int
+swift.property	CBORLDWholeDocumentTransformResult.transportDigest	let transportDigest: CBORLDDigest
+swift.protocol	CBORLDBatchedSHA256Computing	protocol CBORLDBatchedSHA256Computing : Sendable
+swift.protocol	CBORLDByteDiffComputing	protocol CBORLDByteDiffComputing : Sendable
+swift.protocol	CBORLDByteStatisticsComputing	protocol CBORLDByteStatisticsComputing : Sendable
+swift.protocol	CBORLDCDDLCPUOracle	protocol CBORLDCDDLCPUOracle : Sendable
+swift.protocol	CBORLDCDDLValidationComputing	protocol CBORLDCDDLValidationComputing : Sendable
+swift.protocol	CBORLDCanonicalKeyOrderingComputing	protocol CBORLDCanonicalKeyOrderingComputing : Sendable
+swift.protocol	CBORLDComputeBackendDescribing	protocol CBORLDComputeBackendDescribing : Sendable
+swift.protocol	CBORLDComputeCapabilityReporting	protocol CBORLDComputeCapabilityReporting : Sendable
+swift.protocol	CBORLDComputeProvider	protocol CBORLDComputeProvider : CBORLDBatchedSHA256Computing, CBORLDByteDiffComputing, CBORLDByteStatisticsComputing, CBORLDCDDLValidationComputing, CBORLDCanonicalKeyOrderingComputing, CBORLDComputeCapabilityReporting, CBORLDDictionaryProbeComputing, CBORLDMultibaseComputing, CBORLDPrefixScanComputing, CBORLDStructuralScanComputing, CBORLDUTF8ValidationComputing, CBORLDUnsignedVarintComputing, CBORLDWholeDocumentTransformComputing
+swift.protocol	CBORLDDictionaryProbeComputing	protocol CBORLDDictionaryProbeComputing : Sendable
+swift.protocol	CBORLDMultibaseComputing	protocol CBORLDMultibaseComputing : Sendable
+swift.protocol	CBORLDPrefixScanComputing	protocol CBORLDPrefixScanComputing : Sendable
+swift.protocol	CBORLDStructuralScanComputing	protocol CBORLDStructuralScanComputing : Sendable
+swift.protocol	CBORLDUTF8ValidationComputing	protocol CBORLDUTF8ValidationComputing : Sendable
+swift.protocol	CBORLDUnsignedVarintComputing	protocol CBORLDUnsignedVarintComputing : Sendable
+swift.protocol	CBORLDWholeDocumentTransformComputing	protocol CBORLDWholeDocumentTransformComputing : Sendable
+swift.struct	CBORLDByteCompactionResult	struct CBORLDByteCompactionResult
+swift.struct	CBORLDByteDiffResult	struct CBORLDByteDiffResult
+swift.struct	CBORLDBytePair	struct CBORLDBytePair
+swift.struct	CBORLDByteStatistics	struct CBORLDByteStatistics
+swift.struct	CBORLDCDDLDiagnostic	struct CBORLDCDDLDiagnostic
+swift.struct	CBORLDCDDLValidationLimits	struct CBORLDCDDLValidationLimits
+swift.struct	CBORLDCDDLValidationRequest	struct CBORLDCDDLValidationRequest
+swift.struct	CBORLDCDDLValidationResult	struct CBORLDCDDLValidationResult
+swift.struct	CBORLDCPUComputeProvider	struct CBORLDCPUComputeProvider
+swift.struct	CBORLDCanonicalKeyOrderResult	struct CBORLDCanonicalKeyOrderResult
+swift.struct	CBORLDComputeBackendIdentity	struct CBORLDComputeBackendIdentity
+swift.struct	CBORLDComputeByteSpan	struct CBORLDComputeByteSpan
+swift.struct	CBORLDComputeFamilyCapability	struct CBORLDComputeFamilyCapability
+swift.struct	CBORLDComputeFamilyContract	struct CBORLDComputeFamilyContract
+swift.struct	CBORLDComputePackedByteBatch	struct CBORLDComputePackedByteBatch
+swift.struct	CBORLDDictionaryProbe	struct CBORLDDictionaryProbe
+swift.struct	CBORLDDictionaryProbeResult	struct CBORLDDictionaryProbeResult
+swift.struct	CBORLDExclusiveScanUInt32Result	struct CBORLDExclusiveScanUInt32Result
+swift.struct	CBORLDExclusiveScanUInt64Result	struct CBORLDExclusiveScanUInt64Result
+swift.struct	CBORLDMultibaseDecodeResult	struct CBORLDMultibaseDecodeResult
+swift.struct	CBORLDSHA256Result	struct CBORLDSHA256Result
+swift.struct	CBORLDShadowMismatch	struct CBORLDShadowMismatch
+swift.struct	CBORLDShadowVerificationReceipt	struct CBORLDShadowVerificationReceipt
+swift.struct	CBORLDShadowVerifyingProvider	struct CBORLDShadowVerifyingProvider<Candidate> where Candidate : Sendable
+swift.struct	CBORLDStructuralScanResult	struct CBORLDStructuralScanResult
+swift.struct	CBORLDUTF8ValidationResult	struct CBORLDUTF8ValidationResult
+swift.struct	CBORLDUnsignedVarintDecodeResult	struct CBORLDUnsignedVarintDecodeResult
+swift.struct	CBORLDWholeDocumentTransformConfiguration	struct CBORLDWholeDocumentTransformConfiguration
+swift.struct	CBORLDWholeDocumentTransformRequest	struct CBORLDWholeDocumentTransformRequest
+swift.struct	CBORLDWholeDocumentTransformResult	struct CBORLDWholeDocumentTransformResult
+swift.type.method	CBORLD.batchedByteDiff(_:using:)	static func batchedByteDiff<Provider>(_ pairs: [CBORLDBytePair], using provider: Provider) async throws -> [CBORLDByteDiffResult] where Provider : CBORLDByteDiffComputing
+swift.type.method	CBORLD.batchedByteStatistics(_:using:)	static func batchedByteStatistics<Provider>(_ slices: [Data], using provider: Provider) async throws -> [CBORLDByteStatistics] where Provider : CBORLDByteStatisticsComputing
+swift.type.method	CBORLD.batchedCBORStructuralScan(_:limits:using:)	static func batchedCBORStructuralScan<Provider>(_ documents: [Data], limits: CBORLDDecodingLimits = .init(), using provider: Provider) async throws -> [CBORLDStructuralScanResult] where Provider : CBORLDStructuralScanComputing
+swift.type.method	CBORLD.batchedCDDLValidation(_:using:)	static func batchedCDDLValidation<Provider>(_ requests: [CBORLDCDDLValidationRequest], using provider: Provider) async throws -> [CBORLDCDDLValidationResult] where Provider : CBORLDCDDLValidationComputing
+swift.type.method	CBORLD.batchedDictionaryProbe(_:dictionary:requiredFingerprint:using:)	static func batchedDictionaryProbe<Provider>(_ probes: [CBORLDDictionaryProbe], dictionary: CBORLDDocumentDictionary, requiredFingerprint: CBORLDDigest, using provider: Provider) async throws -> [CBORLDDictionaryProbeResult] where Provider : CBORLDDictionaryProbeComputing
+swift.type.method	CBORLD.batchedMultibaseDecode(_:maximumInputBytes:using:)	static func batchedMultibaseDecode<Provider>(_ values: [String], maximumInputBytes: Int = 1_048_576, using provider: Provider) async throws -> [CBORLDMultibaseDecodeResult] where Provider : CBORLDMultibaseComputing
+swift.type.method	CBORLD.batchedMultibaseEncode(_:as:maximumInputBytes:using:)	static func batchedMultibaseEncode<Provider>(_ values: [Data], as encoding: CBORLDMultibaseEncoding, maximumInputBytes: Int = 1_048_576, using provider: Provider) async throws -> [String] where Provider : CBORLDMultibaseComputing
+swift.type.method	CBORLD.batchedTransportDigests(of:using:)	static func batchedTransportDigests<Provider>(of slices: [Data], using provider: Provider) async throws -> [CBORLDDigest] where Provider : CBORLDBatchedSHA256Computing
+swift.type.method	CBORLD.batchedUTF8Validation(_:using:)	static func batchedUTF8Validation<Provider>(_ slices: [Data], using provider: Provider) async throws -> [CBORLDUTF8ValidationResult] where Provider : CBORLDUTF8ValidationComputing
+swift.type.method	CBORLD.batchedUnsignedVarintDecode(_:using:)	static func batchedUnsignedVarintDecode<Provider>(_ values: [Data], using provider: Provider) async throws -> [CBORLDUnsignedVarintDecodeResult] where Provider : CBORLDUnsignedVarintComputing
+swift.type.method	CBORLD.batchedUnsignedVarintEncode(_:using:)	static func batchedUnsignedVarintEncode<Provider>(_ values: [UInt64], using provider: Provider) async throws -> [Data] where Provider : CBORLDUnsignedVarintComputing
+swift.type.method	CBORLD.batchedWholeDocumentTransform(_:using:)	static func batchedWholeDocumentTransform<Provider>(_ requests: [CBORLDWholeDocumentTransformRequest], using provider: Provider) async throws -> [CBORLDWholeDocumentTransformResult] where Provider : CBORLDWholeDocumentTransformComputing
+swift.type.method	CBORLD.compactByteSlices(_:using:)	static func compactByteSlices<Provider>(_ slices: [Data], using provider: Provider) async throws -> CBORLDByteCompactionResult where Provider : CBORLDPrefixScanComputing
+swift.type.method	CBORLD.exclusiveScanUInt32(_:using:)	static func exclusiveScanUInt32<Provider>(_ values: [UInt32], using provider: Provider) async throws -> CBORLDExclusiveScanUInt32Result where Provider : CBORLDPrefixScanComputing
+swift.type.method	CBORLD.exclusiveScanUInt64(_:using:)	static func exclusiveScanUInt64<Provider>(_ values: [UInt64], using provider: Provider) async throws -> CBORLDExclusiveScanUInt64Result where Provider : CBORLDPrefixScanComputing
+swift.type.method	CBORLD.segmentedCanonicalKeyOrder(_:ordering:using:)	static func segmentedCanonicalKeyOrder<Provider>(_ segments: [[Data]], ordering: CBORLDCanonicalKeyOrdering, using provider: Provider) async throws -> [CBORLDCanonicalKeyOrderResult] where Provider : CBORLDCanonicalKeyOrderingComputing
+swift.type.method	CBORLDCPUComputeProvider.byteDiff(_:_:)	static func byteDiff(_ left: Data, _ right: Data) -> CBORLDByteDiffResult
+swift.type.method	CBORLDCPUComputeProvider.byteStatistics(_:)	static func byteStatistics(_ data: Data) -> CBORLDByteStatistics
+swift.type.method	CBORLDCPUComputeProvider.encodeMultibase(_:as:)	static func encodeMultibase(_ data: Data, as encoding: CBORLDMultibaseEncoding) -> String
+swift.type.method	CBORLDCPUComputeProvider.encodeUnsignedVarint(_:)	static func encodeUnsignedVarint(_ value: UInt64) -> Data
+swift.type.method	CBORLDCPUComputeProvider.sha256(_:)	static func sha256(_ data: Data) -> CBORLDSHA256Result
+swift.type.method	CBORLDCPUComputeProvider.validateUTF8(_:)	static func validateUTF8(_ data: Data) -> CBORLDUTF8ValidationResult
+swift.type.method	CBORLDWholeDocumentTransformRequest.decoding(_:configuration:)	static func decoding(_ bytes: Data, configuration: CBORLDWholeDocumentTransformConfiguration = .init()) -> CBORLDWholeDocumentTransformRequest
+swift.type.method	CBORLDWholeDocumentTransformRequest.encoding(_:configuration:)	static func encoding(_ document: JSONValue, configuration: CBORLDWholeDocumentTransformConfiguration = .init()) -> CBORLDWholeDocumentTransformRequest
+swift.type.property	CBORLDComputeFamilyContract.cborldCPUReferences	static let cborldCPUReferences: [`Self`]

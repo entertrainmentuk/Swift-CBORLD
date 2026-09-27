@@ -107,7 +107,7 @@ extension CBORLD {
   ) async throws -> JSONValue {
     guard options.policy == document.validationPolicy else {
       throw CBORLDError(
-        code: "ERR_POLICY_MISMATCH",
+        code: .policyMismatch,
         message: "Decode policy differs from the document's validation policy.")
     }
     return try await decode(document.parsed, options: options)
@@ -137,7 +137,7 @@ private struct CBORLDRawScanner {
       limits.cancellationCheckStride > 0
     else {
       throw CBORLDError(
-        code: "ERR_RESOURCE_LIMIT",
+        code: .resourceLimit,
         message:
           "maximumDiagnosticNodes must not be negative and cancellationCheckStride must be positive."
       )
@@ -157,7 +157,7 @@ private struct CBORLDRawScanner {
   ) throws -> ValueSummary {
     guard depth <= limits.maximumNestingDepth else {
       throw CBORLDError(
-        code: "ERR_RESOURCE_LIMIT",
+        code: .resourceLimit,
         message: "CBOR nesting exceeds the configured depth of \(limits.maximumNestingDepth).",
         diagnostic: .init(byteOffset: offset, containerPath: path, jsonPath: jsonPath))
     }
@@ -399,7 +399,7 @@ private struct CBORLDRawScanner {
   private mutating func readByte(path: [String], jsonPath: String?) throws -> UInt8 {
     guard offset < data.count else {
       throw CBORLDError(
-        code: "ERR_NOT_CBORLD",
+        code: .notCBORLD,
         message: "Unexpected end of CBOR data.",
         diagnostic: .init(byteOffset: offset, containerPath: path, jsonPath: jsonPath))
     }
@@ -414,7 +414,7 @@ private struct CBORLDRawScanner {
   ) throws -> Data {
     guard count >= 0, offset <= data.count, count <= data.count - offset else {
       throw CBORLDError(
-        code: "ERR_NOT_CBORLD",
+        code: .notCBORLD,
         message: "Unexpected end of CBOR byte sequence.",
         diagnostic: .init(byteOffset: offset, containerPath: path, jsonPath: jsonPath))
     }
@@ -447,7 +447,7 @@ private struct CBORLDRawScanner {
   private func checkContainerCount(_ count: Int, at offset: Int, path: [String]) throws {
     guard count <= limits.maximumContainerItems else {
       throw CBORLDError(
-        code: "ERR_RESOURCE_LIMIT",
+        code: .resourceLimit,
         message: "CBOR container contains more than \(limits.maximumContainerItems) items.",
         diagnostic: .init(byteOffset: offset, containerPath: path))
     }
@@ -477,7 +477,7 @@ private struct CBORLDRawScanner {
     path: [String] = []
   ) -> CBORLDError {
     .init(
-      code: "ERR_NOT_CBORLD",
+      code: .notCBORLD,
       message: message,
       diagnostic: .init(byteOffset: byteOffset, containerPath: path))
   }

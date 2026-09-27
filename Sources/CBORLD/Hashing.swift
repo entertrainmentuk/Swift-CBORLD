@@ -44,7 +44,7 @@ public struct CBORLDDigest: Sendable, Hashable, Codable, CustomStringConvertible
   ) throws {
     guard bytes.count == algorithm.byteCount else {
       throw CBORLDError(
-        code: "ERR_INVALID_DIGEST",
+        code: .invalidDigest,
         message:
           "\(algorithm.rawValue) digests must contain \(algorithm.byteCount) bytes, not \(bytes.count)."
       )
@@ -63,7 +63,7 @@ public struct CBORLDDigest: Sendable, Hashable, Codable, CustomStringConvertible
   ) throws {
     guard hex.count == algorithm.byteCount * 2 else {
       throw CBORLDError(
-        code: "ERR_INVALID_DIGEST",
+        code: .invalidDigest,
         message:
           "\(algorithm.rawValue) hexadecimal digests must contain \(algorithm.byteCount * 2) characters."
       )
@@ -75,7 +75,7 @@ public struct CBORLDDigest: Sendable, Hashable, Codable, CustomStringConvertible
       let next = hex.index(index, offsetBy: 2)
       guard let byte = UInt8(hex[index..<next], radix: 16) else {
         throw CBORLDError(
-          code: "ERR_INVALID_DIGEST",
+          code: .invalidDigest,
           message: "Digest contains a non-hexadecimal character.")
       }
       data.append(byte)
@@ -296,7 +296,7 @@ extension CBORLD {
     requiredDomain: CBORLDHashDomain
   ) -> CBORLDError {
     CBORLDError(
-      code: "ERR_INVALID_DIGEST",
+      code: .invalidDigest,
       message:
         "Expected a version 1 \(requiredDomain.rawValue) digest, received \(digest.domain.rawValue) version \(digest.version)."
     )
@@ -312,7 +312,7 @@ extension CBORLD {
       constantTimeEqual(observed.bytes, expected.bytes)
     else {
       throw CBORLDError(
-        code: "ERR_INTEGRITY_MISMATCH",
+        code: .integrityMismatch,
         message:
           "The observed \(expected.domain.rawValue) digest does not match the expected value.")
     }
@@ -339,7 +339,7 @@ extension CBORLDDocumentDictionary {
   public func verifyFingerprint(_ expected: CBORLDDigest) throws {
     guard expected.domain == .documentDictionary, expected.version == 1 else {
       throw CBORLDError(
-        code: "ERR_INVALID_DIGEST",
+        code: .invalidDigest,
         message:
           "Expected a version 1 document-dictionary digest, received \(expected.domain.rawValue) version \(expected.version)."
       )
@@ -366,6 +366,25 @@ extension CBORLDDocumentDictionary {
     }
     entries.append(
       .init(key: .string("typedValues"), value: .map(typedEntries)))
+    // The processing model changes how bytes are read, so a non-default model
+    // is bound into the fingerprint. It is omitted otherwise, which keeps every
+    // version 1 fingerprint of a dictionary without one unchanged.
+    // Provisional status does not change the wire format and is not bound.
+    let model = effectiveProcessingModel
+    if model != (code == 0 ? .uncompressed : .default) {
+      entries.append(
+        .init(
+          key: .string("processingModel"),
+          value: .map([
+            .init(key: .string("semanticCompression"), value: .bool(model.semanticCompression)),
+            .init(
+              key: .string("codecs"),
+              value: .map(
+                model.codecs.map {
+                  CBORMapEntry(key: .string($0.key), value: .string($0.value.rawValue))
+                })),
+          ])))
+    }
     return .map(entries)
   }
 

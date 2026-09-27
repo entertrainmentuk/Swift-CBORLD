@@ -1,6 +1,13 @@
 {
   "schemaVersion": 1,
   "verifiedAt": "2026-09-13T06:33:00Z",
+  "publicVerification": {
+    "workflow": "Comparator pins",
+    "run": "https://github.com/entertrainment/Swift-CBORLD/actions/runs/34751971440",
+    "commit": "0493fd9e5ab89e0dca3d2730ea021caaa7794440",
+    "completedAt": "2026-09-13T10:29:21Z",
+    "result": "all five archives downloaded and matched their recorded SHA-256 digests"
+  },
   "policy": "CI downloads each commit-addressed archive and rejects any SHA-256 mismatch before a comparator may run.",
   "comparators": [
     {
@@ -12,7 +19,7 @@
       "revision": "48bac5a57fe629c7a2271d7ca3be67a6f8f026e9",
       "archiveURL": "https://codeload.github.com/digitalbazaar/cborld/tar.gz/48bac5a57fe629c7a2271d7ca3be67a6f8f026e9",
       "archiveSHA256": "43360b2aea30ea845bdc08f8618fafc75e46cd01f2c8ca49a0ddf4c1a01e43c6",
-      "status": "pin-recorded-ci-pending"
+      "status": "pin-verified-public-ci"
     },
     {
       "name": "LDC Labs cbor-ld",
@@ -23,7 +30,7 @@
       "revision": "1043dd556b3cd663aad09cd135e025d41c01aaf2",
       "archiveURL": "https://codeload.github.com/ldclabs/cbor-ld/tar.gz/1043dd556b3cd663aad09cd135e025d41c01aaf2",
       "archiveSHA256": "e2ebd16ecbb46a9341b48579298720183bf51360d103b9041412be92faede019",
-      "status": "pin-recorded-ci-pending"
+      "status": "pin-verified-public-ci"
     },
     {
       "name": "Subfile cborld",
@@ -34,7 +41,7 @@
       "revision": "c7b509c56de9828b8fa67e40565484336ea55936",
       "archiveURL": "https://codeload.github.com/subfile-llc/cborld/tar.gz/c7b509c56de9828b8fa67e40565484336ea55936",
       "archiveSHA256": "20cefa0811356b849213b407a9cd49d2d6964a7394d3fb8529a6cc764fe994ee",
-      "status": "pin-recorded-ci-pending"
+      "status": "pin-verified-public-ci"
     },
     {
       "name": "fxamacker cbor",
@@ -45,7 +52,7 @@
       "revision": "f0c90b6d3bc7b52873bd26aff2c3891fd0f203ca",
       "archiveURL": "https://codeload.github.com/fxamacker/cbor/tar.gz/f0c90b6d3bc7b52873bd26aff2c3891fd0f203ca",
       "archiveSHA256": "e6bd6862cbb0ab49d5a104f2e1ba3386e0c4e2ccf70965f63db97534edf0b242",
-      "status": "pin-recorded-ci-pending"
+      "status": "pin-verified-public-ci"
     },
     {
       "name": "anweiss cddl",
@@ -56,7 +63,7 @@
       "revision": "938a931dd96db1d75425f0015921aacfb628fc94",
       "archiveURL": "https://codeload.github.com/anweiss/cddl/tar.gz/938a931dd96db1d75425f0015921aacfb628fc94",
       "archiveSHA256": "d3c03f7597bf629baaf7f57cdf0c76324a6888d802b9d3d9aec4585421559b96",
-      "status": "pin-recorded-ci-pending"
+      "status": "pin-verified-public-ci"
     }
   ]
 }
