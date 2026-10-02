@@ -7,7 +7,7 @@ later CI runs or future accelerator packages will demonstrate.
 
 | Implementation or lane | Evidence state | Exact boundary |
 | --- | --- | --- |
-| Swift-CBORLD core | Source-present, build-validated, runtime-validated | Public CI run [34752516586](https://github.com/entertrainment/Swift-CBORLD/actions/runs/34752516586) at commit `af20539` (2026-09-13) built with warnings as errors and passed 75 tests with 1 opt-in skip on macos-15 and ubuntu-24.04 with Swift 6.0.3. The current tree's 164 tests (1 opt-in skip) passed locally on macOS with Swift 6.4 and on Linux with Swift 6.2, including address and thread sanitizer runs on Linux; public CI has not yet run on this tree |
+| Swift-CBORLD core | Source-present, build-validated, runtime-validated | Public CI run [34752516586](https://github.com/entertrainmentuk/Swift-CBORLD/actions/runs/34752516586) at commit `af20539` (2026-09-13) built with warnings as errors and passed 75 tests with 1 opt-in skip on macos-15 and ubuntu-24.04 with Swift 6.0.3. The current tree's 164 tests (1 opt-in skip) passed locally on macOS with Swift 6.4 and on Linux with Swift 6.2, including address and thread sanitizer runs on Linux; public CI has not yet run on this tree |
 | Registry entries and processing models | Source-present, runtime-validated | Registry entries, processing models, codecs, and error names from the CBOR-LD 1.0 editor's draft at w3c/cbor-ld `992f9335703c`, covered by this package's own tests only; the pinned JavaScript reference predates processing models, and no independent implementation has been compared |
 | Swift-CBORLD ↔ Rust corpus | Runtime-validated, byte-identical, Swift CPU performance-win | 11/11 recorded fixtures; in-process round-trip median on one macOS/arm64 setup; exact report retained under `reports/` |
 | Digital Bazaar JavaScript | Source-present, runtime-validated, semantically-equivalent | Immutable comparator pin plus a retained dated 114/114 cross-decode snapshot; the current clean release does not rerun the JavaScript adapter |
@@ -24,7 +24,7 @@ The 2.22x recorded result belongs only to the Swift CPU versus Rust CPU lanes.
 It is not SemanticCompute evidence.
 
 Every comparator pin is public-CI-verified: run
-[34751971440](https://github.com/entertrainment/Swift-CBORLD/actions/runs/34751971440)
+[34751971440](https://github.com/entertrainmentuk/Swift-CBORLD/actions/runs/34751971440)
 at commit `0493fd9` (2026-09-13) downloaded all five commit-addressed archives
 and matched their recorded SHA-256 digests. The pins file is unchanged since,
 and the workflow now repeats the check weekly. A verified pin proves that the

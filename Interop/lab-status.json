@@ -30,7 +30,7 @@
       "id": "swift-cborld",
       "name": "Swift-CBORLD",
       "role": "native Swift processor and public CPU reference",
-      "url": "https://github.com/entertrainment/swift-cborld",
+      "url": "https://github.com/entertrainmentuk/swift-cborld",
       "claims": [
         {
           "classification": "source-present",
@@ -168,7 +168,7 @@
       "id": "swift-cborld-semanticcompute",
       "name": "Swift-CBORLD with SemanticCompute",
       "role": "optional commercial acceleration lane",
-      "url": "https://github.com/entertrainment/swift-cborld",
+      "url": "https://github.com/entertrainmentuk/swift-cborld",
       "claims": [
         {
           "classification": "runtime-validated",

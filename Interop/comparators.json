@@ -3,7 +3,7 @@
   "verifiedAt": "2026-09-13T06:33:00Z",
   "publicVerification": {
     "workflow": "Comparator pins",
-    "run": "https://github.com/entertrainment/Swift-CBORLD/actions/runs/34751971440",
+    "run": "https://github.com/entertrainmentuk/Swift-CBORLD/actions/runs/34751971440",
     "commit": "0493fd9e5ab89e0dca3d2730ea021caaa7794440",
     "completedAt": "2026-09-13T10:29:21Z",
     "result": "all five archives downloaded and matched their recorded SHA-256 digests"

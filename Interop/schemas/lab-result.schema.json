@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/entertrainment/swift-cborld/blob/main/Interop/schemas/lab-result.schema.json",
+  "$id": "https://github.com/entertrainmentuk/swift-cborld/blob/main/Interop/schemas/lab-result.schema.json",
   "title": "Swift-CBORLD Interop Lab result",
   "description": "A portable, implementation-neutral record for CBOR-LD conformance and performance lanes.",
   "type": "object",

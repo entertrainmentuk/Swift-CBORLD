@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/entertrainment/swift-cborld/blob/main/Interop/schemas/lab-status.schema.json",
+  "$id": "https://github.com/entertrainmentuk/swift-cborld/blob/main/Interop/schemas/lab-status.schema.json",
   "title": "Swift-CBORLD Interop Lab status",
   "type": "object",
   "additionalProperties": false,
