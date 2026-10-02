@@ -1,6 +1,6 @@
 # Swift-CBORLD
 
-[![CI](https://github.com/entertrainment/swift-cborld/actions/workflows/ci.yml/badge.svg)](https://github.com/entertrainment/swift-cborld/actions/workflows/ci.yml)
+[![CI](https://github.com/entertrainmentuk/swift-cborld/actions/workflows/ci.yml/badge.svg)](https://github.com/entertrainmentuk/swift-cborld/actions/workflows/ci.yml)
 [![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
 [![Preview: 0.1.0](https://img.shields.io/badge/release-0.1.0%20preview-f0a34a.svg)](CHANGELOG.md)
 
@@ -57,7 +57,7 @@ Add the `0.1.0` preview as a source package:
 ```swift
 dependencies: [
   .package(
-    url: "https://github.com/entertrainment/swift-cborld.git",
+    url: "https://github.com/entertrainmentuk/swift-cborld.git",
     from: "0.1.0")
 ]
 ```
