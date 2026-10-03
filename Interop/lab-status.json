@@ -1,7 +1,7 @@
 {
   "$schema": "schemas/lab-status.schema.json",
   "schemaVersion": 1,
-  "updatedAt": "2026-09-13",
+  "updatedAt": "2026-09-27",
   "implementations": [
     {
       "id": "digitalbazaar-javascript",
@@ -34,18 +34,28 @@
       "claims": [
         {
           "classification": "source-present",
-          "scope": "core and 13 stable compute-family identifiers",
-          "evidence": "Sources/CBORLD and public family contracts are retained in this revision"
+          "scope": "core, registry processing models, and 13 stable compute-family identifiers",
+          "evidence": "Sources/CBORLD and Sources/CBORLDCompute are retained in this revision"
         },
         {
           "classification": "build-validated",
-          "scope": "local macOS release build",
-          "evidence": "Scripts/validate-release.sh passed in the release tree and a fresh clone"
+          "scope": "public macOS and Linux CI at commit af20539",
+          "evidence": "CI run 34752516586 built with warnings as errors on macos-15 and ubuntu-24.04 with Swift 6.0.3"
         },
         {
           "classification": "runtime-validated",
-          "scope": "local macOS release tests",
-          "evidence": "74 tests passed; public macOS and Linux CI remain pending"
+          "scope": "public macOS and Linux CI at commit af20539",
+          "evidence": "CI run 34752516586 passed 75 tests with 1 opt-in skip on macos-15 and ubuntu-24.04"
+        },
+        {
+          "classification": "runtime-validated",
+          "scope": "current tree, local macOS and Linux",
+          "evidence": "164 tests with 1 opt-in skip passed on macOS with Swift 6.4 and on Linux with Swift 6.2, including address and thread sanitizer runs on Linux; public CI has not yet run on this tree"
+        },
+        {
+          "classification": "runtime-validated",
+          "scope": "registry entries and processing models from w3c/cbor-ld 992f9335703c",
+          "evidence": "covered by this package's own tests only; the pinned JavaScript reference predates processing models and no independent implementation was compared"
         },
         {
           "classification": "performance-win",

@@ -9,16 +9,19 @@ struct ParsedCBORLD: Sendable {
 
 /// Stateless CBOR-LD encoding, decoding, and envelope inspection.
 public enum CBORLD {
-  private static let preferredUncompressedPrefix = Data([0xd9, 0xcb, 0x1d, 0x82, 0x00])
+  private static let preferredUncompressedPrefix = Data(CBOREncoder.uncompressedCBORLD1Prefix)
 
   /// Synchronously encodes a JSON-shaped value using CBOR-LD 1.0 registry
   /// entry zero. This path performs no semantic compression and therefore has
   /// no document-loader or suspension requirement.
   public static func encodeUncompressed(
     _ document: JSONValue,
-    serializationMode: CBORLDSerializationMode = .compatibility
+    serializationMode: CBORLDSerializationMode = .compatibility,
+    limits: CBORLDEncodingLimits = .init()
   ) throws -> Data {
-    try CBOREncoder.encodeUncompressedCBORLD1(document, mode: serializationMode)
+    try limits.validate()
+    return try CBOREncoder.encodeUncompressedCBORLD1(
+      document, mode: serializationMode, limits: limits)
   }
 
   /// Synchronously decodes a CBOR-LD 1.0 registry-zero document. Preferred
@@ -45,19 +48,23 @@ public enum CBORLD {
     return try parsed.payload.toJSON()
   }
 
-  /// Encodes any `Encodable` value after validating that it is JSON-shaped.
+  /// Encodes any `Encodable` value. The value is converted directly to a
+  /// ``JSONValue`` tree by ``CBORLDValueEncoder``; no JSON text is produced
+  /// or parsed.
   public static func encode<T: Encodable & Sendable>(
     _ document: T,
-    options: CBORLDEncodingOptions = .init()
+    options: CBORLDEncodingOptions = .init(),
+    valueEncoder: CBORLDValueEncoder = .init()
   ) async throws -> Data {
-    let json = try JSONValue(data: JSONEncoder().encode(document))
-    return try await encode(json, options: options)
+    try await encode(valueEncoder.encode(document), options: options)
   }
 
   public static func encode(
     _ document: JSONValue,
     options: CBORLDEncodingOptions = .init()
   ) async throws -> Data {
+    try options.limits.validate()
+    try options.contextPolicy.validate()
     // Registry zero has no semantic transform or asynchronous dependency. Keep
     // this common interchange path allocation-light while applying the same
     // option validation as the general encoder.
@@ -70,30 +77,36 @@ public enum CBORLD {
         throw CBORLDError.invalidInput(
           "compressionMode is only valid with legacy-singleton.")
       }
-      let encoded = try encodeUncompressed(document, serializationMode: options.serializationMode)
+      guard options.callerProvidedTypeTable == nil else {
+        throw CBORLDError.invalidInput(
+          "Registry entry 0 is uncompressed and cannot use a caller-provided type table.")
+      }
+      let encoded = try CBOREncoder.encodeUncompressedCBORLD1(
+        document, mode: options.serializationMode, limits: options.limits)
       options.diagnostic?("CBOR-LD cbor-ld-1.0, uncompressed registry entry 0.")
       return encoded
     }
 
-    let prepared = try await prepareEncoding(options)
-    let payload: CBORValue
-    if prepared.compressesPayload {
-      let codec = try SemanticCodec(
-        typeTable: prepared.typeTable,
+    let entry = try await resolveEncodingEntry(options)
+    let preparation = try SemanticCodecPreparation(entry: entry, codecs: options.codecs)
+    let payload = try await payload(
+      for: document,
+      preparation: preparation,
+      resolver: ContextResolverFactory.make(
         documentLoader: options.documentLoader,
-        legacy: options.format == .legacySingleton)
-      payload = try await codec.compress(document)
-    } else {
-      payload = try CBORValue.fromJSON(document)
-    }
+        contextDocumentLoader: options.contextDocumentLoader),
+      contextPolicy: options.contextPolicy,
+      limits: options.limits,
+      payloadDepth: payloadDepth(format: options.format, registryEntryID: entry.registryEntryID))
 
     let envelope = try makeEnvelope(
       payload: payload,
       format: options.format,
-      registryEntryID: prepared.registryEntryID,
-      compressionMode: prepared.compressionMode)
+      registryEntryID: entry.registryEntryID,
+      compressionMode: entry.isLegacySingleton ? (entry.performsConversion ? 1 : 0) : nil)
     options.diagnostic?("CBOR-LD \(options.format.rawValue), \(envelope.debugDescription)")
-    return try CBOREncoder.encode(envelope, mode: options.serializationMode)
+    return try CBOREncoder.encode(
+      envelope, mode: options.serializationMode, limits: options.limits)
   }
 
   public static func decode(
@@ -113,19 +126,16 @@ public enum CBORLD {
     _ parsed: ParsedCBORLD,
     options: CBORLDDecodingOptions
   ) async throws -> JSONValue {
-    if !parsed.payloadIsCompressed {
-      return try parsed.payload.toJSON()
-    }
-
-    let typeTable = try await resolveTypeTable(
-      format: parsed.format,
-      registryEntryID: parsed.registryEntryID,
-      typeTableLoader: options.typeTableLoader,
-      applicationContextMap: options.applicationContextMap)
-    let codec = try SemanticCodec(
-      typeTable: typeTable,
-      documentLoader: options.documentLoader,
-      legacy: parsed.format == .legacySingleton)
+    try options.contextPolicy.validate()
+    let entry = try await resolveDecodingEntry(parsed, options: options)
+    guard entry.performsConversion else { return try parsed.payload.toJSON() }
+    let preparation = try SemanticCodecPreparation(entry: entry, codecs: options.codecs)
+    let codec = SemanticCodec(
+      preparation: preparation,
+      resolver: try ContextResolverFactory.make(
+        documentLoader: options.documentLoader,
+        contextDocumentLoader: options.contextDocumentLoader),
+      contextPolicy: options.contextPolicy)
     let output = try await codec.decompress(parsed.payload)
     options.diagnostic?("Decoded \(parsed.format.rawValue) CBOR-LD payload.")
     return output
@@ -136,10 +146,11 @@ public enum CBORLD {
   public static func decode<T: Decodable & Sendable>(
     _ type: T.Type,
     from data: Data,
-    options: CBORLDDecodingOptions = .init()
+    options: CBORLDDecodingOptions = .init(),
+    valueDecoder: CBORLDValueDecoder = .init()
   ) async throws -> T {
     let json = try await decode(data, options: options)
-    return try CBORLDValueDecoder().decode(type, from: json)
+    return try valueDecoder.decode(type, from: json)
   }
 
   public static func inspect(
@@ -149,6 +160,15 @@ public enum CBORLD {
   ) throws -> CBORLDInspection {
     let parsed = try parse(data, limits: limits, policy: policy)
     return inspection(of: parsed, bytes: data)
+  }
+
+  /// Inspects an envelope with a complete parser configuration, such as
+  /// ``CBORLDDecodingConfiguration/untrustedCompatible``.
+  public static func inspect(
+    _ data: Data,
+    configuration: CBORLDDecodingConfiguration
+  ) throws -> CBORLDInspection {
+    try inspect(data, limits: configuration.limits, policy: configuration.policy)
   }
 
   static func inspection(
@@ -169,36 +189,61 @@ public enum CBORLD {
     CBORLDConstants.legacyTypeTable
   }
 
-  private struct PreparedEncoding {
-    var registryEntryID: UInt64?
-    var compressionMode: UInt8?
-    var compressesPayload: Bool
-    var typeTable: CBORLDTypeTable
+  /// Produces the envelope payload for one document and prepared entry.
+  static func payload(
+    for document: JSONValue,
+    preparation: SemanticCodecPreparation,
+    resolver: CBORLDContextDocumentLoader?,
+    contextPolicy: CBORLDContextLoadingPolicy,
+    limits: CBORLDEncodingLimits,
+    payloadDepth: Int
+  ) async throws -> CBORValue {
+    guard preparation.performsConversion else {
+      return try CBORValue.fromJSON(document, depth: payloadDepth, limits: limits)
+    }
+    return try await SemanticCodec(
+      preparation: preparation,
+      resolver: resolver,
+      contextPolicy: contextPolicy,
+      limits: limits,
+      payloadDepth: payloadDepth
+    ).compress(document)
   }
 
-  private static func prepareEncoding(
+  /// The CBOR nesting depth of the payload root inside its envelope, counted
+  /// like the decoder counts it.
+  static func payloadDepth(format: CBORLDFormat, registryEntryID: UInt64?) -> Int {
+    switch format {
+    case .cborLD1: return 2
+    case .legacyRange: return (registryEntryID ?? 0) < 128 ? 1 : 2
+    case .legacySingleton: return 1
+    }
+  }
+
+  private static func resolveEncodingEntry(
     _ options: CBORLDEncodingOptions
-  ) async throws -> PreparedEncoding {
+  ) async throws -> ResolvedRegistryEntry {
     if options.format == .legacySingleton {
       guard options.registryEntryID == nil else {
         throw CBORLDError.invalidInput(
           "registryEntryID must not be used with legacy-singleton.")
       }
-      guard options.typeTableLoader == nil else {
+      guard options.typeTableLoader == nil, options.registryEntryLoader == nil else {
         throw CBORLDError.invalidInput(
           "typeTableLoader must not be used with legacy-singleton.")
+      }
+      guard options.callerProvidedTypeTable == nil else {
+        throw CBORLDError.invalidInput(
+          "callerProvidedTypeTable must not be used with legacy-singleton.")
       }
       let mode = options.compressionMode ?? 1
       guard mode == 0 || mode == 1 else {
         throw CBORLDError.invalidInput(
           "compressionMode must be 0 or 1 for legacy-singleton.")
       }
-      return PreparedEncoding(
-        registryEntryID: nil,
-        compressionMode: mode,
-        compressesPayload: mode == 1,
-        typeTable: legacyTypeTable(
-          applicationContextMap: options.applicationContextMap))
+      return mode == 1
+        ? .legacySingleton(applicationContextMap: options.applicationContextMap)
+        : .uncompressed(format: .legacySingleton, registryEntryID: nil)
     }
 
     guard let id = options.registryEntryID,
@@ -215,53 +260,36 @@ public enum CBORLD {
       throw CBORLDError.invalidInput(
         "compressionMode is only valid with legacy-singleton.")
     }
-
-    let table = try await resolveTypeTable(
+    return try await ResolvedRegistryEntry.resolve(
       format: options.format,
       registryEntryID: id,
+      registryEntryLoader: options.registryEntryLoader,
       typeTableLoader: options.typeTableLoader,
-      applicationContextMap: nil)
-    return PreparedEncoding(
+      callerProvidedTypeTable: options.callerProvidedTypeTable,
+      allowsProvisionalEntries: options.allowsProvisionalRegistryEntries,
+      forEncoding: true)
+  }
+
+  private static func resolveDecodingEntry(
+    _ parsed: ParsedCBORLD,
+    options: CBORLDDecodingOptions
+  ) async throws -> ResolvedRegistryEntry {
+    if parsed.format == .legacySingleton {
+      return parsed.payloadIsCompressed
+        ? .legacySingleton(applicationContextMap: options.applicationContextMap)
+        : .uncompressed(format: .legacySingleton, registryEntryID: nil)
+    }
+    guard let id = parsed.registryEntryID else {
+      throw CBORLDError(code: .notCBORLD, message: "Missing registry entry ID.")
+    }
+    return try await ResolvedRegistryEntry.resolve(
+      format: parsed.format,
       registryEntryID: id,
-      compressionMode: nil,
-      compressesPayload: id != 0,
-      typeTable: table)
-  }
-
-  private static func resolveTypeTable(
-    format: CBORLDFormat,
-    registryEntryID: UInt64?,
-    typeTableLoader: CBORLDTypeTableLoader?,
-    applicationContextMap: [String: UInt64]?
-  ) async throws -> CBORLDTypeTable {
-    if format == .legacySingleton {
-      return legacyTypeTable(applicationContextMap: applicationContextMap)
-    }
-    guard let id = registryEntryID else {
-      throw CBORLDError(code: "ERR_NOT_CBORLD", message: "Missing registry entry ID.")
-    }
-    if id == 0 || id == 1 { return CBORLDConstants.normalized(nil) }
-    let loaded = try await typeTableLoader?(id)
-    guard let loaded else {
-      throw CBORLDError(
-        code: "ERR_NO_TYPETABLE",
-        message: "Type table not found for registryEntryID \"\(id)\".")
-    }
-    try validate(typeTable: loaded)
-    return CBORLDConstants.normalized(loaded)
-  }
-
-  private static func validate(typeTable: CBORLDTypeTable) throws {
-    let unsupported = [
-      "http://www.w3.org/2001/XMLSchema#integer",
-      "http://www.w3.org/2001/XMLSchema#double",
-      "http://www.w3.org/2001/XMLSchema#boolean",
-    ]
-    if let type = unsupported.first(where: { typeTable[$0] != nil }) {
-      throw CBORLDError(
-        code: "ERR_UNSUPPORTED_LITERAL_TYPE",
-        message: "Type table must not contain unsupported literal type \"\(type)\".")
-    }
+      registryEntryLoader: options.registryEntryLoader,
+      typeTableLoader: options.typeTableLoader,
+      callerProvidedTypeTable: options.callerProvidedTypeTable,
+      allowsProvisionalEntries: options.allowsProvisionalRegistryEntries,
+      forEncoding: false)
   }
 
   static func legacyTypeTable(
@@ -315,10 +343,16 @@ public enum CBORLD {
   ) throws -> ParsedCBORLD {
     var decoder = CBORDecoder(data: data, limits: limits, policy: policy)
     let root = try decoder.decodeComplete()
+    return try envelope(of: root)
+  }
+
+  /// Interprets a completely parsed root item as a CBOR-LD envelope.
+  static func envelope(of root: CBORValue) throws -> ParsedCBORLD {
     guard case .tagged(let tag, let taggedValue) = root else {
       throw CBORLDError(
-        code: "ERR_NOT_CBORLD",
-        message: "CBOR-LD data must begin with a recognized CBOR tag.")
+        code: .notCBORLD,
+        message: "CBOR-LD data must begin with a recognized CBOR tag.",
+        specificationCode: .nonCBORLDTag)
     }
 
     switch tag {
@@ -328,8 +362,9 @@ public enum CBORLD {
         let id = parts[0].unsignedValue
       else {
         throw CBORLDError(
-          code: "ERR_NOT_CBORLD",
-          message: "CBOR-LD 1.0 must contain [registryEntryID, payload].")
+          code: .notCBORLD,
+          message: "CBOR-LD 1.0 must contain [registryEntryID, payload].",
+          specificationCode: .invalidPayloadStructure)
       }
       return ParsedCBORLD(
         format: .cborLD1,
@@ -351,8 +386,9 @@ public enum CBORLD {
         let remainder = parts[0].bytesValue
       else {
         throw CBORLDError(
-          code: "ERR_NOT_CBORLD",
-          message: "Malformed legacy-range registry entry varint.")
+          code: .notCBORLD,
+          message: "Malformed legacy-range registry entry varint.",
+          specificationCode: .invalidPayloadStructure)
       }
       let bytes = [firstByte] + remainder
       let id = try decodeVarint(bytes)
@@ -370,8 +406,9 @@ public enum CBORLD {
         payload: taggedValue)
     default:
       throw CBORLDError(
-        code: "ERR_NOT_CBORLD",
-        message: "Unknown CBOR-LD tag \"\(tag)\".")
+        code: .notCBORLD,
+        message: "Unknown CBOR-LD tag \"\(tag)\".",
+        specificationCode: .nonCBORLDTag)
     }
   }
 }
@@ -383,24 +420,44 @@ public struct CBORLDEncoder: Sendable {
   public let dictionary: CBORLDDocumentDictionary
   public let documentLoader: CBORLDDocumentLoader?
   public let diagnostic: (@Sendable (String) -> Void)?
+  /// Codecs for identifiers the dictionary's processing model uses beyond
+  /// the built-in codecs.
+  public let codecs: [any CBORLDTypedValueCodec]
+  public let limits: CBORLDEncodingLimits
+  public let contextPolicy: CBORLDContextLoadingPolicy
+  public let contextDocumentLoader: CBORLDContextDocumentLoader?
+  private let validation = VerificationMemo<UInt64>()
 
   public init(
     format: CBORLDFormat = .cborLD1,
     serializationMode: CBORLDSerializationMode = .compatibility,
     dictionary: CBORLDDocumentDictionary = .unregistered,
     documentLoader: CBORLDDocumentLoader? = nil,
-    diagnostic: (@Sendable (String) -> Void)? = nil
+    diagnostic: (@Sendable (String) -> Void)? = nil,
+    codecs: [any CBORLDTypedValueCodec] = [],
+    limits: CBORLDEncodingLimits = .init(),
+    contextPolicy: CBORLDContextLoadingPolicy = .init(),
+    contextDocumentLoader: CBORLDContextDocumentLoader? = nil
   ) {
     self.format = format
     self.serializationMode = serializationMode
     self.dictionary = dictionary
     self.documentLoader = documentLoader
     self.diagnostic = diagnostic
+    self.codecs = codecs
+    self.limits = limits
+    self.contextPolicy = contextPolicy
+    self.contextDocumentLoader = contextDocumentLoader
   }
 
   public func encode(_ document: JSONValue) async throws -> Data {
-    try dictionary.validate()
+    let dictionary = self.dictionary
+    try validation.require(dictionary.code) { try dictionary.validate() }
     if format == .legacySingleton {
+      guard dictionary.processingModel == nil else {
+        throw CBORLDError.invalidInput(
+          "legacy-singleton always uses the default processing model.")
+      }
       return try await CBORLD.encode(
         document,
         options: .init(
@@ -409,9 +466,13 @@ public struct CBORLDEncoder: Sendable {
           registryEntryID: nil,
           documentLoader: documentLoader,
           applicationContextMap: dictionary.contexts,
-          diagnostic: diagnostic))
+          diagnostic: diagnostic,
+          codecs: codecs,
+          limits: limits,
+          contextPolicy: contextPolicy,
+          contextDocumentLoader: contextDocumentLoader))
     }
-    let dictionary = self.dictionary
+    let entry = dictionary.registryEntry
     return try await CBORLD.encode(
       document,
       options: .init(
@@ -419,17 +480,20 @@ public struct CBORLDEncoder: Sendable {
         serializationMode: serializationMode,
         registryEntryID: dictionary.code,
         documentLoader: documentLoader,
-        typeTableLoader: { id in
-          id == dictionary.code ? dictionary.typeTable : nil
-        },
-        diagnostic: diagnostic))
+        diagnostic: diagnostic,
+        registryEntryLoader: { id in id == entry.id ? entry : nil },
+        codecs: codecs,
+        limits: limits,
+        contextPolicy: contextPolicy,
+        contextDocumentLoader: contextDocumentLoader))
   }
 
-  /// Encodes any `Encodable` value after checking that its encoded form is a
-  /// valid JSON value.
-  public func encode<T: Encodable & Sendable>(_ document: T) async throws -> Data {
-    let json = try JSONValue(data: JSONEncoder().encode(document))
-    return try await encode(json)
+  /// Encodes any `Encodable` value through ``CBORLDValueEncoder``.
+  public func encode<T: Encodable & Sendable>(
+    _ document: T,
+    valueEncoder: CBORLDValueEncoder = .init()
+  ) async throws -> Data {
+    try await encode(valueEncoder.encode(document))
   }
 }
 
@@ -446,7 +510,17 @@ public struct CBORLDDecoder: Sendable {
   public let limits: CBORLDDecodingLimits
   public let policy: CBORLDDecodingPolicy
   public let diagnostic: (@Sendable (String) -> Void)?
+  /// Codecs for identifiers that dictionary processing models use beyond the
+  /// built-in codecs.
+  public let codecs: [any CBORLDTypedValueCodec]
+  /// Whether documents may select provisional dictionaries.
+  public let allowsProvisionalRegistryEntries: Bool
+  public let contextPolicy: CBORLDContextLoadingPolicy
+  public let contextDocumentLoader: CBORLDContextDocumentLoader?
   let configurationError: CBORLDError?
+  /// Dictionary validation and pin verification depend only on immutable
+  /// configuration, so each registry entry is checked once, on first use.
+  private let entryVerification = VerificationMemo<UInt64>()
 
   public init(
     supportedFormats: Set<CBORLDFormat> = Set(CBORLDFormat.allCases),
@@ -456,7 +530,11 @@ public struct CBORLDDecoder: Sendable {
     documentLoader: CBORLDDocumentLoader? = nil,
     limits: CBORLDDecodingLimits = .init(),
     policy: CBORLDDecodingPolicy = .init(),
-    diagnostic: (@Sendable (String) -> Void)? = nil
+    diagnostic: (@Sendable (String) -> Void)? = nil,
+    codecs: [any CBORLDTypedValueCodec] = [],
+    allowsProvisionalRegistryEntries: Bool = true,
+    contextPolicy: CBORLDContextLoadingPolicy = .init(),
+    contextDocumentLoader: CBORLDContextDocumentLoader? = nil
   ) {
     self.supportedFormats = supportedFormats
     var dictionaryMap: [UInt64: CBORLDDocumentDictionary] = [:]
@@ -475,9 +553,13 @@ public struct CBORLDDecoder: Sendable {
     self.limits = limits
     self.policy = policy
     self.diagnostic = diagnostic
+    self.codecs = codecs
+    self.allowsProvisionalRegistryEntries = allowsProvisionalRegistryEntries
+    self.contextPolicy = contextPolicy
+    self.contextDocumentLoader = contextDocumentLoader
     if let duplicateCode {
       self.configurationError = CBORLDError(
-        code: "ERR_INVALID_DICTIONARY",
+        code: .invalidDictionary,
         message: "Decoder received more than one dictionary with code \(duplicateCode).")
     } else if let invalidPin = requiredDictionaryFingerprints.first(where: {
       $0.key > CBORLDConstants.maximumSafeInteger
@@ -485,7 +567,7 @@ public struct CBORLDDecoder: Sendable {
         || $0.value.version != 1
     }) {
       self.configurationError = CBORLDError(
-        code: "ERR_INVALID_DIGEST",
+        code: .invalidDigest,
         message:
           "Dictionary fingerprint for registry entry \(invalidPin.key) must be a version 1 document-dictionary digest."
       )
@@ -494,49 +576,92 @@ public struct CBORLDDecoder: Sendable {
     }
   }
 
+  /// Creates a decoder from a complete parser configuration, such as
+  /// ``CBORLDDecodingConfiguration/untrustedDeterministic``.
+  public init(
+    configuration: CBORLDDecodingConfiguration,
+    supportedFormats: Set<CBORLDFormat> = Set(CBORLDFormat.allCases),
+    dictionaries: [CBORLDDocumentDictionary] = [.unregistered],
+    requiredDictionaryFingerprints: [UInt64: CBORLDDigest] = [:],
+    legacyApplicationContextMap: [String: UInt64]? = nil,
+    documentLoader: CBORLDDocumentLoader? = nil,
+    diagnostic: (@Sendable (String) -> Void)? = nil,
+    codecs: [any CBORLDTypedValueCodec] = [],
+    allowsProvisionalRegistryEntries: Bool = true,
+    contextPolicy: CBORLDContextLoadingPolicy = .init(),
+    contextDocumentLoader: CBORLDContextDocumentLoader? = nil
+  ) {
+    self.init(
+      supportedFormats: supportedFormats,
+      dictionaries: dictionaries,
+      requiredDictionaryFingerprints: requiredDictionaryFingerprints,
+      legacyApplicationContextMap: legacyApplicationContextMap,
+      documentLoader: documentLoader,
+      limits: configuration.limits,
+      policy: configuration.policy,
+      diagnostic: diagnostic,
+      codecs: codecs,
+      allowsProvisionalRegistryEntries: allowsProvisionalRegistryEntries,
+      contextPolicy: contextPolicy,
+      contextDocumentLoader: contextDocumentLoader)
+  }
+
+  /// The parser limits and representation policy as one value.
+  public var configuration: CBORLDDecodingConfiguration {
+    .init(limits: limits, policy: policy)
+  }
+
   public func decode(_ data: Data) async throws -> JSONValue {
     if let configurationError { throw configurationError }
     let parsed = try CBORLD.parse(data, limits: limits, policy: policy)
     guard supportedFormats.contains(parsed.format) else {
       throw CBORLDError(
-        code: "ERR_UNSUPPORTED_FORMAT",
+        code: .unsupportedFormat,
         message: "Decoder is not configured for \(parsed.format.rawValue).")
     }
+    let dictionaries = self.dictionaries
     if let id = parsed.registryEntryID {
-      let dictionary = dictionaries[id]
-      if let dictionary {
-        try dictionary.validate()
-      }
-      if let expected = requiredDictionaryFingerprints[id] {
-        guard let dictionary else {
-          throw CBORLDError(
-            code: "ERR_INVALID_DICTIONARY",
-            message:
-              "No dictionary was configured for the required registry entry \(id) fingerprint."
-          )
+      let expected = requiredDictionaryFingerprints[id]
+      try entryVerification.require(id) {
+        let dictionary = dictionaries[id]
+        if let dictionary {
+          try dictionary.validate()
         }
-        try dictionary.verifyFingerprint(expected)
+        if let expected {
+          guard let dictionary else {
+            throw CBORLDError(
+              code: .invalidDictionary,
+              message:
+                "No dictionary was configured for the required registry entry \(id) fingerprint."
+            )
+          }
+          try dictionary.verifyFingerprint(expected)
+        }
       }
     }
-    let dictionaries = self.dictionaries
     return try await CBORLD.decode(
       parsed,
       options: .init(
         documentLoader: documentLoader,
-        typeTableLoader: { id in dictionaries[id]?.typeTable },
         applicationContextMap: legacyApplicationContextMap,
         limits: limits,
         policy: policy,
-        diagnostic: diagnostic))
+        diagnostic: diagnostic,
+        registryEntryLoader: { id in dictionaries[id]?.registryEntry },
+        codecs: codecs,
+        allowsProvisionalRegistryEntries: allowsProvisionalRegistryEntries,
+        contextPolicy: contextPolicy,
+        contextDocumentLoader: contextDocumentLoader))
   }
 
   /// Restores CBOR-LD and decodes the resulting JSON-LD document as `T`.
   public func decode<T: Decodable & Sendable>(
     _ type: T.Type,
-    from data: Data
+    from data: Data,
+    valueDecoder: CBORLDValueDecoder = .init()
   ) async throws -> T {
     let json = try await decode(data)
-    return try CBORLDValueDecoder().decode(type, from: json)
+    return try valueDecoder.decode(type, from: json)
   }
 }
 
@@ -556,8 +681,9 @@ private func decodeVarint<C: Collection>(_ bytes: C) throws -> UInt64
 where C.Element == UInt8 {
   guard bytes.count < 24 else {
     throw CBORLDError(
-      code: "ERR_NOT_CBORLD",
-      message: "CBOR-LD encoded registry entry ID is too large.")
+      code: .notCBORLD,
+      message: "CBOR-LD encoded registry entry ID is too large.",
+      specificationCode: .invalidPayloadStructure)
   }
   var value: UInt64 = 0
   var shift: UInt64 = 0
@@ -566,7 +692,10 @@ where C.Element == UInt8 {
   for byte in bytes {
     consumed += 1
     guard shift < 64 else {
-      throw CBORLDError(code: "ERR_NOT_CBORLD", message: "Registry varint overflow.")
+      throw CBORLDError(
+        code: .notCBORLD,
+        message: "Registry varint overflow.",
+        specificationCode: .invalidPayloadStructure)
     }
     value |= UInt64(byte & 0x7f) << shift
     if byte & 0x80 == 0 {
@@ -576,12 +705,16 @@ where C.Element == UInt8 {
     shift += 7
   }
   guard terminated else {
-    throw CBORLDError(code: "ERR_NOT_CBORLD", message: "Unterminated registry varint.")
+    throw CBORLDError(
+      code: .notCBORLD,
+      message: "Unterminated registry varint.",
+      specificationCode: .invalidPayloadStructure)
   }
   guard consumed == bytes.count else {
     throw CBORLDError(
-      code: "ERR_NOT_CBORLD",
-      message: "Registry varint contains trailing bytes.")
+      code: .notCBORLD,
+      message: "Registry varint contains trailing bytes.",
+      specificationCode: .invalidPayloadStructure)
   }
   return value
 }

@@ -19,85 +19,146 @@ struct CBORMapEntry: Sendable {
   var value: CBORValue
 }
 
-/// Single-owner growable byte storage for the hot JSON-to-CBOR path. It avoids
-/// `Data.append`'s repeated uniqueness checks and transfers its allocation to
-/// the returned `Data` without copying.
-private final class CBORByteWriter {
-  private var storage: UnsafeMutablePointer<UInt8>?
+/// Single-owner growable byte storage for the CBOR output paths. It avoids
+/// `Data.append`'s repeated uniqueness checks, transfers its allocation to the
+/// returned `Data` without copying, and never allocates beyond `limit`: growth
+/// uses checked arithmetic and fails before crossing the cap.
+final class CBORByteWriter {
+  private var storage: UnsafeMutablePointer<UInt8>
   private(set) var count = 0
   private var capacity: Int
+  /// The limit applies to every byte written, including drained bytes.
+  let limit: Int
+  /// Bytes already handed out by ``drain()``.
+  private(set) var drainedCount = 0
+  private var ownsStorage = true
 
-  init(capacity: Int = 128) {
-    self.capacity = Swift.max(1, capacity)
+  init(capacity: Int = 128, limit: Int = .max) {
+    self.limit = Swift.max(0, limit)
+    self.capacity = Swift.max(0, Swift.min(capacity, self.limit))
     self.storage = .allocate(capacity: self.capacity)
   }
 
-  deinit { storage?.deallocate() }
+  deinit {
+    if ownsStorage { storage.deallocate() }
+  }
 
-  func append(_ byte: UInt8) {
-    ensureCapacity(for: 1)
-    storage![count] = byte
+  /// Bytes that may still be written before `limit` is reached.
+  var remaining: Int { limit - drainedCount - count }
+
+  /// The current allocation size, which never exceeds `limit`.
+  var allocatedCapacity: Int { capacity }
+
+  @inline(__always)
+  func append(_ byte: UInt8) throws {
+    if count == capacity { try reserve(1) }
+    storage[count] = byte
     count += 1
   }
 
-  func append(bigEndian value: UInt16) {
-    append(UInt8(truncatingIfNeeded: value >> 8))
-    append(UInt8(truncatingIfNeeded: value))
+  func append(bigEndian value: UInt16) throws {
+    try reserve(2)
+    storage[count] = UInt8(truncatingIfNeeded: value >> 8)
+    storage[count + 1] = UInt8(truncatingIfNeeded: value)
+    count += 2
   }
 
-  func append(bigEndian value: UInt32) {
-    append(UInt8(truncatingIfNeeded: value >> 24))
-    append(UInt8(truncatingIfNeeded: value >> 16))
-    append(UInt8(truncatingIfNeeded: value >> 8))
-    append(UInt8(truncatingIfNeeded: value))
-  }
-
-  func append(bigEndian value: UInt64) {
-    append(UInt8(truncatingIfNeeded: value >> 56))
-    append(UInt8(truncatingIfNeeded: value >> 48))
-    append(UInt8(truncatingIfNeeded: value >> 40))
-    append(UInt8(truncatingIfNeeded: value >> 32))
-    append(UInt8(truncatingIfNeeded: value >> 24))
-    append(UInt8(truncatingIfNeeded: value >> 16))
-    append(UInt8(truncatingIfNeeded: value >> 8))
-    append(UInt8(truncatingIfNeeded: value))
-  }
-
-  func append(utf8 value: String) {
-    if value.utf8.withContiguousStorageIfAvailable({ buffer in
-      guard let baseAddress = buffer.baseAddress else { return }
-      append(baseAddress, count: buffer.count)
-    }) == nil {
-      for byte in value.utf8 { append(byte) }
+  func append(bigEndian value: UInt32) throws {
+    try reserve(4)
+    for offset in 0..<4 {
+      storage[count + offset] = UInt8(truncatingIfNeeded: value >> UInt32(24 - offset * 8))
     }
+    count += 4
   }
 
+  func append(bigEndian value: UInt64) throws {
+    try reserve(8)
+    for offset in 0..<8 {
+      storage[count + offset] = UInt8(truncatingIfNeeded: value >> UInt64(56 - offset * 8))
+    }
+    count += 8
+  }
+
+  func append(utf8 value: String) throws {
+    let byteCount = value.utf8.count
+    guard byteCount > 0 else { return }
+    try reserve(byteCount)
+    let copied: Void? = value.utf8.withContiguousStorageIfAvailable { buffer in
+      (storage + count).initialize(from: buffer.baseAddress!, count: byteCount)
+    }
+    if copied == nil {
+      var offset = count
+      for byte in value.utf8 {
+        storage[offset] = byte
+        offset += 1
+      }
+    }
+    count += byteCount
+  }
+
+  func append(_ data: Data) throws {
+    let byteCount = data.count
+    guard byteCount > 0 else { return }
+    try reserve(byteCount)
+    data.withUnsafeBytes { buffer in
+      (storage + count).initialize(
+        from: buffer.bindMemory(to: UInt8.self).baseAddress!, count: byteCount)
+    }
+    count += byteCount
+  }
+
+  /// Ensures that `additional` more bytes fit, growing geometrically but never
+  /// past `limit`.
+  func reserve(_ additional: Int) throws {
+    let (required, overflow) = count.addingReportingOverflow(additional)
+    let (total, totalOverflow) = required.addingReportingOverflow(drainedCount)
+    guard !overflow, !totalOverflow, total <= limit else {
+      throw CBORLDError.resourceLimit(
+        "CBOR-LD output would exceed the configured maximumOutputBytes of \(limit) bytes.")
+    }
+    guard required > capacity else { return }
+    var newCapacity = Swift.max(capacity, 64)
+    while newCapacity < required {
+      let (doubled, didOverflow) = newCapacity.multipliedReportingOverflow(by: 2)
+      newCapacity = didOverflow ? .max : doubled
+    }
+    newCapacity = Swift.min(newCapacity, limit - drainedCount)
+    let replacement = UnsafeMutablePointer<UInt8>.allocate(capacity: newCapacity)
+    replacement.initialize(from: storage, count: count)
+    storage.deallocate()
+    storage = replacement
+    capacity = newCapacity
+  }
+
+  /// Transfers the written bytes to `Data` without copying. The writer must
+  /// not be used afterwards.
   func finish() -> Data {
-    let pointer = storage!
-    storage = nil
+    ownsStorage = false
     return Data(
-      bytesNoCopy: UnsafeMutableRawPointer(pointer),
+      bytesNoCopy: UnsafeMutableRawPointer(storage),
       count: count,
       deallocator: .custom { pointer, _ in pointer.deallocate() })
   }
 
-  private func append(_ source: UnsafePointer<UInt8>, count sourceCount: Int) {
-    guard sourceCount > 0 else { return }
-    ensureCapacity(for: sourceCount)
-    storage!.advanced(by: count).update(from: source, count: sourceCount)
-    count += sourceCount
+  /// Accounts for bytes emitted outside the buffer, such as a long string
+  /// streamed directly to a sink, against the same limit.
+  func reserveExternal(_ byteCount: Int) throws {
+    let (total, overflow) = drainedCount.addingReportingOverflow(count)
+    let (withExternal, externalOverflow) = total.addingReportingOverflow(byteCount)
+    guard !overflow, !externalOverflow, withExternal <= limit else {
+      throw CBORLDError.resourceLimit(
+        "CBOR-LD output would exceed the configured maximumOutputBytes of \(limit) bytes.")
+    }
+    drainedCount += byteCount
   }
 
-  private func ensureCapacity(for additionalCount: Int) {
-    let required = count + additionalCount
-    guard required > capacity else { return }
-    var newCapacity = capacity
-    while newCapacity < required { newCapacity *= 2 }
-    let replacement = UnsafeMutablePointer<UInt8>.allocate(capacity: newCapacity)
-    replacement.initialize(from: storage!, count: count)
-    storage!.deallocate()
-    storage = replacement
-    capacity = newCapacity
+  /// Copies out the written bytes and empties the writer while keeping its
+  /// allocation, for incremental emission.
+  func drain() -> Data {
+    let chunk = Data(bytes: storage, count: count)
+    drainedCount += count
+    count = 0
+    return chunk
   }
 }
 
@@ -138,7 +199,16 @@ extension CBORValue {
     return value
   }
 
-  static func fromJSON(_ value: JSONValue) throws -> CBORValue {
+  /// Converts a JSON value without semantic compression. Depth is counted
+  /// like the CBOR decoder counts it, from `depth` for `value` itself.
+  static func fromJSON(
+    _ value: JSONValue,
+    depth: Int = 0,
+    limits: CBORLDEncodingLimits = .unbounded
+  ) throws -> CBORValue {
+    guard depth <= limits.maximumNestingDepth else {
+      throw CBOREncoder.nestingLimit(limits)
+    }
     switch value {
     case .null: return .null
     case .bool(let value): return .bool(value)
@@ -160,16 +230,29 @@ extension CBORValue {
       return .double(value)
     case .string(let value): return .string(value)
     case .array(let values):
-      return .array(try values.map(Self.fromJSON))
+      try CBOREncoder.checkContainer(values.count, limits: limits)
+      var output: [CBORValue] = []
+      output.reserveCapacity(values.count)
+      for (index, element) in values.enumerated() {
+        try CBOREncoder.checkCancellation(at: index, limits: limits)
+        output.append(try fromJSON(element, depth: depth + 1, limits: limits))
+      }
+      return .array(output)
     case .object(let values):
-      return .map(
-        try values.keys.sorted().map { key in
-          guard let value = values[key] else {
-            throw CBORLDError.invalidInput(
-              "JSON object changed while it was being encoded.")
-          }
-          return CBORMapEntry(key: .string(key), value: try Self.fromJSON(value))
-        })
+      try CBOREncoder.checkContainer(values.count, limits: limits)
+      var entries: [CBORMapEntry] = []
+      entries.reserveCapacity(values.count)
+      for (index, key) in values.keys.sorted().enumerated() {
+        try CBOREncoder.checkCancellation(at: index, limits: limits)
+        guard let element = values[key] else {
+          throw CBORLDError.invalidInput("JSON object changed while it was being encoded.")
+        }
+        entries.append(
+          CBORMapEntry(
+            key: .string(key),
+            value: try fromJSON(element, depth: depth + 1, limits: limits)))
+      }
+      return .map(entries)
     }
   }
 
@@ -220,13 +303,18 @@ extension CBORValue {
 }
 
 enum CBOREncoder {
+  /// The CBOR-LD 1.0 registry-entry-zero prefix: tag 51997, a two-element
+  /// array, and registry entry `0`.
+  static let uncompressedCBORLD1Prefix: [UInt8] = [0xd9, 0xcb, 0x1d, 0x82, 0x00]
+
   static func encode(
     _ value: CBORValue,
-    mode: CBORLDSerializationMode = .compatibility
+    mode: CBORLDSerializationMode = .compatibility,
+    limits: CBORLDEncodingLimits = .unbounded
   ) throws -> Data {
-    var data = Data()
-    try append(value, mode: mode, to: &data)
-    return data
+    let writer = CBORByteWriter(limit: limits.maximumOutputBytes)
+    try append(value, depth: 0, mode: mode, limits: limits, to: writer)
+    return writer.finish()
   }
 
   /// Encodes the hot uncompressed CBOR-LD 1.0 path without first allocating a
@@ -234,31 +322,35 @@ enum CBOREncoder {
   /// general encoder and retain all finite-number validation.
   static func encodeUncompressedCBORLD1(
     _ value: JSONValue,
-    mode: CBORLDSerializationMode
+    mode: CBORLDSerializationMode,
+    limits: CBORLDEncodingLimits = .unbounded
   ) throws -> Data {
-    let writer = CBORByteWriter()
-    appendHeader(major: 6, argument: 51_997, to: writer)
-    appendHeader(major: 4, argument: 2, to: writer)
-    appendHeader(major: 0, argument: 0, to: writer)
-    try appendJSON(value, mode: mode, to: writer)
+    let writer = CBORByteWriter(limit: limits.maximumOutputBytes)
+    for byte in uncompressedCBORLD1Prefix { try writer.append(byte) }
+    // The payload sits at depth 2: tag (0), envelope array (1), payload (2).
+    try appendJSON(value, depth: 2, mode: mode, limits: limits, to: writer)
     return writer.finish()
   }
 
-  private static func appendJSON(
+  /// Appends one JSON value as preferred-width, definite-length CBOR.
+  static func appendJSON(
     _ value: JSONValue,
+    depth: Int,
     mode: CBORLDSerializationMode,
+    limits: CBORLDEncodingLimits,
     to writer: CBORByteWriter
   ) throws {
+    guard depth <= limits.maximumNestingDepth else { throw nestingLimit(limits) }
     switch value {
     case .null:
-      writer.append(0xf6)
+      try writer.append(0xf6)
     case .bool(let value):
-      writer.append(value ? 0xf5 : 0xf4)
+      try writer.append(value ? 0xf5 : 0xf4)
     case .integer(let value):
       if value >= 0 {
-        appendHeader(major: 0, argument: UInt64(value), to: writer)
+        try appendHeader(major: 0, argument: UInt64(value), to: writer)
       } else {
-        appendHeader(major: 1, argument: UInt64(bitPattern: ~value), to: writer)
+        try appendHeader(major: 1, argument: UInt64(bitPattern: ~value), to: writer)
       }
     case .number(let value):
       guard value.isFinite else {
@@ -266,247 +358,236 @@ enum CBOREncoder {
       }
       if value.rounded(.towardZero) == value {
         if value >= 0, value <= Double(CBORLDConstants.maximumSafeInteger) {
-          appendHeader(major: 0, argument: UInt64(value), to: writer)
+          try appendHeader(major: 0, argument: UInt64(value), to: writer)
           return
         }
         if value >= -Double(CBORLDConstants.maximumSafeInteger), value < 0 {
           let integer = Int64(value)
-          appendHeader(major: 1, argument: UInt64(bitPattern: ~integer), to: writer)
+          try appendHeader(major: 1, argument: UInt64(bitPattern: ~integer), to: writer)
           return
         }
       }
-      appendPreferredDouble(value, to: writer)
+      try appendPreferredDouble(value, to: writer)
     case .string(let value):
-      appendString(value, to: writer)
+      try appendString(value, to: writer)
     case .array(let values):
-      appendHeader(major: 4, argument: UInt64(values.count), to: writer)
+      try checkContainer(values.count, limits: limits)
+      try appendHeader(major: 4, argument: UInt64(values.count), to: writer)
       for (index, value) in values.enumerated() {
-        try checkCancellation(at: index)
-        try appendJSON(value, mode: mode, to: writer)
+        try checkCancellation(at: index, limits: limits)
+        try appendJSON(value, depth: depth + 1, mode: mode, limits: limits, to: writer)
       }
     case .object(let values):
-      appendHeader(major: 5, argument: UInt64(values.count), to: writer)
-      var keys = Array(values.keys)
-      keys.sort { lhs, rhs in
-        let lhsCount = encodedStringByteCount(lhs)
-        let rhsCount = encodedStringByteCount(rhs)
-        if mode.usesLengthFirstMapOrdering, lhsCount != rhsCount {
-          return lhsCount < rhsCount
-        }
-        return lhs.utf8.lexicographicallyPrecedes(rhs.utf8)
-      }
-      for (index, key) in keys.enumerated() {
-        try checkCancellation(at: index)
-        appendString(key, to: writer)
+      try checkContainer(values.count, limits: limits)
+      try appendHeader(major: 5, argument: UInt64(values.count), to: writer)
+      for (index, key) in sortedKeys(values, mode: mode).enumerated() {
+        try checkCancellation(at: index, limits: limits)
+        try appendString(key, to: writer)
         guard let value = values[key] else {
           throw CBORLDError.invalidInput("JSON object changed while it was being encoded.")
         }
-        try appendJSON(value, mode: mode, to: writer)
+        try appendJSON(value, depth: depth + 1, mode: mode, limits: limits, to: writer)
       }
     }
   }
 
-  private static func appendHeader(
+  /// Object keys in the order every serialization mode emits them.
+  ///
+  /// JSON keys are text strings, whose encoded head grows with their length.
+  /// Ordering encoded keys bytewise (RFC 8949 section 4.2.1) therefore sorts
+  /// by length and then by UTF-8 bytes, exactly as length-first ordering
+  /// (section 4.2.3) does, so the two profiles agree for JSON objects. They
+  /// differ only for maps with keys of several major types.
+  static func sortedKeys(
+    _ values: [String: JSONValue],
+    mode: CBORLDSerializationMode
+  ) -> [String] {
+    var keys = Array(values.keys)
+    keys.sort { lhs, rhs in
+      let lhsCount = lhs.utf8.count
+      let rhsCount = rhs.utf8.count
+      if lhsCount != rhsCount { return lhsCount < rhsCount }
+      return lhs.utf8.lexicographicallyPrecedes(rhs.utf8)
+    }
+    return keys
+  }
+
+  static func appendHeader(
     major: UInt8,
     argument: UInt64,
     to writer: CBORByteWriter
-  ) {
+  ) throws {
     let prefix = major << 5
     switch argument {
     case 0...23:
-      writer.append(prefix | UInt8(argument))
+      try writer.append(prefix | UInt8(argument))
     case 24...UInt64(UInt8.max):
-      writer.append(prefix | 24)
-      writer.append(UInt8(argument))
+      try writer.reserve(2)
+      try writer.append(prefix | 24)
+      try writer.append(UInt8(argument))
     case 256...UInt64(UInt16.max):
-      writer.append(prefix | 25)
-      writer.append(bigEndian: UInt16(argument))
+      try writer.reserve(3)
+      try writer.append(prefix | 25)
+      try writer.append(bigEndian: UInt16(argument))
     case 65_536...UInt64(UInt32.max):
-      writer.append(prefix | 26)
-      writer.append(bigEndian: UInt32(argument))
+      try writer.reserve(5)
+      try writer.append(prefix | 26)
+      try writer.append(bigEndian: UInt32(argument))
     default:
-      writer.append(prefix | 27)
-      writer.append(bigEndian: argument)
+      try writer.reserve(9)
+      try writer.append(prefix | 27)
+      try writer.append(bigEndian: argument)
     }
   }
 
-  private static func appendPreferredDouble(_ value: Double, to writer: CBORByteWriter) {
+  static func appendPreferredDouble(_ value: Double, to writer: CBORByteWriter) throws {
     if value.isNaN {
-      writer.append(0xf9)
-      writer.append(bigEndian: UInt16(0x7e00))
+      try writer.append(0xf9)
+      try writer.append(bigEndian: UInt16(0x7e00))
       return
     }
     let half = Float16(value)
     if Double(half).bitPattern == value.bitPattern {
-      writer.append(0xf9)
-      writer.append(bigEndian: half.bitPattern)
+      try writer.append(0xf9)
+      try writer.append(bigEndian: half.bitPattern)
       return
     }
     let single = Float(value)
     if Double(single).bitPattern == value.bitPattern {
-      writer.append(0xfa)
-      writer.append(bigEndian: single.bitPattern)
+      try writer.append(0xfa)
+      try writer.append(bigEndian: single.bitPattern)
       return
     }
-    writer.append(0xfb)
-    writer.append(bigEndian: value.bitPattern)
+    try writer.append(0xfb)
+    try writer.append(bigEndian: value.bitPattern)
   }
 
-  private static func appendString(_ value: String, to writer: CBORByteWriter) {
-    appendHeader(major: 3, argument: UInt64(value.utf8.count), to: writer)
-    writer.append(utf8: value)
+  static func appendString(_ value: String, to writer: CBORByteWriter) throws {
+    try appendHeader(major: 3, argument: UInt64(value.utf8.count), to: writer)
+    try writer.append(utf8: value)
   }
 
   private static func append(
     _ value: CBORValue,
+    depth: Int,
     mode: CBORLDSerializationMode,
-    to data: inout Data
+    limits: CBORLDEncodingLimits,
+    to writer: CBORByteWriter
   ) throws {
+    guard depth <= limits.maximumNestingDepth else { throw nestingLimit(limits) }
     switch value {
     case .unsigned(let value):
-      appendHeader(major: 0, argument: value, to: &data)
+      try appendHeader(major: 0, argument: value, to: writer)
     case .negative(let value):
       guard value < 0 else {
         throw CBORLDError.invalidInput("A negative CBOR integer must be below zero.")
       }
-      appendHeader(major: 1, argument: UInt64(bitPattern: ~value), to: &data)
+      try appendHeader(major: 1, argument: UInt64(bitPattern: ~value), to: writer)
     case .bytes(let value):
-      appendHeader(major: 2, argument: UInt64(value.count), to: &data)
-      data.append(value)
+      try appendHeader(major: 2, argument: UInt64(value.count), to: writer)
+      try writer.append(value)
     case .string(let value):
-      let bytes = Data(value.utf8)
-      appendHeader(major: 3, argument: UInt64(bytes.count), to: &data)
-      data.append(bytes)
+      try appendString(value, to: writer)
     case .array(let values):
-      appendHeader(major: 4, argument: UInt64(values.count), to: &data)
+      try checkContainer(values.count, limits: limits)
+      try appendHeader(major: 4, argument: UInt64(values.count), to: writer)
       for (index, value) in values.enumerated() {
-        try checkCancellation(at: index)
-        try append(value, mode: mode, to: &data)
+        try checkCancellation(at: index, limits: limits)
+        try append(value, depth: depth + 1, mode: mode, limits: limits, to: writer)
       }
     case .map(let entries):
-      appendHeader(major: 5, argument: UInt64(entries.count), to: &data)
-      if mode.ordersMapKeys {
-        var encoded: [(key: Data, value: Data)] = []
-        encoded.reserveCapacity(entries.count)
-        for (index, entry) in entries.enumerated() {
-          try checkCancellation(at: index)
-          encoded.append(
-            (
-              key: try encode(entry.key, mode: mode),
-              value: try encode(entry.value, mode: mode)
-            ))
-        }
-        encoded.sort { lhs, rhs in
-          if mode.usesLengthFirstMapOrdering, lhs.key.count != rhs.key.count {
-            return lhs.key.count < rhs.key.count
-          }
-          return lhs.key.lexicographicallyPrecedes(rhs.key)
-        }
-        for (index, entry) in encoded.enumerated() {
-          try checkCancellation(at: index)
-          data.append(entry.key)
-          data.append(entry.value)
-        }
-      } else {
-        for (index, entry) in entries.enumerated() {
-          try checkCancellation(at: index)
-          try append(entry.key, mode: mode, to: &data)
-          try append(entry.value, mode: mode, to: &data)
-        }
-      }
+      try checkContainer(entries.count, limits: limits)
+      try appendHeader(major: 5, argument: UInt64(entries.count), to: writer)
+      try appendSortedEntries(entries, depth: depth, mode: mode, limits: limits, to: writer)
     case .tagged(let tag, let value):
-      appendHeader(major: 6, argument: tag, to: &data)
-      try append(value, mode: mode, to: &data)
+      try appendHeader(major: 6, argument: tag, to: writer)
+      try append(value, depth: depth + 1, mode: mode, limits: limits, to: writer)
     case .simple(let value):
       if value < 24 {
-        data.append(0xe0 | value)
+        try writer.append(0xe0 | value)
       } else {
-        data.append(0xf8)
-        data.append(value)
+        try writer.append(0xf8)
+        try writer.append(value)
       }
     case .bool(let value):
-      data.append(value ? 0xf5 : 0xf4)
+      try writer.append(value ? 0xf5 : 0xf4)
     case .null:
-      data.append(0xf6)
+      try writer.append(0xf6)
     case .double(let value):
-      appendPreferredDouble(value, to: &data)
+      try appendPreferredDouble(value, to: writer)
     }
   }
 
-  private static func appendPreferredDouble(_ value: Double, to data: inout Data) {
-    if value.isNaN {
-      data.append(0xf9)
-      appendBigEndian(UInt16(0x7e00), to: &data)
-      return
+  /// Every supported mode orders map keys by their encoded bytes. Only the
+  /// keys are encoded ahead of time; values stream straight into the output,
+  /// so a map never holds a second copy of its values.
+  private static func appendSortedEntries(
+    _ entries: [CBORMapEntry],
+    depth: Int,
+    mode: CBORLDSerializationMode,
+    limits: CBORLDEncodingLimits,
+    to writer: CBORByteWriter
+  ) throws {
+    var keys: [Data] = []
+    keys.reserveCapacity(entries.count)
+    var pendingKeyBytes = 0
+    for (index, entry) in entries.enumerated() {
+      try checkCancellation(at: index, limits: limits)
+      // Keys will be written to the output, so together they must fit the
+      // bytes that remain before the output limit.
+      let keyWriter = CBORByteWriter(capacity: 16, limit: writer.remaining - pendingKeyBytes)
+      try append(entry.key, depth: depth + 1, mode: mode, limits: limits, to: keyWriter)
+      pendingKeyBytes += keyWriter.count
+      keys.append(keyWriter.finish())
     }
-
-    let half = Float16(value)
-    if Double(half).bitPattern == value.bitPattern {
-      data.append(0xf9)
-      appendBigEndian(half.bitPattern, to: &data)
-      return
+    var order = Array(entries.indices)
+    let lengthFirst = mode.usesLengthFirstMapOrdering
+    order.sort { lhs, rhs in
+      let left = keys[lhs]
+      let right = keys[rhs]
+      if lengthFirst, left.count != right.count { return left.count < right.count }
+      if left == right { return lhs < rhs }
+      return left.lexicographicallyPrecedes(right)
     }
-
-    let single = Float(value)
-    if Double(single).bitPattern == value.bitPattern {
-      data.append(0xfa)
-      appendBigEndian(single.bitPattern, to: &data)
-      return
+    for (position, index) in order.enumerated() {
+      try checkCancellation(at: position, limits: limits)
+      try writer.append(keys[index])
+      try append(entries[index].value, depth: depth + 1, mode: mode, limits: limits, to: writer)
     }
-
-    data.append(0xfb)
-    appendBigEndian(value.bitPattern, to: &data)
   }
 
-  private static func encodedStringByteCount(_ value: String) -> Int {
+  static func encodedStringByteCount(_ value: String) -> Int {
     let count = value.utf8.count
-    switch count {
-    case 0...23: return 1 + count
-    case 24...Int(UInt8.max): return 2 + count
-    case 256...Int(UInt16.max): return 3 + count
-    case 65_536...Int(UInt32.max): return 5 + count
-    default: return 9 + count
-    }
+    return headerByteCount(UInt64(count)) + count
   }
 
-  private static func appendString(_ value: String, to data: inout Data) {
-    appendHeader(major: 3, argument: UInt64(value.utf8.count), to: &data)
-    data.append(contentsOf: value.utf8)
-  }
-
-  private static func appendHeader(
-    major: UInt8, argument: UInt64, to data: inout Data
-  ) {
-    let prefix = major << 5
+  /// The size of a preferred-width CBOR head carrying `argument`.
+  static func headerByteCount(_ argument: UInt64) -> Int {
     switch argument {
-    case 0...23:
-      data.append(prefix | UInt8(argument))
-    case 24...UInt64(UInt8.max):
-      data.append(prefix | 24)
-      data.append(UInt8(argument))
-    case 256...UInt64(UInt16.max):
-      data.append(prefix | 25)
-      appendBigEndian(UInt16(argument), to: &data)
-    case 65_536...UInt64(UInt32.max):
-      data.append(prefix | 26)
-      appendBigEndian(UInt32(argument), to: &data)
-    default:
-      data.append(prefix | 27)
-      appendBigEndian(argument, to: &data)
+    case 0...23: return 1
+    case 24...UInt64(UInt8.max): return 2
+    case 256...UInt64(UInt16.max): return 3
+    case 65_536...UInt64(UInt32.max): return 5
+    default: return 9
     }
   }
 
-  private static func appendBigEndian<T: FixedWidthInteger>(
-    _ value: T, to data: inout Data
-  ) {
-    var value = value.bigEndian
-    withUnsafeBytes(of: &value) { data.append(contentsOf: $0) }
+  static func checkContainer(_ count: Int, limits: CBORLDEncodingLimits) throws {
+    guard count <= limits.maximumContainerItems else {
+      throw CBORLDError.resourceLimit(
+        "CBOR container contains more than \(limits.maximumContainerItems) items.")
+    }
   }
 
-  private static func checkCancellation(at itemIndex: Int) throws {
-    if itemIndex.isMultiple(of: 1_024), Task<Never, Never>.isCancelled {
+  static func checkCancellation(at itemIndex: Int, limits: CBORLDEncodingLimits) throws {
+    if itemIndex.isMultiple(of: limits.cancellationCheckStride), Task<Never, Never>.isCancelled {
       throw CancellationError()
     }
+  }
+
+  static func nestingLimit(_ limits: CBORLDEncodingLimits) -> CBORLDError {
+    .resourceLimit(
+      "CBOR nesting exceeds the configured depth of \(limits.maximumNestingDepth).")
   }
 }
 
@@ -568,7 +649,7 @@ where Bytes.Element == UInt8, Bytes.Index == Int {
     let value = try decodeValue(depth: 0)
     guard index == bytes.count else {
       throw CBORLDError(
-        code: "ERR_NOT_CBORLD",
+        code: .notCBORLD,
         message: "Unexpected trailing bytes after the CBOR value.")
     }
     if let mode = policy.requiredSerializationMode {
@@ -577,7 +658,7 @@ where Bytes.Element == UInt8, Bytes.Index == Int {
       guard expected == original else {
         let offset = firstMismatch(expected, original)
         throw policyViolation(
-          "ERR_NON_PREFERRED_CBOR",
+          .nonPreferredCBOR,
           "CBOR input does not match the required \(mode.rawValue) serialization.",
           offset: offset,
           violation: "required-serialization-mode")
@@ -833,7 +914,7 @@ where Bytes.Element == UInt8, Bytes.Index == Int {
   private func decodeReservedSimple(_ value: UInt8, offset: Int) throws -> CBORValue {
     guard policy.allowsReservedSimpleValuesInLosslessMode else {
       throw policyViolation(
-        "ERR_RESERVED_SIMPLE_VALUE",
+        .reservedSimpleValue,
         "CBOR simple value \(value) is not allowed by the decoding policy.",
         offset: offset,
         violation: "reserved-simple-value")
@@ -852,7 +933,7 @@ where Bytes.Element == UInt8, Bytes.Index == Int {
     if value.isNaN {
       guard info == 25, bits == 0x7e00 else {
         throw policyViolation(
-          "ERR_NON_PREFERRED_FLOAT",
+          .nonPreferredFloat,
           "CBOR NaN does not use the preferred half-precision representation.",
           offset: offset,
           violation: "non-preferred-float")
@@ -868,7 +949,7 @@ where Bytes.Element == UInt8, Bytes.Index == Int {
     }
     guard info == preferredInfo else {
       throw policyViolation(
-        "ERR_NON_PREFERRED_FLOAT",
+        .nonPreferredFloat,
         "CBOR floating-point value uses a wider representation than required.",
         offset: offset,
         violation: "non-preferred-float")
@@ -962,7 +1043,7 @@ where Bytes.Element == UInt8, Bytes.Index == Int {
       return
     }
     throw policyViolation(
-      "ERR_NOT_CBORLD",
+      .notCBORLD,
       "CBOR map contains a duplicate key.",
       offset: keyOffset,
       violation: "duplicate-map-key",
@@ -1018,7 +1099,7 @@ where Bytes.Element == UInt8, Bytes.Index == Int {
       ? policy.rejectNonPreferredIntegerWidths
       : policy.rejectNonPreferredLengthWidths
     if rejectsNonPreferred, !Self.isPreferredArgument(value, info: info) {
-      let code = kind == .integer ? "ERR_NON_PREFERRED_INTEGER" : "ERR_NON_PREFERRED_LENGTH"
+      let code: CBORLDErrorCode = kind == .integer ? .nonPreferredInteger : .nonPreferredLength
       let name = kind == .integer ? "integer" : "length"
       throw policyViolation(
         code,
@@ -1190,20 +1271,20 @@ where Bytes.Element == UInt8, Bytes.Index == Int {
 
   private func malformed(_ message: String) -> CBORLDError {
     .init(
-      code: "ERR_NOT_CBORLD",
+      code: .notCBORLD,
       message: message,
       diagnostic: .init(byteOffset: min(index, bytes.count)))
   }
 
   private func resourceLimit(_ message: String) -> CBORLDError {
     .init(
-      code: "ERR_RESOURCE_LIMIT",
+      code: .resourceLimit,
       message: message,
       diagnostic: .init(byteOffset: min(index, bytes.count)))
   }
 
   private func policyViolation(
-    _ code: String,
+    _ code: CBORLDErrorCode,
     _ message: String,
     offset: Int,
     violation: String,

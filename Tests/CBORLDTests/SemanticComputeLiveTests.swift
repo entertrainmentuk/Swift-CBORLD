@@ -68,9 +68,9 @@ final class SemanticComputeLiveTests: XCTestCase {
     XCTAssertEqual(receipt.schemaVersion, "semanticcompute.live.byte-parity-receipt/1")
     XCTAssertFalse(receipt.receiptID.isEmpty)
     XCTAssertEqual(receipt.executionStatus, "executed")
-    XCTAssertEqual(
-      receipt.executionTarget,
-      environment["SC_LIVE_EXPECTED_TARGET"] ?? "cpu-reference")
+    // As with the other optional variables, an empty value means unset.
+    let expectedTarget = environment["SC_LIVE_EXPECTED_TARGET"].flatMap { $0.isEmpty ? nil : $0 }
+    XCTAssertEqual(receipt.executionTarget, expectedTarget ?? "cpu-reference")
     XCTAssertTrue(receipt.result.compatible)
     XCTAssertEqual(receipt.result.comparedByteCount, expected.count)
     XCTAssertEqual(receipt.result.mismatchCount, 0)

@@ -238,8 +238,10 @@ final class AdvancedAPITests: XCTestCase {
     let decoder = try CBORLDPreparedDecoder(dictionaries: [])
     let document = JSONValue.array((0..<4_096).map { .integer(Int64($0)) })
     let bytes = try CBORLD.encodeUncompressed(document)
+    // Decoding starts only once the task is cancelled; otherwise a fast
+    // decode could finish on another core before `cancel()` runs.
     let task = Task {
-      await Task.yield()
+      while !Task.isCancelled { await Task.yield() }
       return try await decoder.decode(bytes)
     }
     task.cancel()

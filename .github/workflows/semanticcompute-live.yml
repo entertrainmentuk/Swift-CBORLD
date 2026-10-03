@@ -1,0 +1,56 @@
+name: SemanticCompute Live
+
+# Opt-in, digest-only byte-parity check against a SemanticCompute Live
+# service; see SEMANTICCOMPUTE_LIVE.md. It runs only when dispatched, and the
+# ordinary suite stays offline. Store SC_LIVE_URL and SC_LIVE_TOKEN as secrets
+# of the `semanticcompute-live` environment. A pass is integration evidence
+# only: it does not show Metal execution, producer authentication, or a
+# signed release artifact.
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected-engine:
+        description: Engine version the receipt must report (empty to accept any)
+        default: ""
+      expected-target:
+        description: Execution target the receipt must report (empty for cpu-reference)
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    name: Byte parity through SemanticCompute Live
+    runs-on: ubuntu-24.04
+    container: swift:6.4-noble
+    environment: semanticcompute-live
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      # Without a URL the test skips, which must not count as a pass.
+      - name: Require the service endpoint
+        env:
+          SC_LIVE_URL: ${{ secrets.SC_LIVE_URL }}
+        run: |
+          if [ -z "$SC_LIVE_URL" ]; then
+            echo "::error::Set the SC_LIVE_URL secret of the semanticcompute-live environment."
+            exit 1
+          fi
+      - name: Byte-parity check
+        env:
+          SC_LIVE_URL: ${{ secrets.SC_LIVE_URL }}
+          SC_LIVE_TOKEN: ${{ secrets.SC_LIVE_TOKEN }}
+          SC_LIVE_EXPECTED_ENGINE: ${{ inputs.expected-engine }}
+          SC_LIVE_EXPECTED_TARGET: ${{ inputs.expected-target }}
+        run: |
+          swift test --disable-swift-testing \
+            --filter 'CBORLDTests.SemanticComputeLiveTests' 2>&1 | tee live.log
+          if grep -q "skipped" live.log; then
+            echo "::error::The live check was skipped instead of running."
+            exit 1
+          fi

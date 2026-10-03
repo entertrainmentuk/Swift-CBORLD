@@ -13,6 +13,9 @@ on:
       - Scripts/verify-comparator-pins.sh
       - .github/workflows/comparator-pins.yml
   workflow_dispatch:
+  # Re-verify weekly that every pinned archive is still served unchanged.
+  schedule:
+    - cron: "41 4 * * 1"
 
 permissions:
   contents: read

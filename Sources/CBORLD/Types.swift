@@ -42,14 +42,17 @@ public typealias CBORLDTypeTable = [String: CBORLDValueTable]
 /// Resolves a remote JSON-LD context URL to the context document.
 public typealias CBORLDDocumentLoader = @Sendable (String) async throws -> JSONValue
 
-/// Resolves a CBOR-LD registry entry identifier to its type table.
+/// Resolves a CBOR-LD registry entry identifier to its type table. The entry
+/// uses the default processing model; use ``CBORLDRegistryEntryLoader`` to
+/// resolve complete registry entries.
 public typealias CBORLDTypeTableLoader =
   @Sendable (UInt64) async throws -> CBORLDTypeTable?
 
 /// Controls policy checks that are independent of parser resource limits.
 /// The permissive default retains the JavaScript processor's accepted input
 /// surface; use ``strict`` at trust boundaries that require a reproducible
-/// byte representation.
+/// byte representation, or the complete
+/// ``CBORLDDecodingConfiguration/untrustedDeterministic`` preset.
 public struct CBORLDDecodingPolicy: Sendable, Hashable, Codable {
   /// Reject integer and tag arguments encoded in a wider width than needed.
   public var rejectNonPreferredIntegerWidths: Bool
@@ -82,7 +85,8 @@ public struct CBORLDDecodingPolicy: Sendable, Hashable, Codable {
 
   /// RFC 8949 length-first deterministic bytes, preferred argument and float
   /// widths, no indefinite-length items, duplicate-key rejection, and no
-  /// reserved simple values. Pass this together with ``CBORLDDecodingLimits/strict``.
+  /// reserved simple values. Pass this together with ``CBORLDDecodingLimits/strict``,
+  /// or use ``CBORLDDecodingConfiguration/untrustedDeterministic``.
   public static let strict = Self(
     rejectNonPreferredIntegerWidths: true,
     rejectNonPreferredLengthWidths: true,
@@ -172,42 +176,133 @@ public struct CBORLDDecodingLimits: Sendable, Hashable, Codable {
   }
 }
 
-/// An application-controlled context cache that can optionally delegate misses.
-public struct CBORLDContextRegistry: Sendable {
-  public let documents: [String: JSONValue]
-  public let expectedFingerprints: [String: CBORLDDigest]
-  public let fallback: CBORLDDocumentLoader?
+/// A complete parser configuration for one trust boundary.
+///
+/// ``CBORLDDecodingLimits`` bounds the work a document may cause, while
+/// ``CBORLDDecodingPolicy`` decides which byte representations are acceptable.
+/// Safe input and deterministic transport are related but distinct
+/// requirements, so the presets keep them separate:
+///
+/// - ``untrustedCompatible`` accepts any representation the JavaScript
+///   processor produces, inside tight resource bounds and without duplicate
+///   keys or indefinite lengths.
+/// - ``untrustedDeterministic`` additionally requires the exact bytes of the
+///   RFC 8949 length-first deterministic profile.
+///
+/// Contexts loaded while decoding are bounded separately by
+/// ``CBORLDContextLoadingPolicy``; use ``CBORLDContextLoadingPolicy/strict``
+/// alongside either untrusted preset.
+public struct CBORLDDecodingConfiguration: Sendable, Hashable, Codable {
+  public var limits: CBORLDDecodingLimits
+  public var policy: CBORLDDecodingPolicy
 
   public init(
-    documents: [String: JSONValue] = [:],
-    expectedFingerprints: [String: CBORLDDigest] = [:],
-    fallback: CBORLDDocumentLoader? = nil
+    limits: CBORLDDecodingLimits = .init(),
+    policy: CBORLDDecodingPolicy = .init()
   ) {
-    self.documents = documents
-    self.expectedFingerprints = expectedFingerprints
-    self.fallback = fallback
+    self.limits = limits
+    self.policy = policy
   }
 
-  public func load(_ url: String) async throws -> JSONValue {
-    let document: JSONValue
-    if let registered = documents[url] {
-      document = registered
-    } else if let fallback {
-      document = try await fallback(url)
-    } else {
-      throw CBORLDError(
-        code: "ERR_UNKNOWN_CONTEXT",
-        message: "No JSON-LD context is registered for \"\(url)\".")
-    }
+  /// The package defaults: generous bounds and the JavaScript-compatible
+  /// accepted input surface.
+  public static let permissive = Self()
 
-    if let expected = expectedFingerprints[url] {
-      try CBORLD.verifyContext(document, against: expected)
-    }
-    return document
+  /// Bounded parsing for untrusted input that may use any compatible
+  /// representation: 16 MiB input, 64 levels of nesting, 65,536 items per
+  /// container, duplicate-key rejection, no indefinite-length items, 1,024
+  /// retained diagnostic nodes, and cancellation checks every 256 elements.
+  public static let untrustedCompatible = Self(
+    limits: untrustedLimits,
+    policy: .init())
+
+  /// ``untrustedCompatible`` plus preferred integer, length, and
+  /// floating-point widths and the exact RFC 8949 length-first deterministic
+  /// byte representation.
+  public static let untrustedDeterministic = Self(
+    limits: untrustedLimits,
+    policy: .strict)
+
+  private static let untrustedLimits = CBORLDDecodingLimits(
+    maximumInputBytes: 16 * 1_024 * 1_024,
+    maximumNestingDepth: 64,
+    maximumContainerItems: 65_536,
+    rejectDuplicateMapKeys: true,
+    allowsIndefiniteLengthItems: false,
+    maximumDiagnosticNodes: 1_024,
+    cancellationCheckStride: 256)
+}
+
+/// Resource limits applied while producing CBOR-LD bytes. Every limit is
+/// enforced while the output is being built: the writer refuses to grow past
+/// ``maximumOutputBytes`` instead of inspecting a completed buffer.
+public struct CBORLDEncodingLimits: Sendable, Hashable, Codable {
+  /// Maximum size of the complete encoded CBOR-LD document.
+  public var maximumOutputBytes: Int
+  /// Maximum nesting depth across the emitted CBOR tags, arrays, and maps,
+  /// counted exactly as ``CBORLDDecodingLimits/maximumNestingDepth`` counts
+  /// it, so output within this limit also satisfies an equal decoding limit.
+  public var maximumNestingDepth: Int
+  /// Maximum number of elements in an array or key/value pairs in a map.
+  public var maximumContainerItems: Int
+  /// Check structured-concurrency cancellation after this many container
+  /// elements while encoding one large document.
+  public var cancellationCheckStride: Int
+
+  public init(
+    maximumOutputBytes: Int = 64 * 1_024 * 1_024,
+    maximumNestingDepth: Int = 128,
+    maximumContainerItems: Int = 1_000_000,
+    cancellationCheckStride: Int = 1_024
+  ) {
+    self.maximumOutputBytes = maximumOutputBytes
+    self.maximumNestingDepth = maximumNestingDepth
+    self.maximumContainerItems = maximumContainerItems
+    self.cancellationCheckStride = cancellationCheckStride
   }
 
-  public var documentLoader: CBORLDDocumentLoader {
-    { url in try await self.load(url) }
+  /// Internal hashing and fingerprinting of caller-supplied values keeps its
+  /// historical unbounded behavior.
+  static let unbounded = Self(
+    maximumOutputBytes: .max,
+    maximumNestingDepth: .max,
+    maximumContainerItems: .max,
+    cancellationCheckStride: 1_024)
+
+  func validate() throws {
+    guard maximumOutputBytes >= 0,
+      maximumNestingDepth >= 0,
+      maximumContainerItems >= 0,
+      cancellationCheckStride > 0
+    else {
+      throw CBORLDError.resourceLimit(
+        "CBOR-LD encoding limits must not be negative and cancellationCheckStride must be positive."
+      )
+    }
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case maximumOutputBytes
+    case maximumNestingDepth
+    case maximumContainerItems
+    case cancellationCheckStride
+  }
+
+  public init(from decoder: Decoder) throws {
+    let defaults = Self()
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    maximumOutputBytes =
+      try container.decodeIfPresent(Int.self, forKey: .maximumOutputBytes)
+      ?? defaults.maximumOutputBytes
+    maximumNestingDepth =
+      try container.decodeIfPresent(Int.self, forKey: .maximumNestingDepth)
+      ?? defaults.maximumNestingDepth
+    maximumContainerItems =
+      try container.decodeIfPresent(Int.self, forKey: .maximumContainerItems)
+      ?? defaults.maximumContainerItems
+    cancellationCheckStride =
+      try container.decodeIfPresent(Int.self, forKey: .cancellationCheckStride)
+      ?? defaults.cancellationCheckStride
   }
 }
 
@@ -220,6 +315,24 @@ public struct CBORLDEncodingOptions: Sendable {
   public var applicationContextMap: [String: UInt64]?
   public var compressionMode: UInt8?
   public var diagnostic: (@Sendable (String) -> Void)?
+  /// Resolves complete registry entries, including processing models. Use
+  /// this or ``typeTableLoader``, not both.
+  public var registryEntryLoader: CBORLDRegistryEntryLoader?
+  /// The application's table for a registry entry whose `typeTables`
+  /// requires a caller-provided table.
+  public var callerProvidedTypeTable: CBORLDTypeTable?
+  /// Codecs for identifiers that processing models use beyond the built-in
+  /// codecs.
+  public var codecs: [any CBORLDTypedValueCodec]
+  /// Whether provisional registry entries may be used.
+  public var allowsProvisionalRegistryEntries: Bool
+  /// Bounds on the produced bytes and their structure.
+  public var limits: CBORLDEncodingLimits
+  /// Bounds and integrity requirements for contexts loaded while encoding.
+  public var contextPolicy: CBORLDContextLoadingPolicy
+  /// A metadata-reporting context loader. Use this or ``documentLoader``,
+  /// not both.
+  public var contextDocumentLoader: CBORLDContextDocumentLoader?
 
   public init(
     format: CBORLDFormat = .cborLD1,
@@ -229,7 +342,14 @@ public struct CBORLDEncodingOptions: Sendable {
     typeTableLoader: CBORLDTypeTableLoader? = nil,
     applicationContextMap: [String: UInt64]? = nil,
     compressionMode: UInt8? = nil,
-    diagnostic: (@Sendable (String) -> Void)? = nil
+    diagnostic: (@Sendable (String) -> Void)? = nil,
+    registryEntryLoader: CBORLDRegistryEntryLoader? = nil,
+    callerProvidedTypeTable: CBORLDTypeTable? = nil,
+    codecs: [any CBORLDTypedValueCodec] = [],
+    allowsProvisionalRegistryEntries: Bool = true,
+    limits: CBORLDEncodingLimits = .init(),
+    contextPolicy: CBORLDContextLoadingPolicy = .init(),
+    contextDocumentLoader: CBORLDContextDocumentLoader? = nil
   ) {
     self.format = format
     self.serializationMode = serializationMode
@@ -239,6 +359,13 @@ public struct CBORLDEncodingOptions: Sendable {
     self.applicationContextMap = applicationContextMap
     self.compressionMode = compressionMode
     self.diagnostic = diagnostic
+    self.registryEntryLoader = registryEntryLoader
+    self.callerProvidedTypeTable = callerProvidedTypeTable
+    self.codecs = codecs
+    self.allowsProvisionalRegistryEntries = allowsProvisionalRegistryEntries
+    self.limits = limits
+    self.contextPolicy = contextPolicy
+    self.contextDocumentLoader = contextDocumentLoader
   }
 }
 
@@ -246,6 +373,10 @@ public struct CBORLDEncodingOptions: Sendable {
 public struct CBORLDInspection: Sendable, Hashable, Codable {
   public let format: CBORLDFormat
   public let registryEntryID: UInt64?
+  /// Whether the envelope selects something other than the uncompressed
+  /// representation: any registry entry except `0`, or legacy tag 1281.
+  /// Inspection does not resolve registry entries, so the transform actually
+  /// applied depends on the selected entry's processing model.
   public let payloadIsCompressed: Bool
   public let byteCount: Int
   public let payloadDescription: String
@@ -260,6 +391,22 @@ public struct CBORLDDecodingOptions: Sendable {
   public var limits: CBORLDDecodingLimits
   public var policy: CBORLDDecodingPolicy
   public var diagnostic: (@Sendable (String) -> Void)?
+  /// Resolves complete registry entries, including processing models. Use
+  /// this or ``typeTableLoader``, not both.
+  public var registryEntryLoader: CBORLDRegistryEntryLoader?
+  /// The application's table for a registry entry whose `typeTables`
+  /// requires a caller-provided table.
+  public var callerProvidedTypeTable: CBORLDTypeTable?
+  /// Codecs for identifiers that processing models use beyond the built-in
+  /// codecs.
+  public var codecs: [any CBORLDTypedValueCodec]
+  /// Whether documents may select provisional registry entries.
+  public var allowsProvisionalRegistryEntries: Bool
+  /// Bounds and integrity requirements for contexts loaded while decoding.
+  public var contextPolicy: CBORLDContextLoadingPolicy
+  /// A metadata-reporting context loader. Use this or ``documentLoader``,
+  /// not both.
+  public var contextDocumentLoader: CBORLDContextDocumentLoader?
 
   public init(
     documentLoader: CBORLDDocumentLoader? = nil,
@@ -267,7 +414,13 @@ public struct CBORLDDecodingOptions: Sendable {
     applicationContextMap: [String: UInt64]? = nil,
     limits: CBORLDDecodingLimits = .init(),
     policy: CBORLDDecodingPolicy = .init(),
-    diagnostic: (@Sendable (String) -> Void)? = nil
+    diagnostic: (@Sendable (String) -> Void)? = nil,
+    registryEntryLoader: CBORLDRegistryEntryLoader? = nil,
+    callerProvidedTypeTable: CBORLDTypeTable? = nil,
+    codecs: [any CBORLDTypedValueCodec] = [],
+    allowsProvisionalRegistryEntries: Bool = true,
+    contextPolicy: CBORLDContextLoadingPolicy = .init(),
+    contextDocumentLoader: CBORLDContextDocumentLoader? = nil
   ) {
     self.documentLoader = documentLoader
     self.typeTableLoader = typeTableLoader
@@ -275,63 +428,50 @@ public struct CBORLDDecodingOptions: Sendable {
     self.limits = limits
     self.policy = policy
     self.diagnostic = diagnostic
+    self.registryEntryLoader = registryEntryLoader
+    self.callerProvidedTypeTable = callerProvidedTypeTable
+    self.codecs = codecs
+    self.allowsProvisionalRegistryEntries = allowsProvisionalRegistryEntries
+    self.contextPolicy = contextPolicy
+    self.contextDocumentLoader = contextDocumentLoader
   }
-}
 
-/// Machine-readable location and policy information attached to parser errors.
-public struct CBORLDSourceDiagnostic: Sendable, Hashable, Codable {
-  public let byteOffset: Int
-  public let endOffset: Int?
-  public let containerPath: [String]
-  public let jsonPath: String?
-  public let majorType: UInt8?
-  public let additionalInformation: UInt8?
-  public let violation: String?
-  public let relatedByteOffset: Int?
-
+  /// Creates options from a complete parser configuration, such as
+  /// ``CBORLDDecodingConfiguration/untrustedCompatible``.
   public init(
-    byteOffset: Int,
-    endOffset: Int? = nil,
-    containerPath: [String] = [],
-    jsonPath: String? = nil,
-    majorType: UInt8? = nil,
-    additionalInformation: UInt8? = nil,
-    violation: String? = nil,
-    relatedByteOffset: Int? = nil
+    configuration: CBORLDDecodingConfiguration,
+    documentLoader: CBORLDDocumentLoader? = nil,
+    typeTableLoader: CBORLDTypeTableLoader? = nil,
+    applicationContextMap: [String: UInt64]? = nil,
+    diagnostic: (@Sendable (String) -> Void)? = nil,
+    registryEntryLoader: CBORLDRegistryEntryLoader? = nil,
+    callerProvidedTypeTable: CBORLDTypeTable? = nil,
+    codecs: [any CBORLDTypedValueCodec] = [],
+    allowsProvisionalRegistryEntries: Bool = true,
+    contextPolicy: CBORLDContextLoadingPolicy = .init(),
+    contextDocumentLoader: CBORLDContextDocumentLoader? = nil
   ) {
-    self.byteOffset = byteOffset
-    self.endOffset = endOffset
-    self.containerPath = containerPath
-    self.jsonPath = jsonPath
-    self.majorType = majorType
-    self.additionalInformation = additionalInformation
-    self.violation = violation
-    self.relatedByteOffset = relatedByteOffset
-  }
-}
-
-/// A processor error with the same stable error-code vocabulary as the
-/// JavaScript implementation.
-public struct CBORLDError: Error, Sendable, Equatable, CustomStringConvertible {
-  public let code: String
-  public let message: String
-  public let diagnostic: CBORLDSourceDiagnostic?
-
-  public init(
-    code: String,
-    message: String,
-    diagnostic: CBORLDSourceDiagnostic? = nil
-  ) {
-    self.code = code
-    self.message = message
-    self.diagnostic = diagnostic
+    self.init(
+      documentLoader: documentLoader,
+      typeTableLoader: typeTableLoader,
+      applicationContextMap: applicationContextMap,
+      limits: configuration.limits,
+      policy: configuration.policy,
+      diagnostic: diagnostic,
+      registryEntryLoader: registryEntryLoader,
+      callerProvidedTypeTable: callerProvidedTypeTable,
+      codecs: codecs,
+      allowsProvisionalRegistryEntries: allowsProvisionalRegistryEntries,
+      contextPolicy: contextPolicy,
+      contextDocumentLoader: contextDocumentLoader)
   }
 
-  public var description: String { "\(code): \(message)" }
-}
-
-extension CBORLDError {
-  static func invalidInput(_ message: String) -> Self {
-    .init(code: "ERR_INVALID_INPUT", message: message)
+  /// The parser limits and representation policy as one value.
+  public var configuration: CBORLDDecodingConfiguration {
+    get { .init(limits: limits, policy: policy) }
+    set {
+      limits = newValue.limits
+      policy = newValue.policy
+    }
   }
 }

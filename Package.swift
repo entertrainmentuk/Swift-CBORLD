@@ -12,13 +12,18 @@ let package = Package(
     .visionOS(.v1),
   ],
   products: [
-    .library(name: "CBORLD", targets: ["CBORLD"])
+    .library(name: "CBORLD", targets: ["CBORLD"]),
+    .library(name: "CBORLDCompute", targets: ["CBORLDCompute"]),
   ],
   targets: [
     .target(name: "CBORLD"),
+    .target(name: "CBORLDCompute", dependencies: ["CBORLD"]),
     .testTarget(
       name: "CBORLDTests",
-      dependencies: ["CBORLD"],
+      dependencies: ["CBORLD", "CBORLDCompute"],
       resources: [.copy("Fixtures")]),
+    .testTarget(
+      name: "CBORLDComputeTests",
+      dependencies: ["CBORLD", "CBORLDCompute"]),
   ]
 )

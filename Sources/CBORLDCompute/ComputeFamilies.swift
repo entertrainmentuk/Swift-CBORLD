@@ -1,3 +1,4 @@
+import CBORLD
 import Foundation
 
 /// Stable identifiers for CBOR-LD-oriented compute families. These identifiers
@@ -205,14 +206,14 @@ public struct CBORLDComputePackedByteBatch: Sendable, Hashable, Codable {
       let addition = totalByteCount.addingReportingOverflow(UInt64(slice.count))
       guard !addition.overflow else {
         throw CBORLDError(
-          code: "ERR_RESOURCE_LIMIT",
+          code: .resourceLimit,
           message: "Packed byte batch size overflowed UInt64.")
       }
       totalByteCount = addition.partialValue
     }
     guard totalByteCount <= UInt64(UInt32.max), UInt64(slices.count) <= UInt64(UInt32.max) else {
       throw CBORLDError(
-        code: "ERR_RESOURCE_LIMIT",
+        code: .resourceLimit,
         message: "Packed byte batches must fit the UInt32 execution ABI.")
     }
     bytes.reserveCapacity(Int(totalByteCount))
@@ -349,7 +350,7 @@ public struct CBORLDStructuralScanResult: Sendable, Hashable, Codable {
   public let firstErrorOffset: Int?
   public let maximumDepth: Int
   public let itemCount: UInt64
-  public let errorCode: String?
+  public let errorCode: CBORLDErrorCode?
   public let message: String?
 
   public init(
@@ -358,7 +359,7 @@ public struct CBORLDStructuralScanResult: Sendable, Hashable, Codable {
     firstErrorOffset: Int?,
     maximumDepth: Int,
     itemCount: UInt64,
-    errorCode: String?,
+    errorCode: CBORLDErrorCode?,
     message: String?
   ) {
     self.byteCount = byteCount
@@ -690,7 +691,7 @@ public struct CBORLDDictionaryProbeResult: Sendable, Hashable, Codable {
     guard table == expected.table, value == expected.value else {
       throw invalidComputeOutput("Dictionary probe result does not echo its work item.")
     }
-    if let identifier, identifier > CBORLDConstants.maximumSafeInteger {
+    if let identifier, identifier > cborldMaximumSafeInteger {
       throw invalidComputeOutput(
         "Dictionary probe identifier exceeds the CBOR-LD safe-integer limit.")
     }
@@ -1154,7 +1155,7 @@ public struct CBORLDCPUComputeProvider: CBORLDComputeProvider {
     }
     guard values.allSatisfy({ $0.count <= maximumInputBytes }) else {
       throw CBORLDError(
-        code: "ERR_RESOURCE_LIMIT",
+        code: .resourceLimit,
         message: "A multibase input exceeds the configured byte limit.")
     }
     return values.map { Self.encodeMultibase($0, as: encoding) }
@@ -1196,11 +1197,9 @@ public struct CBORLDCPUComputeProvider: CBORLDComputeProvider {
     return .init(
       inputByteCount: data.count,
       stateWords: stateWords,
-      digest: CBORLDDigest(
-        uncheckedAlgorithm: .sha256,
-        domain: .encodedBytes,
-        version: 1,
-        bytes: bytes))
+      // SHA-256 always yields 32 bytes, which the digest initializer requires.
+      digest: try! CBORLDDigest(algorithm: .sha256, domain: .encodedBytes, version: 1, bytes: bytes)
+    )
   }
 
   public static func byteDiff(_ left: Data, _ right: Data) -> CBORLDByteDiffResult {
@@ -1313,7 +1312,7 @@ public struct CBORLDCPUComputeProvider: CBORLDComputeProvider {
   }
 
   private static func integerOverflow(_ operation: String) -> CBORLDError {
-    .init(code: "ERR_INTEGER_OVERFLOW", message: "Exact \(operation) overflowed.")
+    .init(code: .integerOverflow, message: "Exact \(operation) overflowed.")
   }
 
   private static func decodeMultibase(
@@ -1542,7 +1541,7 @@ private enum Base58Reference {
 }
 
 private struct CBORScanFailure: Error {
-  let code: String
+  let code: CBORLDErrorCode
   let offset: Int
   let message: String
 }
@@ -1590,7 +1589,7 @@ private struct CBORStructuralScanner {
         firstErrorOffset: index,
         maximumDepth: maximumDepth,
         itemCount: itemCount,
-        errorCode: "ERR_NOT_CBOR",
+        errorCode: .notCBOR,
         message: String(describing: error))
     }
   }
@@ -1602,13 +1601,13 @@ private struct CBORStructuralScanner {
     else {
       throw failure(
         "CBOR scan limits must not be negative.",
-        code: "ERR_RESOURCE_LIMIT",
+        code: .resourceLimit,
         offset: 0)
     }
     guard bytes.count <= limits.maximumInputBytes else {
       throw failure(
         "CBOR input exceeds the configured byte limit.",
-        code: "ERR_RESOURCE_LIMIT",
+        code: .resourceLimit,
         offset: limits.maximumInputBytes)
     }
   }
@@ -1618,7 +1617,7 @@ private struct CBORStructuralScanner {
     guard depth <= limits.maximumNestingDepth else {
       throw failure(
         "CBOR nesting exceeds the configured depth.",
-        code: "ERR_RESOURCE_LIMIT",
+        code: .resourceLimit,
         offset: itemOffset)
     }
     let initial = try readByte()
@@ -1627,7 +1626,7 @@ private struct CBORStructuralScanner {
     guard !addition.overflow else {
       throw failure(
         "CBOR item count overflows UInt64.",
-        code: "ERR_RESOURCE_LIMIT",
+        code: .resourceLimit,
         offset: itemOffset)
     }
     itemCount = addition.partialValue
@@ -1815,7 +1814,7 @@ private struct CBORStructuralScanner {
     guard count <= limits.maximumContainerItems else {
       throw failure(
         "CBOR container exceeds the configured item limit.",
-        code: "ERR_RESOURCE_LIMIT",
+        code: .resourceLimit,
         offset: offset)
     }
   }
@@ -1844,7 +1843,7 @@ private struct CBORStructuralScanner {
 
   private func failure(
     _ message: String,
-    code: String = "ERR_NOT_CBOR",
+    code: CBORLDErrorCode = .notCBOR,
     offset: Int
   ) -> CBORScanFailure {
     .init(code: code, offset: max(0, min(offset, bytes.count)), message: message)
@@ -1952,5 +1951,15 @@ private enum SHA256CPUReference {
 }
 
 func invalidComputeOutput(_ message: String) -> CBORLDError {
-  .init(code: "ERR_INVALID_COMPUTE_OUTPUT", message: message)
+  .init(code: .invalidComputeOutput, message: message)
+}
+
+/// The largest integer JavaScript represents exactly, which bounds every
+/// CBOR-LD identifier.
+let cborldMaximumSafeInteger: UInt64 = 9_007_199_254_740_991
+
+extension CBORLDError {
+  static func invalidInput(_ message: String) -> Self {
+    .init(code: .invalidInput, message: message)
+  }
 }

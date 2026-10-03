@@ -2,37 +2,99 @@ import Foundation
 
 /// A Swift `Decoder` backed directly by ``JSONValue``. It avoids serializing a
 /// restored CBOR-LD document to JSON bytes and asking `JSONDecoder` to parse it
-/// again. Its scalar, `Date`, and `Data` behavior matches `JSONDecoder`'s
-/// default strategies.
+/// again. With default strategies its scalar, `Date`, and `Data` behavior
+/// matches `JSONDecoder`'s defaults, and each strategy mirrors the
+/// corresponding ``CBORLDValueEncoder`` strategy.
 public struct CBORLDValueDecoder: Sendable {
+  public enum DateDecodingStrategy: Sendable {
+    /// Use the `Date` type's own decoding: seconds since 2001-01-01.
+    case deferredToDate
+    case secondsSince1970
+    case millisecondsSince1970
+    /// An RFC 3339 string with no fractional seconds.
+    case iso8601
+    case custom(@Sendable (any Decoder) throws -> Date)
+  }
+
+  public enum DataDecodingStrategy: Sendable {
+    /// Use the `Data` type's own decoding: an array of byte values.
+    case deferredToData
+    case base64
+    case custom(@Sendable (any Decoder) throws -> Data)
+  }
+
+  public enum NonConformingFloatDecodingStrategy: Sendable {
+    case `throw`
+    case convertFromString(positiveInfinity: String, negativeInfinity: String, nan: String)
+  }
+
+  public enum KeyDecodingStrategy: Sendable {
+    case useDefaultKeys
+    /// `my_url_property` becomes `myUrlProperty`, matching `JSONDecoder`.
+    case convertFromSnakeCase
+    case custom(@Sendable ([any CodingKey]) -> any CodingKey)
+  }
+
+  public var dateDecodingStrategy: DateDecodingStrategy
+  public var dataDecodingStrategy: DataDecodingStrategy
+  public var nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy
+  public var keyDecodingStrategy: KeyDecodingStrategy
   public var userInfo: [CodingUserInfoKey: any Sendable]
 
-  public init(userInfo: [CodingUserInfoKey: any Sendable] = [:]) {
+  public init(
+    userInfo: [CodingUserInfoKey: any Sendable] = [:],
+    dateDecodingStrategy: DateDecodingStrategy = .deferredToDate,
+    dataDecodingStrategy: DataDecodingStrategy = .base64,
+    nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy = .throw,
+    keyDecodingStrategy: KeyDecodingStrategy = .useDefaultKeys
+  ) {
     self.userInfo = userInfo
+    self.dateDecodingStrategy = dateDecodingStrategy
+    self.dataDecodingStrategy = dataDecodingStrategy
+    self.nonConformingFloatDecodingStrategy = nonConformingFloatDecodingStrategy
+    self.keyDecodingStrategy = keyDecodingStrategy
   }
 
   public func decode<T: Decodable>(_ type: T.Type, from value: JSONValue) throws -> T {
     try JSONValueDecoderImplementation(
       value: value,
       codingPath: [],
-      userInfo: Dictionary(uniqueKeysWithValues: userInfo.map { ($0.key, $0.value) })
+      options: ValueDecoderOptions(self)
     ).unbox(type, from: value)
+  }
+}
+
+private struct ValueDecoderOptions {
+  let date: CBORLDValueDecoder.DateDecodingStrategy
+  let data: CBORLDValueDecoder.DataDecodingStrategy
+  let nonConformingFloat: CBORLDValueDecoder.NonConformingFloatDecodingStrategy
+  let key: CBORLDValueDecoder.KeyDecodingStrategy
+  let userInfo: [CodingUserInfoKey: Any]
+
+  init(_ decoder: CBORLDValueDecoder) {
+    date = decoder.dateDecodingStrategy
+    data = decoder.dataDecodingStrategy
+    nonConformingFloat = decoder.nonConformingFloatDecodingStrategy
+    key = decoder.keyDecodingStrategy
+    userInfo = Dictionary(uniqueKeysWithValues: decoder.userInfo.map { ($0.key, $0.value) })
   }
 }
 
 private final class JSONValueDecoderImplementation: Decoder {
   let value: JSONValue
   let codingPath: [any CodingKey]
-  let userInfo: [CodingUserInfoKey: Any]
+  let options: ValueDecoderOptions
+
+  var userInfo: [CodingUserInfoKey: Any] { options.userInfo }
 
   init(
     value: JSONValue,
     codingPath: [any CodingKey],
-    userInfo: [CodingUserInfoKey: Any]
+    options: ValueDecoderOptions
   ) {
     self.value = value
     self.codingPath = codingPath
-    self.userInfo = userInfo
+    self.options = options
   }
 
   func container<Key: CodingKey>(
@@ -42,7 +104,7 @@ private final class JSONValueDecoderImplementation: Decoder {
       throw typeMismatch([String: JSONValue].self, value)
     }
     return KeyedDecodingContainer(
-      JSONValueKeyedContainer<Key>(decoder: self, object: object))
+      JSONValueKeyedContainer<Key>(decoder: self, object: convertedKeys(object)))
   }
 
   func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
@@ -60,23 +122,34 @@ private final class JSONValueDecoderImplementation: Decoder {
     JSONValueDecoderImplementation(
       value: value,
       codingPath: codingPath + [key],
-      userInfo: userInfo)
+      options: options)
+  }
+
+  private func convertedKeys(_ object: [String: JSONValue]) -> [String: JSONValue] {
+    switch options.key {
+    case .useDefaultKeys:
+      return object
+    case .convertFromSnakeCase:
+      var converted: [String: JSONValue] = [:]
+      converted.reserveCapacity(object.count)
+      for (key, value) in object {
+        converted[SnakeCaseKeys.camelCase(fromSnakeCase: key)] = value
+      }
+      return converted
+    case .custom(let convert):
+      var converted: [String: JSONValue] = [:]
+      converted.reserveCapacity(object.count)
+      for (key, value) in object {
+        converted[convert(codingPath + [ValueCodingKey(stringValue: key)]).stringValue] = value
+      }
+      return converted
+    }
   }
 
   func unbox<T: Decodable>(_ type: T.Type, from value: JSONValue) throws -> T {
     if type == JSONValue.self { return value as! T }
-    if type == Date.self {
-      let seconds = try number(from: value)
-      return Date(timeIntervalSinceReferenceDate: seconds) as! T
-    }
-    if type == Data.self {
-      guard case .string(let string) = value,
-        let data = Data(base64Encoded: string)
-      else {
-        throw typeMismatch(Data.self, value, "Expected a base64-encoded string.")
-      }
-      return data as! T
-    }
+    if type == Date.self { return try date(from: value) as! T }
+    if type == Data.self { return try data(from: value) as! T }
     if type == URL.self {
       guard case .string(let string) = value, let url = URL(string: string) else {
         throw typeMismatch(URL.self, value)
@@ -101,7 +174,50 @@ private final class JSONValueDecoderImplementation: Decoder {
       from: JSONValueDecoderImplementation(
         value: value,
         codingPath: codingPath,
-        userInfo: userInfo))
+        options: options))
+  }
+
+  private func date(from value: JSONValue) throws -> Date {
+    switch options.date {
+    case .deferredToDate:
+      return Date(timeIntervalSinceReferenceDate: try number(from: value))
+    case .secondsSince1970:
+      return Date(timeIntervalSince1970: try number(from: value))
+    case .millisecondsSince1970:
+      return Date(timeIntervalSince1970: try number(from: value) / 1_000)
+    case .iso8601:
+      let formatter = ISO8601DateFormatter()
+      formatter.formatOptions = .withInternetDateTime
+      guard let date = formatter.date(from: try string(from: value)) else {
+        throw DecodingError.dataCorrupted(
+          .init(
+            codingPath: codingPath,
+            debugDescription: "Expected date string to be ISO8601-formatted."))
+      }
+      return date
+    case .custom(let closure):
+      return try closure(
+        JSONValueDecoderImplementation(value: value, codingPath: codingPath, options: options))
+    }
+  }
+
+  private func data(from value: JSONValue) throws -> Data {
+    switch options.data {
+    case .deferredToData:
+      return try Data(
+        from: JSONValueDecoderImplementation(value: value, codingPath: codingPath, options: options)
+      )
+    case .base64:
+      guard case .string(let string) = value,
+        let data = Data(base64Encoded: string)
+      else {
+        throw typeMismatch(Data.self, value, "Expected a base64-encoded string.")
+      }
+      return data
+    case .custom(let closure):
+      return try closure(
+        JSONValueDecoderImplementation(value: value, codingPath: codingPath, options: options))
+    }
   }
 
   func bool(from value: JSONValue) throws -> Bool {
@@ -118,6 +234,15 @@ private final class JSONValueDecoderImplementation: Decoder {
     switch value {
     case .integer(let result): return Double(result)
     case .number(let result): return result
+    case .string(let string):
+      if case .convertFromString(let positiveInfinity, let negativeInfinity, let nan) =
+        options.nonConformingFloat
+      {
+        if string == positiveInfinity { return .infinity }
+        if string == negativeInfinity { return -.infinity }
+        if string == nan { return .nan }
+      }
+      throw typeMismatch(Double.self, value)
     default: throw typeMismatch(Double.self, value)
     }
   }
@@ -134,22 +259,32 @@ private final class JSONValueDecoderImplementation: Decoder {
     }
   }
 
+  /// Rounds to the nearest `T`, as `JSONDecoder` does when it parses a
+  /// number's text; only a finite value that overflows `T` is rejected.
   func floating<T: BinaryFloatingPoint>(_ type: T.Type, from value: JSONValue) throws -> T {
     let number = try number(from: value)
-    guard number >= -Double(T.greatestFiniteMagnitude),
-      number <= Double(T.greatestFiniteMagnitude)
-    else {
+    let converted = T(number)
+    guard converted.isFinite || !number.isFinite else {
       throw numberOutOfRange(type, value)
     }
-    return T(number)
+    return converted
   }
 
+  /// `null` where a value is required is `valueNotFound`, as with
+  /// `JSONDecoder`; any other kind of value is a `typeMismatch`.
   func typeMismatch(
     _ type: Any.Type,
     _ value: JSONValue,
     _ detail: String? = nil
   ) -> DecodingError {
-    .typeMismatch(
+    if value == .null {
+      return .valueNotFound(
+        type,
+        .init(
+          codingPath: codingPath,
+          debugDescription: "Cannot get value of type \(type) -- found null value instead."))
+    }
+    return .typeMismatch(
       type,
       .init(
         codingPath: codingPath,
@@ -237,13 +372,14 @@ private struct JSONValueKeyedContainer<Key: CodingKey>: KeyedDecodingContainerPr
     try child(for: key).unkeyedContainer()
   }
 
+  /// A missing `super` entry decodes as `null`, as with `JSONDecoder`.
   func superDecoder() throws -> any Decoder {
-    let key = JSONValueCodingKey(stringValue: "super")
-    return decoder.child(object["super"] ?? .object([:]), key: key)
+    let key = ValueCodingKey(stringValue: "super")
+    return decoder.child(object["super"] ?? .null, key: key)
   }
 
   func superDecoder(forKey key: Key) throws -> any Decoder {
-    decoder.child(try required(key), key: key)
+    decoder.child(object[key.stringValue] ?? .null, key: key)
   }
 
   private func required(_ key: Key) throws -> JSONValue {
@@ -343,7 +479,7 @@ private struct JSONValueUnkeyedContainer: UnkeyedDecodingContainer {
     _ body: (JSONValueDecoderImplementation, JSONValue) throws -> T
   ) throws -> T {
     let value = try current()
-    let child = decoder.child(value, key: JSONValueCodingKey(index: currentIndex))
+    let child = decoder.child(value, key: ValueCodingKey(intValue: currentIndex))
     let result = try body(child, value)
     currentIndex += 1
     return result
@@ -351,7 +487,7 @@ private struct JSONValueUnkeyedContainer: UnkeyedDecodingContainer {
 
   private mutating func consumeChild() throws -> JSONValueDecoderImplementation {
     let value = try current()
-    let child = decoder.child(value, key: JSONValueCodingKey(index: currentIndex))
+    let child = decoder.child(value, key: ValueCodingKey(intValue: currentIndex))
     currentIndex += 1
     return child
   }
@@ -387,23 +523,6 @@ private struct JSONValueSingleContainer: SingleValueDecodingContainer {
   func decode(_ type: UInt32.Type) throws -> UInt32 { try decoder.integer(type, from: value) }
   func decode(_ type: UInt64.Type) throws -> UInt64 { try decoder.integer(type, from: value) }
   func decode<T: Decodable>(_ type: T.Type) throws -> T { try decoder.unbox(type, from: value) }
-}
-
-private struct JSONValueCodingKey: CodingKey {
-  let stringValue: String
-  let intValue: Int?
-
-  init(stringValue: String) {
-    self.stringValue = stringValue
-    self.intValue = nil
-  }
-
-  init(intValue: Int) {
-    self.stringValue = "Index \(intValue)"
-    self.intValue = intValue
-  }
-
-  init(index: Int) { self.init(intValue: index) }
 }
 
 extension JSONValue {

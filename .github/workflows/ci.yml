@@ -4,13 +4,21 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+  # A weekly run catches toolchain and runner-image drift between changes.
+  schedule:
+    - cron: "17 5 * * 1"
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  swift:
-    name: Swift 6 / ${{ matrix.os }}
+  minimum:
+    name: Swift 6.0 (minimum) / ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -25,6 +33,29 @@ jobs:
         run: swift --version
       - name: Manifest
         run: swift package dump-package > /dev/null
+      - name: Release build with warnings as errors
+        run: >-
+          swift build -c release -Xswiftc -warnings-as-errors
+          --explicit-target-dependency-import-check error
+      - name: Release tests
+        run: swift test -c release --disable-swift-testing
+
+  current:
+    name: Swift 6.4 (current) / Linux
+    runs-on: ubuntu-24.04
+    container: swift:6.4-noble
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Tools
+        run: |
+          apt-get update -qq && apt-get install -y -qq jq > /dev/null
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Toolchain
+        run: swift --version
+      # Formatting is checked with one pinned toolchain because swift-format
+      # output can differ between releases.
       - name: Format
         run: swift format lint --strict --recursive Sources Tests Package.swift
       - name: Release build with warnings as errors
@@ -33,17 +64,90 @@ jobs:
           --explicit-target-dependency-import-check error
       - name: Release tests
         run: swift test -c release --disable-swift-testing
-      - name: Public symbol graph
+      - name: Public API baseline
+        run: Scripts/public-api.sh
+      # Breaking changes are allowed before 1.0 but must be intentional; the
+      # baseline diff above is the gate, and this report is informational.
+      - name: API changes since the latest tag
+        continue-on-error: true
         run: |
-          mkdir -p .build/public-symbols
-          swift build --target CBORLD \
-            -Xswiftc -emit-symbol-graph \
-            -Xswiftc -emit-symbol-graph-dir \
-            -Xswiftc .build/public-symbols
-          test -s .build/public-symbols/CBORLD.symbols.json
-      - name: Evidence checksums
+          tag="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+          if [ -z "$tag" ]; then
+            echo "No release tag yet; nothing to compare."
+            exit 0
+          fi
+          swift package diagnose-api-breaking-changes "$tag" --products CBORLD CBORLDCompute
+
+  nightly:
+    name: Swift nightly (advisory) / Linux
+    runs-on: ubuntu-24.04
+    container: swiftlang/swift:nightly-main-noble
+    # Advance notice of upcoming compiler changes; never blocks a merge.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: swift --version
+      - name: Release build
+        run: swift build -c release
+      - name: Release tests
+        run: swift test -c release --disable-swift-testing
+
+  apple:
+    name: ${{ matrix.platform }} device build
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [iOS, tvOS, watchOS, visionOS]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
         run: |
-          find Interop -type f -name '*.json' -print0 | xargs -0 -n1 jq -e . > /dev/null
-          jq -e '.schemaVersion == 1 and (.implementations | length == 8)' Interop/lab-status.json > /dev/null
-          (cd Interop/reports && shasum -a 256 -c SHA256SUMS)
-          shasum -a 256 -c Interop/FIXTURE_SHA256SUMS
+          xcodebuild -version
+          xcodebuild -showsdks
+      - name: Generic device build with warnings as errors
+        run: >-
+          xcodebuild build
+          -scheme SwiftCBORLD-Package
+          -destination "generic/platform=${{ matrix.platform }}"
+          -derivedDataPath .build/xcode
+          SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+          CODE_SIGNING_ALLOWED=NO
+
+  sanitizers:
+    name: ${{ matrix.sanitizer }} sanitizer / Linux
+    runs-on: ubuntu-24.04
+    container: swift:6.4-noble
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address, thread]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tests under the sanitizer
+        env:
+          # XCTest on Linux keeps every test-case instance, and the values its
+          # stored properties hold, alive until exit, which LeakSanitizer
+          # reports as leaks. AddressSanitizer still checks every memory access.
+          ASAN_OPTIONS: detect_leaks=0
+        run: swift test --sanitize=${{ matrix.sanitizer }} --disable-swift-testing
+
+  coverage:
+    name: Coverage / Linux
+    runs-on: ubuntu-24.04
+    container: swift:6.4-noble
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: apt-get update -qq && apt-get install -y -qq jq > /dev/null
+      - name: Line coverage floors
+        run: Scripts/check-coverage.sh
+
+  evidence:
+    name: Evidence and release hygiene
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Evidence files, checksums, and tracked paths
+        run: Scripts/check-evidence.sh
