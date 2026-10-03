@@ -46,6 +46,12 @@ func fixedLoader(_ documents: [String: JSONValue]) -> CBORLDDocumentLoader {
 }
 
 /// Asserts that `body` throws a ``CBORLDError`` with `code`.
+///
+/// Both assertion helpers stay unoptimized. In release builds, Swift 6.0.3 on
+/// x86_64 Linux specializes this helper for a closure that captures a
+/// prepared encoder and passes the closure's captures incorrectly, which
+/// crashes the test process; calling the same code directly works.
+@_optimize(none)
 func assertCBORLDError(
   _ code: CBORLDErrorCode,
   file: StaticString = #filePath,
@@ -63,6 +69,7 @@ func assertCBORLDError(
 }
 
 /// Synchronous form of ``assertCBORLDError(_:file:line:_:)``.
+@_optimize(none)
 func assertCBORLDErrorSync(
   _ code: CBORLDErrorCode,
   file: StaticString = #filePath,
