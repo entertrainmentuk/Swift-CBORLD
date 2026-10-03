@@ -49,8 +49,17 @@ final class ResourceSafetyTests: XCTestCase {
     await assertCBORLDError(.resourceLimit) {
       _ = try await CBORLDEncoder(limits: .init(maximumOutputBytes: 64)).encode(document)
     }
+    // Called directly rather than through assertCBORLDError: in release
+    // builds, Swift 6.0.3 on x86_64 Linux miscompiles that helper's
+    // specialization for a closure capturing this prepared encoder and
+    // crashes the test process. The direct call works on every toolchain.
     let prepared = try CBORLDPreparedEncoder(limits: .init(maximumOutputBytes: 64))
-    await assertCBORLDError(.resourceLimit) { _ = try await prepared.encode(document) }
+    do {
+      _ = try await prepared.encode(document)
+      XCTFail("Expected ERR_RESOURCE_LIMIT from the prepared encoder.")
+    } catch let error as CBORLDError {
+      XCTAssertEqual(error.code, .resourceLimit, error.message)
+    }
     await assertCBORLDError(.resourceLimit) {
       _ = try await CBORLD.encode(
         document, options: .init(registryEntryID: 1, limits: .init(maximumOutputBytes: -1)))
