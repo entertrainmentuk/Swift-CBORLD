@@ -40,17 +40,17 @@ rows="$(source_rows <"$report")"
 if [[ -n "$(missing_modules "$rows")" ]]; then
   codecov="$(dirname "$report")"
   products="$(dirname "$codecov")"
-  # Apple platforms build each test target as a bundle directory; other
-  # platforms build executables, whose names and nesting vary between
-  # SwiftPM releases.
+  # Apple platforms build each test target as a bundle directory, Linux as
+  # a shared library beside a small runner, and older Linux toolchains as a
+  # single executable bundle.
   objects=()
   while IFS= read -r -d '' candidate; do
     if [[ -d "$candidate/Contents/MacOS" ]]; then
       objects+=("$candidate/Contents/MacOS/$(basename "$candidate" .xctest)")
-    elif [[ -f "$candidate" && -x "$candidate" ]]; then
+    elif [[ -f "$candidate" ]]; then
       objects+=("$candidate")
     fi
-  done < <(find "$products" -maxdepth 3 \( -name '*.xctest' -o -name '*Tests' \) -print0)
+  done < <(find "$products" -maxdepth 1 \( -name '*.xctest' -o -name '*Tests.so' \) -print0)
   if [[ ${#objects[@]} -eq 0 ]]; then
     echo "warning: no test binaries found under $products:" >&2
     find "$products" -maxdepth 2 >&2
