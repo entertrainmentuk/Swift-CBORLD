@@ -36,6 +36,8 @@ or publish directly from the mixed development workspace.
 - [ ] Every performance statement identifies its implementation, workload,
       hardware, toolchain, measurement boundary, and parity result.
 - [ ] `CHANGELOG.md` carries the release date.
+- [ ] `CommandLineTool.version` in `Sources/CBORLDCommandLine` matches the
+      tag, so `cborld --version` reports the release.
 - [ ] The working tree is clean.
 
 ## Tagging

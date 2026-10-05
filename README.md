@@ -464,6 +464,45 @@ predates processing models.
 The package does not provide digital signatures, certificate trust, Merkle
 proofs, content-addressed persistence, or network context fetching.
 
+## Command-line tool
+
+The `cborld` executable runs the processor from a shell. It reads contexts
+only from files named with `--context URL=FILE` and never fetches anything
+from the network.
+
+```sh
+swift run -c release cborld help
+```
+
+A typical round trip pins a context, encodes with an integrity manifest, and
+checks the result:
+
+```sh
+PIN=$(cborld digest --kind context notes-v1.json)
+cborld encode note.json \
+  --context https://example.com/contexts/notes-v1=notes-v1.json \
+  --pin "https://example.com/contexts/notes-v1=$PIN" --require-pins \
+  -o note.cborld --write-manifest note.manifest.json
+cborld inspect note.cborld
+cborld decode note.cborld --untrusted \
+  --context https://example.com/contexts/notes-v1=notes-v1.json
+cborld verify note.cborld --manifest note.manifest.json \
+  --context https://example.com/contexts/notes-v1=notes-v1.json
+```
+
+| Command | Purpose |
+| --- | --- |
+| `encode` | JSON-LD to CBOR-LD, with a registry entry, serialization mode, output limit, and optional manifest |
+| `decode` | CBOR-LD to JSON-LD, optionally with the untrusted-input presets |
+| `inspect` | Envelope format, registry entry, size, and transport digest, without loading contexts |
+| `digest` | Transport digest, structural fingerprint, or context fingerprint |
+| `verify` | One line per check against expected digests or a manifest |
+
+`--hex` reads or writes hexadecimal text instead of bytes, and binary output
+is never written to a terminal. `cborld` exits with 0 on success, 1 for a
+processing error or failed verification, and 2 for a usage error. Run
+`cborld help <command>` for every option.
+
 ## Development
 
 Run the local release gates:
