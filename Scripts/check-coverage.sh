@@ -39,16 +39,25 @@ rows="$(source_rows <"$report")"
 # on Apple platforms. Export from every bundle when a module is missing.
 if [[ -n "$(missing_modules "$rows")" ]]; then
   codecov="$(dirname "$report")"
+  products="$(dirname "$codecov")"
+  # Apple platforms build each test target as a bundle directory; other
+  # platforms build executables, whose names and nesting vary between
+  # SwiftPM releases.
   objects=()
-  shopt -s nullglob
-  for bundle in "$(dirname "$codecov")"/*.xctest; do
-    if [[ -d "$bundle/Contents/MacOS" ]]; then
-      objects+=("$bundle/Contents/MacOS/$(basename "$bundle" .xctest)")
-    else
-      objects+=("$bundle")
+  while IFS= read -r -d '' candidate; do
+    if [[ -d "$candidate/Contents/MacOS" ]]; then
+      objects+=("$candidate/Contents/MacOS/$(basename "$candidate" .xctest)")
+    elif [[ -f "$candidate" && -x "$candidate" ]]; then
+      objects+=("$candidate")
     fi
-  done
-  shopt -u nullglob
+  done < <(find "$products" -maxdepth 3 \( -name '*.xctest' -o -name '*Tests' \) -print0)
+  if [[ ${#objects[@]} -eq 0 ]]; then
+    echo "warning: no test binaries found under $products:" >&2
+    find "$products" -maxdepth 2 >&2
+  else
+    printf 'Coverage objects:\n' >&2
+    printf '  %s\n' "${objects[@]}" >&2
+  fi
   if [[ ${#objects[@]} -gt 0 ]]; then
     arguments=("${objects[0]}")
     for object in "${objects[@]:1}"; do arguments+=(-object "$object"); done
