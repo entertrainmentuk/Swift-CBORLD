@@ -106,10 +106,14 @@ jobs:
         run: |
           xcodebuild -version
           xcodebuild -showsdks
+      # The CBORLDCompute scheme builds both library modules. The package
+      # scheme also holds the `cborld` executable, whose name differs from
+      # the CBORLD module only in case, which Xcode 16 cannot build on a
+      # case-insensitive file system.
       - name: Generic device build with warnings as errors
         run: >-
           xcodebuild build
-          -scheme SwiftCBORLD-Package
+          -scheme CBORLDCompute
           -destination "generic/platform=${{ matrix.platform }}"
           -derivedDataPath .build/xcode
           SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
