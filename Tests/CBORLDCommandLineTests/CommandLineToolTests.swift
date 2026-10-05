@@ -170,6 +170,26 @@ final class CommandLineToolTests: XCTestCase {
       "--context", "\(contextURL)=context.json")
     XCTAssertEqual(manifestStatus, 0, workspace.standardOutput)
 
+    // Every supplied context must be pinned, by --pin or by the manifest.
+    workspace.reset()
+    let pinnedByManifest = await workspace.run(
+      "verify", "note.cborld", "--manifest", "note.manifest.json", "--require-pins",
+      "--context", "\(contextURL)=context.json")
+    XCTAssertEqual(pinnedByManifest, 0, workspace.standardOutput)
+    workspace.reset()
+    let unpinned = await workspace.run(
+      "verify", "note.cborld", "--transport", transport.description, "--require-pins",
+      "--context", "\(contextURL)=context.json")
+    XCTAssertEqual(unpinned, 1, workspace.standardOutput)
+    XCTAssertTrue(
+      workspace.standardOutput.contains("invalid: context-document \(contextURL)"),
+      workspace.standardOutput)
+    workspace.reset()
+    let pinnedByFlag = await workspace.run(
+      "verify", "note.cborld", "--transport", transport.description, "--require-pins",
+      "--context", "\(contextURL)=context.json", "--pin", "\(contextURL)=\(pin)")
+    XCTAssertEqual(pinnedByFlag, 0, workspace.standardOutput)
+
     workspace.files["note.cborld"]?[bytes.count - 1] ^= 0x01
     workspace.reset()
     let tampered = await workspace.run(

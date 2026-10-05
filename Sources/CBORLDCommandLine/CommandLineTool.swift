@@ -113,7 +113,7 @@ enum Command: String, CaseIterable {
     case .decode: ["hex", "require-pins", "untrusted", "untrusted-deterministic", "compact"]
     case .inspect: ["hex", "untrusted", "untrusted-deterministic", "json"]
     case .digest: ["hex"]
-    case .verify: ["hex", "untrusted", "untrusted-deterministic", "json"]
+    case .verify: ["hex", "require-pins", "untrusted", "untrusted-deterministic", "json"]
     }
   }
 
@@ -229,6 +229,8 @@ enum Command: String, CaseIterable {
         --context URL=FILE         Read the context for URL from FILE; repeatable
         --manifest FILE            Check against an integrity manifest instead
                                    of --transport and --structure
+        --require-pins             Fail if any context given with --context is
+                                   pinned neither by --pin nor by the manifest
         --untrusted                Apply bounded limits for untrusted input
         --untrusted-deterministic  Also require RFC 8949 length-first
                                    deterministic bytes

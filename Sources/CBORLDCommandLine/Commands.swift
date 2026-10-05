@@ -306,7 +306,8 @@ extension CommandContext {
     let bytes = try inputBytes()
     let registry = try contextRegistry()
     let configuration = try decodingConfiguration()
-    let report: CBORLDVerificationReport
+    var report: CBORLDVerificationReport
+    var pinnedContexts = Set(registry.expectedFingerprints.keys)
     if let manifestPath = try arguments.value("manifest") {
       guard try arguments.value("transport") == nil, try arguments.value("structure") == nil
       else {
@@ -314,6 +315,7 @@ extension CommandContext {
       }
       let manifest = try JSONDecoder.iso8601.decode(
         CBORLDIntegrityManifest.self, from: try environment.readFile(manifestPath))
+      pinnedContexts.formUnion(manifest.contextFingerprints.keys)
       report = await CBORLD.verificationReport(
         for: bytes, against: manifest, contextRegistry: registry, limits: configuration.limits)
     } else {
@@ -329,6 +331,24 @@ extension CommandContext {
           expectedStructuralFingerprint: structure,
           contextRegistry: registry,
           limits: configuration.limits))
+    }
+
+    // With --require-pins, decoding may use only pinned contexts, as encode
+    // and decode enforce through their loading policy.
+    if arguments.flag("require-pins") {
+      let unpinned = registry.documents.keys.filter { !pinnedContexts.contains($0) }.sorted()
+      if !unpinned.isEmpty {
+        report = CBORLDVerificationReport(
+          checkedAt: report.checkedAt,
+          inspection: report.inspection,
+          checks: report.checks
+            + unpinned.map { url in
+              CBORLDVerificationCheck(
+                kind: .contextDocument, subject: url, status: .invalid,
+                message: "The context is supplied without a pin, and --require-pins is set.")
+            },
+          warnings: report.warnings)
+      }
     }
 
     if arguments.flag("json") {

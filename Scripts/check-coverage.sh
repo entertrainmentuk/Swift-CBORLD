@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Runs the test suite with coverage and enforces minimum line coverage for the
-# package's own sources, per module and per file. The report is exported with
-# llvm-cov from every test bundle, because SwiftPM's own export can omit all
-# but one bundle when a package has several test targets.
+# package's own sources, per module and per file. The report is SwiftPM's own
+# coverage export, or an llvm-cov export from every test bundle when SwiftPM's
+# export omits a module, and a module missing from both fails the check.
 #
 #   Scripts/check-coverage.sh [extra swift test arguments]
 set -euo pipefail
@@ -16,37 +16,51 @@ MODULE_MINIMUM_CBORLDCOMMANDLINE=90
 FILE_MINIMUM=80
 
 swift test --enable-code-coverage --disable-swift-testing "$@" >/dev/null
-codecov="$(dirname "$(swift test --show-codecov-path "$@")")"
-products="$(dirname "$codecov")"
+report="$(swift test --show-codecov-path "$@")"
+modules=(CBORLD CBORLDCompute CBORLDCommandLine)
 
-# A test bundle is a directory on Apple platforms and an executable elsewhere.
-objects=()
-for bundle in "$products"/*.xctest; do
-  if [[ -d "$bundle/Contents/MacOS" ]]; then
-    objects+=("$bundle/Contents/MacOS/$(basename "$bundle" .xctest)")
-  else
-    objects+=("$bundle")
-  fi
-done
-if [[ ${#objects[@]} -eq 0 ]]; then
-  echo "error: no test bundles found in $products." >&2
-  exit 1
-fi
-arguments=("${objects[0]}")
-for object in "${objects[@]:1}"; do arguments+=(-object "$object"); done
-if command -v xcrun >/dev/null 2>&1; then
-  llvm_cov=(xcrun llvm-cov)
-else
-  llvm_cov=(llvm-cov)
-fi
-
-rows="$("${llvm_cov[@]}" export -summary-only \
-  -instr-profile "$codecov/default.profdata" "${arguments[@]}" |
+source_rows() {
   jq -r '
     .data[0].files[]
     | select(.filename | test("/Sources/"))
     | [(.filename | sub(".*/Sources/"; "")), .summary.lines.count, .summary.lines.covered]
-    | @tsv')"
+    | @tsv'
+}
+
+missing_modules() {
+  for module in "${modules[@]}"; do
+    grep -q "^$module/" <<<"$1" || echo "$module"
+  done
+}
+
+rows="$(source_rows <"$report")"
+
+# With several test targets, SwiftPM's report can cover only one test bundle
+# on Apple platforms. Export from every bundle when a module is missing.
+if [[ -n "$(missing_modules "$rows")" ]]; then
+  codecov="$(dirname "$report")"
+  objects=()
+  shopt -s nullglob
+  for bundle in "$(dirname "$codecov")"/*.xctest; do
+    if [[ -d "$bundle/Contents/MacOS" ]]; then
+      objects+=("$bundle/Contents/MacOS/$(basename "$bundle" .xctest)")
+    else
+      objects+=("$bundle")
+    fi
+  done
+  shopt -u nullglob
+  if [[ ${#objects[@]} -gt 0 ]]; then
+    arguments=("${objects[0]}")
+    for object in "${objects[@]:1}"; do arguments+=(-object "$object"); done
+    if command -v xcrun >/dev/null 2>&1; then
+      llvm_cov=(xcrun llvm-cov)
+    else
+      llvm_cov=(llvm-cov)
+    fi
+    rows="$("${llvm_cov[@]}" export -summary-only \
+      -instr-profile "$codecov/default.profdata" "${arguments[@]}" | source_rows)"
+  fi
+fi
 
 status=0
 printf '%-48s %8s\n' "File" "Lines"
@@ -59,7 +73,7 @@ while IFS=$'\t' read -r file count covered; do
   fi
 done <<<"$rows"
 
-for module in CBORLD CBORLDCompute CBORLDCommandLine; do
+for module in "${modules[@]}"; do
   case "$module" in
   CBORLD) minimum=$MODULE_MINIMUM_CBORLD ;;
   CBORLDCompute) minimum=$MODULE_MINIMUM_CBORLDCOMPUTE ;;

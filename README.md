@@ -503,6 +503,10 @@ is never written to a terminal. `cborld` exits with 0 on success, 1 for a
 processing error or failed verification, and 2 for a usage error. Run
 `cborld help <command>` for every option.
 
+The executable's name differs from the `CBORLD` module only in case. Xcode 16
+cannot build the whole package because of that, so build the `CBORLD` or
+`CBORLDCompute` scheme there; `swift build` and Xcode 27 build everything.
+
 ## Development
 
 Run the local release gates:
