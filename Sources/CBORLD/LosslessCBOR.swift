@@ -349,12 +349,12 @@ private struct CBORLDRawScanner {
       if value < 32 { violations.append("non-preferred-simple") }
     case 25:
       let bits = try readUnsigned(byteCount: 2, path: path)
-      let value = Double(Float16(bitPattern: UInt16(bits)))
+      let value = HalfPrecision.double(fromBits: UInt16(bits))
       if value.isNaN, bits != 0x7e00 { violations.append("non-preferred-float") }
     case 26:
       let bits = try readUnsigned(byteCount: 4, path: path)
       let value = Double(Float(bitPattern: UInt32(bits)))
-      if value.isNaN || Double(Float16(value)).bitPattern == value.bitPattern {
+      if value.isNaN || HalfPrecision.exactBits(of: value) != nil {
         violations.append("non-preferred-float")
       }
     case 27:

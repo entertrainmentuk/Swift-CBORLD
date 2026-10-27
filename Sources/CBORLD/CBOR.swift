@@ -336,10 +336,9 @@ enum CBOREncoder {
       writer.append(bigEndian: UInt16(0x7e00))
       return
     }
-    let half = Float16(value)
-    if Double(half).bitPattern == value.bitPattern {
+    if let half = HalfPrecision.exactBits(of: value) {
       writer.append(0xf9)
-      writer.append(bigEndian: half.bitPattern)
+      writer.append(bigEndian: half)
       return
     }
     let single = Float(value)
@@ -440,10 +439,9 @@ enum CBOREncoder {
       return
     }
 
-    let half = Float16(value)
-    if Double(half).bitPattern == value.bitPattern {
+    if let half = HalfPrecision.exactBits(of: value) {
       data.append(0xf9)
-      appendBigEndian(half.bitPattern, to: &data)
+      appendBigEndian(half, to: &data)
       return
     }
 
@@ -652,7 +650,7 @@ where Bytes.Element == UInt8, Bytes.Index == Int {
     case 21: return .bool(true)
     case 22: return .null
     case 25:
-      return try finiteJSONNumber(Double(Float16(bitPattern: readInteger())))
+      return try finiteJSONNumber(HalfPrecision.double(fromBits: readInteger()))
     case 26:
       return try finiteJSONNumber(Double(Float(bitPattern: readInteger())))
     case 27:
@@ -810,7 +808,7 @@ where Bytes.Element == UInt8, Bytes.Index == Int {
     case 22: return .null
     case 25:
       let bits: UInt16 = try readInteger()
-      let value = Double(Float16(bitPattern: bits))
+      let value = HalfPrecision.double(fromBits: bits)
       try validatePreferredFloat(value, info: info, bits: UInt64(bits), offset: offset)
       return .double(value)
     case 26:
@@ -859,7 +857,7 @@ where Bytes.Element == UInt8, Bytes.Index == Int {
       }
       return
     }
-    if Double(Float16(value)).bitPattern == value.bitPattern {
+    if HalfPrecision.exactBits(of: value) != nil {
       preferredInfo = 25
     } else if Double(Float(value)).bitPattern == value.bitPattern {
       preferredInfo = 26
