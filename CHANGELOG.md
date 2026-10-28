@@ -64,6 +64,8 @@ Initial source-first preview. The date is set when the signed tag is created.
   toolchain; generic iOS, tvOS, watchOS, and visionOS device builds; address
   and thread sanitizers; line-coverage floors; a checked-in public API
   baseline; nightly property runs; and weekly comparator-pin verification.
+- `cborld`, a command-line tool that encodes, decodes, inspects, digests, and
+  verifies CBOR-LD offline, reading contexts only from local files.
 - An opt-in, digest-only SemanticCompute Live byte-parity check and workflow
   with no core dependency and no authentication or accelerator-execution
   claim.

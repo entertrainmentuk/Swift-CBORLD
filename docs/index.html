@@ -244,8 +244,8 @@
 ]</code></pre>
           <pre id="usage-code" hidden><code><span class="keyword">import</span> CBORLD
 
-<span class="keyword">let</span> bytes = <span class="keyword">try await</span> CBORLD.encode(document)
-<span class="keyword">let</span> restored = <span class="keyword">try await</span> CBORLD.decode(bytes)
+<span class="keyword">let</span> bytes = <span class="keyword">try await</span> CBORLDEncoder().encode(document)
+<span class="keyword">let</span> restored = <span class="keyword">try await</span> CBORLDDecoder().decode(bytes)
 
 <span class="keyword">precondition</span>(restored == document)</code></pre>
           <div class="code-foot"><span>Swift 6</span><span>core dependency count · <b>0</b></span></div>
