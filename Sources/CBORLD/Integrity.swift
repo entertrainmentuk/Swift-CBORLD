@@ -91,17 +91,17 @@ public struct CBORLDIntegrityManifest: Sendable, Hashable, Codable {
   public func validate() throws {
     guard formatVersion == Self.currentFormatVersion else {
       throw CBORLDError(
-        code: "ERR_INVALID_MANIFEST",
+        code: .invalidManifest,
         message: "Unsupported integrity manifest version \(formatVersion).")
     }
     guard envelope.byteCount >= 0 else {
       throw CBORLDError(
-        code: "ERR_INVALID_MANIFEST",
+        code: .invalidManifest,
         message: "Integrity manifest byteCount must not be negative.")
     }
     if let artifactName, artifactName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
       throw CBORLDError(
-        code: "ERR_INVALID_MANIFEST",
+        code: .invalidManifest,
         message: "Integrity manifest artifactName must not be empty.")
     }
     try Self.requireDigest(
@@ -117,7 +117,7 @@ public struct CBORLDIntegrityManifest: Sendable, Hashable, Codable {
     if let dictionaryBinding {
       guard dictionaryBinding.registryEntryID <= CBORLDConstants.maximumSafeInteger else {
         throw CBORLDError(
-          code: "ERR_INVALID_MANIFEST",
+          code: .invalidManifest,
           message: "Dictionary registry entry exceeds the CBOR-LD safe-integer limit.")
       }
       try Self.requireDigest(
@@ -128,14 +128,14 @@ public struct CBORLDIntegrityManifest: Sendable, Hashable, Codable {
         envelope.registryEntryID != dictionaryBinding.registryEntryID
       {
         throw CBORLDError(
-          code: "ERR_INVALID_MANIFEST",
+          code: .invalidManifest,
           message: "Dictionary binding does not match the envelope registry entry.")
       }
     }
     for (url, fingerprint) in contextFingerprints {
       guard !url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
         throw CBORLDError(
-          code: "ERR_INVALID_MANIFEST",
+          code: .invalidManifest,
           message: "Context fingerprint URL must not be empty.")
       }
       try Self.requireDigest(
@@ -152,7 +152,7 @@ public struct CBORLDIntegrityManifest: Sendable, Hashable, Codable {
   ) throws {
     guard digest.domain == domain, digest.version == 1 else {
       throw CBORLDError(
-        code: "ERR_INVALID_MANIFEST",
+        code: .invalidManifest,
         message: "\(field) must be a version 1 \(domain.rawValue) digest.")
     }
   }
@@ -299,7 +299,7 @@ extension CBORLD {
         inspection.registryEntryID != dictionary.code
       {
         throw CBORLDError(
-          code: "ERR_INVALID_MANIFEST",
+          code: .invalidManifest,
           message: "Dictionary code does not match the encoded registry entry.")
       }
       dictionaryBinding = try CBORLDDictionaryBinding(
@@ -492,8 +492,15 @@ extension CBORLD {
           let context: JSONValue
           if let registered = resolvedContexts[url] {
             context = registered
-          } else if let fallback = policy.contextRegistry?.fallback {
-            context = try await fallback(url)
+          } else if let registry = policy.contextRegistry, registry.hasFallback {
+            // Resolve without the registry's pins so a mismatch is reported
+            // with its observed digest instead of failing the load.
+            context = try await CBORLDContextRegistry(
+              documents: [:],
+              expectedFingerprints: [:],
+              fallback: registry.fallback,
+              contextFallback: registry.contextFallback
+            ).load(url)
             resolvedContexts[url] = context
           } else {
             contextConfigurationIsValid = false
@@ -533,7 +540,8 @@ extension CBORLD {
       CBORLDContextRegistry(
         documents: resolvedContexts,
         expectedFingerprints: expectedContexts,
-        fallback: $0.fallback)
+        fallback: $0.fallback,
+        contextFallback: $0.contextFallback)
     }
 
     var decodedDocument: JSONValue?
@@ -693,7 +701,7 @@ extension CBORLD {
         expectedDigest: expected,
         observedDigest: observed,
         message: "Observed digest matches the expected digest.")
-    } catch let error as CBORLDError where error.code == "ERR_INTEGRITY_MISMATCH" {
+    } catch let error as CBORLDError where error.code == .integrityMismatch {
       return .init(
         kind: kind,
         subject: subject,

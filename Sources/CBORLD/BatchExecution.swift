@@ -9,6 +9,8 @@ public struct CBORLDExecutionPolicy: Sendable {
   public var minimumParallelBytes: Int
   public var cancellationCheckStride: Int
   public var maximumDocumentCount: Int
+  /// Budget for the sum of every document's input measure: exact bytes for
+  /// decoding, and ``encodeInputCost`` for encoding.
   public var maximumTotalInputBytes: Int
   /// `nil` inherits the caller task's priority and task-local values.
   public var taskPriority: TaskPriority?
@@ -19,6 +21,14 @@ public struct CBORLDExecutionPolicy: Sendable {
   /// Optional monotonic byte counter supplied by an allocator profiler. The
   /// package does not fabricate a portable allocation count when none exists.
   public var allocationByteCounter: (@Sendable () -> UInt64?)?
+  /// Measures one in-memory document for encoding budgets and observations.
+  /// `nil` uses ``CBORLDStructuralCost/encodedByteCount``, which is exact and
+  /// requires no serialization.
+  public var encodeInputCost: (@Sendable (JSONValue) -> Int)?
+  /// Serializes each decoded document to JSON text to report its size in
+  /// observations. This costs a complete serialization per document, so it is
+  /// off by default and reported with ``CBORLDBatchOutputMeasure/jsonText``.
+  public var measuresDecodedJSONTextSize: Bool
 
   public init(
     maximumConcurrentTasks: Int = min(ProcessInfo.processInfo.activeProcessorCount, 4),
@@ -30,7 +40,9 @@ public struct CBORLDExecutionPolicy: Sendable {
     taskPriority: TaskPriority? = nil,
     backendAlreadyParallel: Bool = false,
     recordsTiming: Bool = false,
-    allocationByteCounter: (@Sendable () -> UInt64?)? = nil
+    allocationByteCounter: (@Sendable () -> UInt64?)? = nil,
+    encodeInputCost: (@Sendable (JSONValue) -> Int)? = nil,
+    measuresDecodedJSONTextSize: Bool = false
   ) {
     self.maximumConcurrentTasks = maximumConcurrentTasks
     self.minimumParallelDocumentCount = minimumParallelDocumentCount
@@ -42,18 +54,44 @@ public struct CBORLDExecutionPolicy: Sendable {
     self.backendAlreadyParallel = backendAlreadyParallel
     self.recordsTiming = recordsTiming
     self.allocationByteCounter = allocationByteCounter
+    self.encodeInputCost = encodeInputCost
+    self.measuresDecodedJSONTextSize = measuresDecodedJSONTextSize
   }
+
+  var recordsObservations: Bool {
+    recordsTiming || allocationByteCounter != nil || measuresDecodedJSONTextSize
+  }
+}
+
+/// What an observation's input size measures.
+public enum CBORLDBatchInputMeasure: String, Sendable, Hashable, Codable, CaseIterable {
+  /// The exact encoded CBOR-LD input bytes.
+  case encodedBytes = "encoded-bytes"
+  /// ``CBORLDStructuralCost/encodedByteCount`` of an in-memory document.
+  case structuralCost = "structural-cost"
+  /// The policy's ``CBORLDExecutionPolicy/encodeInputCost`` function.
+  case callerDefined = "caller-defined"
+}
+
+/// What an observation's output size measures.
+public enum CBORLDBatchOutputMeasure: String, Sendable, Hashable, Codable, CaseIterable {
+  /// The exact encoded CBOR-LD output bytes.
+  case encodedBytes = "encoded-bytes"
+  /// The length of the decoded document serialized as JSON text.
+  case jsonText = "json-text"
 }
 
 public struct CBORLDBatchObservation: Sendable, Hashable, Codable {
   public let durationNanoseconds: UInt64?
   public let inputByteCount: Int
+  public let inputMeasure: CBORLDBatchInputMeasure
   public let outputByteCount: Int?
+  public let outputMeasure: CBORLDBatchOutputMeasure?
   public let allocatedByteCount: UInt64?
 }
 
 public struct CBORLDBatchFailure: Error, Sendable, Hashable, Codable {
-  public let code: String
+  public let code: CBORLDErrorCode
   public let message: String
   public let diagnostic: CBORLDSourceDiagnostic?
 }
@@ -78,20 +116,96 @@ public enum CBORLDBatchOutcome<Value: Sendable>: Sendable {
   }
 }
 
+/// One outcome of a streaming batch together with its input position.
+public struct CBORLDIndexedOutcome<Value: Sendable>: Sendable {
+  public let index: Int
+  public let outcome: CBORLDBatchOutcome<Value>
+
+  public init(index: Int, outcome: CBORLDBatchOutcome<Value>) {
+    self.index = index
+    self.outcome = outcome
+  }
+}
+
+/// The order in which a streaming batch yields outcomes.
+public enum CBORLDBatchResultOrder: Sendable, Hashable {
+  /// Yield each outcome as soon as it completes. At most
+  /// ``CBORLDExecutionPolicy/maximumConcurrentTasks`` documents are in flight.
+  case completionOrder
+  /// Yield outcomes in input order. Completed outcomes waiting for an earlier
+  /// document occupy the reorder buffer, and new documents are not started
+  /// while it is full, so at most `maximumReorderBuffer` plus the concurrency
+  /// limit outcomes are retained.
+  case inputOrder(maximumReorderBuffer: Int)
+}
+
+/// A pull-driven stream of batch outcomes. Work is admitted only as the
+/// consumer iterates, which gives natural backpressure: a slow consumer stops
+/// new documents from being read or started. Ending iteration early, or
+/// cancelling the consuming task, cancels the documents still in flight.
+public struct CBORLDBatchOutcomeStream<Value: Sendable>: AsyncSequence, Sendable {
+  public typealias Element = CBORLDIndexedOutcome<Value>
+
+  private let makeEngine: @Sendable () -> BatchStreamEngine<Value>
+
+  init(makeEngine: @escaping @Sendable () -> BatchStreamEngine<Value>) {
+    self.makeEngine = makeEngine
+  }
+
+  public func makeAsyncIterator() -> Iterator {
+    Iterator(engine: makeEngine())
+  }
+
+  public struct Iterator: AsyncIteratorProtocol {
+    private let engine: BatchStreamEngine<Value>
+
+    init(engine: BatchStreamEngine<Value>) {
+      self.engine = engine
+    }
+
+    public mutating func next() async throws -> CBORLDIndexedOutcome<Value>? {
+      try await engine.next()
+    }
+  }
+}
+
 extension CBORLDPreparedEncoder {
   /// Encodes independent documents with bounded concurrency and stable output
   /// ordering. One failed document does not discard successful siblings.
+  /// Documents are measured by ``CBORLDExecutionPolicy/encodeInputCost`` or,
+  /// by default, their exact ``CBORLDStructuralCost``; nothing is serialized
+  /// to JSON for accounting.
   public func encodeBatch(
     _ documents: [JSONValue],
     policy: CBORLDExecutionPolicy = .init()
   ) async throws -> [CBORLDBatchOutcome<Data>] {
-    let byteCounts = try documents.map { try $0.data().count }
+    let measure = CBORLDBatchExecutor.encodeMeasure(policy)
     return try await CBORLDBatchExecutor.execute(
       inputs: documents,
-      byteCounts: byteCounts,
+      byteCounts: documents.map(measure.cost),
+      inputMeasure: measure.kind,
       policy: policy,
-      outputByteCount: { $0.count },
+      outputByteCount: { ($0.count, .encodedBytes) },
       operation: { try await self.encode($0) })
+  }
+
+  /// Streams encode outcomes for an asynchronous document source.
+  public func encodeBatchStream<Documents: AsyncSequence & Sendable>(
+    _ documents: Documents,
+    policy: CBORLDExecutionPolicy = .init(),
+    order: CBORLDBatchResultOrder = .completionOrder
+  ) -> CBORLDBatchOutcomeStream<Data> where Documents.Element == JSONValue {
+    let measure = CBORLDBatchExecutor.encodeMeasure(policy)
+    return CBORLDBatchOutcomeStream {
+      BatchStreamEngine(
+        source: documents,
+        measure: measure.cost,
+        inputMeasure: measure.kind,
+        policy: policy,
+        order: order,
+        outputByteCount: { ($0.count, .encodedBytes) },
+        operation: { try await self.encode($0) })
+    }
   }
 }
 
@@ -105,8 +219,9 @@ extension CBORLDPreparedDecoder {
     try await CBORLDBatchExecutor.execute(
       inputs: documents,
       byteCounts: documents.map(\.count),
+      inputMeasure: .encodedBytes,
       policy: policy,
-      outputByteCount: { value in try? value.data().count },
+      outputByteCount: CBORLDBatchExecutor.decodedOutputMeasure(policy),
       operation: { try await self.decode($0) })
   }
 
@@ -119,71 +234,207 @@ extension CBORLDPreparedDecoder {
     policy: CBORLDExecutionPolicy = .init()
   ) async throws -> [CBORLDBatchOutcome<JSONValue>]
   where Documents.Element == Data {
-    try CBORLDBatchExecutor.validate(policy)
-    var iterator = documents.makeAsyncIterator()
-    var nextIndex = 0
-    var totalBytes = 0
     var ordered: [Int: CBORLDBatchOutcome<JSONValue>] = [:]
-    let cap = policy.backendAlreadyParallel ? 1 : policy.maximumConcurrentTasks
-    var inFlight = 0
-
-    try await withThrowingTaskGroup(
-      of: (Int, CBORLDBatchOutcome<JSONValue>).self
-    ) { group in
-      func submit(_ input: Data, at index: Int) {
-        group.addTask(priority: policy.taskPriority) {
-          try Task.checkCancellation()
-          return (
-            index,
-            try await CBORLDBatchExecutor.perform(
-              input,
-              inputByteCount: input.count,
-              policy: policy,
-              outputByteCount: { value in try? value.data().count },
-              operation: { try await self.decode($0) })
-          )
-        }
-      }
-
-      while inFlight < cap, let input = try await iterator.next() {
-        try CBORLDBatchExecutor.account(
-          inputByteCount: input.count,
-          nextDocumentCount: nextIndex + 1,
-          totalBytes: &totalBytes,
-          policy: policy)
-        submit(input, at: nextIndex)
-        nextIndex += 1
-        inFlight += 1
-      }
-
-      while let (index, result) = try await group.next() {
-        inFlight -= 1
-        ordered[index] = result
-        if nextIndex.isMultiple(of: policy.cancellationCheckStride) {
-          try Task.checkCancellation()
-        }
-        if let input = try await iterator.next() {
-          try CBORLDBatchExecutor.account(
-            inputByteCount: input.count,
-            nextDocumentCount: nextIndex + 1,
-            totalBytes: &totalBytes,
-            policy: policy)
-          submit(input, at: nextIndex)
-          nextIndex += 1
-          inFlight += 1
-        }
-      }
+    for try await indexed in decodeBatchStream(documents, policy: policy) {
+      ordered[indexed.index] = indexed.outcome
     }
-    return (0..<nextIndex).compactMap { ordered[$0] }
+    return (0..<ordered.count).compactMap { ordered[$0] }
+  }
+
+  /// Streams decode outcomes for an asynchronous document source without
+  /// retaining the whole batch. Use ``CBORLDBatchResultOrder/completionOrder``
+  /// for minimum latency and memory, or
+  /// ``CBORLDBatchResultOrder/inputOrder(maximumReorderBuffer:)`` when
+  /// callers need stable ordering.
+  public func decodeBatchStream<Documents: AsyncSequence & Sendable>(
+    _ documents: Documents,
+    policy: CBORLDExecutionPolicy = .init(),
+    order: CBORLDBatchResultOrder = .completionOrder
+  ) -> CBORLDBatchOutcomeStream<JSONValue> where Documents.Element == Data {
+    CBORLDBatchOutcomeStream {
+      BatchStreamEngine(
+        source: documents,
+        measure: \.count,
+        inputMeasure: .encodedBytes,
+        policy: policy,
+        order: order,
+        outputByteCount: CBORLDBatchExecutor.decodedOutputMeasure(policy),
+        operation: { try await self.decode($0) })
+    }
   }
 }
 
-private enum CBORLDBatchExecutor {
+/// The pull-driven state machine behind ``CBORLDBatchOutcomeStream``. It is
+/// owned by one iterator and used only by the consuming task.
+final class BatchStreamEngine<Value: Sendable> {
+  private typealias Completion = (index: Int, result: Result<CBORLDBatchOutcome<Value>, Error>)
+
+  /// A document read from the source, measured, and ready to start.
+  private struct PendingDocument {
+    let cost: Int
+    let start:
+      (_ index: Int, _ completions: AsyncStream<Completion>.Continuation) -> Task<
+        Void, Never
+      >
+  }
+
+  private let pullSource: () async throws -> PendingDocument?
+  private let policy: CBORLDExecutionPolicy
+  private let order: CBORLDBatchResultOrder
+  private var completionIterator: AsyncStream<Completion>.Iterator
+  private let continuation: AsyncStream<Completion>.Continuation
+  private var inFlight: [Int: Task<Void, Never>] = [:]
+  private var reorderBuffer: [Int: CBORLDBatchOutcome<Value>] = [:]
+  private var sourceExhausted = false
+  private var admitted = 0
+  private var nextToYield = 0
+  private var totalBytes = 0
+  private var terminalError: Error?
+  private var finished = false
+  private var validated = false
+
+  init<Source: AsyncSequence, Input: Sendable>(
+    source: Source,
+    measure: @escaping (Input) -> Int,
+    inputMeasure: CBORLDBatchInputMeasure,
+    policy: CBORLDExecutionPolicy,
+    order: CBORLDBatchResultOrder,
+    outputByteCount: @escaping @Sendable (Value) -> (Int, CBORLDBatchOutputMeasure)?,
+    operation: @escaping @Sendable (Input) async throws -> Value
+  ) where Source.Element == Input {
+    var iterator = source.makeAsyncIterator()
+    self.pullSource = {
+      guard let input = try await iterator.next() else { return nil }
+      let cost = measure(input)
+      return PendingDocument(cost: cost) { index, completions in
+        Task(priority: policy.taskPriority) {
+          let result: Result<CBORLDBatchOutcome<Value>, Error>
+          do {
+            result = .success(
+              try await CBORLDBatchExecutor.perform(
+                input,
+                inputByteCount: cost,
+                inputMeasure: inputMeasure,
+                policy: policy,
+                outputByteCount: outputByteCount,
+                operation: operation))
+          } catch {
+            result = .failure(error)
+          }
+          completions.yield((index, result))
+        }
+      }
+    }
+    self.policy = policy
+    self.order = order
+    var captured: AsyncStream<Completion>.Continuation?
+    let completions = AsyncStream<Completion> { captured = $0 }
+    self.continuation = captured!
+    self.completionIterator = completions.makeAsyncIterator()
+  }
+
+  deinit {
+    for task in inFlight.values { task.cancel() }
+    continuation.finish()
+  }
+
+  func next() async throws -> CBORLDIndexedOutcome<Value>? {
+    if let terminalError { throw terminalError }
+    if finished { return nil }
+    do {
+      if !validated {
+        try CBORLDBatchExecutor.validate(policy)
+        if case .inputOrder(let maximumReorderBuffer) = order, maximumReorderBuffer < 0 {
+          throw CBORLDError(
+            code: .invalidExecutionPolicy,
+            message: "maximumReorderBuffer must not be negative.")
+        }
+        validated = true
+      }
+      while true {
+        if case .inputOrder = order, let outcome = reorderBuffer.removeValue(forKey: nextToYield) {
+          let index = nextToYield
+          nextToYield += 1
+          return .init(index: index, outcome: outcome)
+        }
+        try await admit()
+        if inFlight.isEmpty {
+          finished = true
+          continuation.finish()
+          return nil
+        }
+        guard let completion = await completionIterator.next() else {
+          try Task.checkCancellation()
+          throw CancellationError()
+        }
+        inFlight[completion.index] = nil
+        let outcome = try completion.result.get()
+        switch order {
+        case .completionOrder:
+          return .init(index: completion.index, outcome: outcome)
+        case .inputOrder:
+          reorderBuffer[completion.index] = outcome
+        }
+      }
+    } catch {
+      terminalError = error
+      for task in inFlight.values { task.cancel() }
+      inFlight.removeAll()
+      continuation.finish()
+      throw error
+    }
+  }
+
+  /// Starts documents while a task slot and reorder space are available.
+  private func admit() async throws {
+    let capacity = policy.backendAlreadyParallel ? 1 : policy.maximumConcurrentTasks
+    while !sourceExhausted, inFlight.count < capacity, hasReorderRoom {
+      if admitted.isMultiple(of: policy.cancellationCheckStride) {
+        try Task.checkCancellation()
+      }
+      guard let document = try await pullSource() else {
+        sourceExhausted = true
+        return
+      }
+      try CBORLDBatchExecutor.account(
+        inputByteCount: document.cost,
+        nextDocumentCount: admitted + 1,
+        totalBytes: &totalBytes,
+        policy: policy)
+      inFlight[admitted] = document.start(admitted, continuation)
+      admitted += 1
+    }
+  }
+
+  /// Admission never blocks when nothing is in flight, so the next document to
+  /// yield is always either buffered or running.
+  private var hasReorderRoom: Bool {
+    guard case .inputOrder(let maximumReorderBuffer) = order else { return true }
+    return inFlight.isEmpty || reorderBuffer.count < maximumReorderBuffer
+  }
+}
+
+enum CBORLDBatchExecutor {
+  static func encodeMeasure(
+    _ policy: CBORLDExecutionPolicy
+  ) -> (cost: @Sendable (JSONValue) -> Int, kind: CBORLDBatchInputMeasure) {
+    if let cost = policy.encodeInputCost { return (cost, .callerDefined) }
+    return ({ $0.structuralCost.encodedByteCount }, .structuralCost)
+  }
+
+  static func decodedOutputMeasure(
+    _ policy: CBORLDExecutionPolicy
+  ) -> @Sendable (JSONValue) -> (Int, CBORLDBatchOutputMeasure)? {
+    guard policy.measuresDecodedJSONTextSize else { return { _ in nil } }
+    return { value in (try? value.data().count).map { ($0, .jsonText) } }
+  }
+
   static func execute<Input: Sendable, Output: Sendable>(
     inputs: [Input],
     byteCounts: [Int],
+    inputMeasure: CBORLDBatchInputMeasure,
     policy: CBORLDExecutionPolicy,
-    outputByteCount: @escaping @Sendable (Output) -> Int?,
+    outputByteCount: @escaping @Sendable (Output) -> (Int, CBORLDBatchOutputMeasure)?,
     operation: @escaping @Sendable (Input) async throws -> Output
   ) async throws -> [CBORLDBatchOutcome<Output>] {
     try validate(policy)
@@ -221,6 +472,7 @@ private enum CBORLDBatchExecutor {
           try await perform(
             inputs[index],
             inputByteCount: byteCounts[index],
+            inputMeasure: inputMeasure,
             policy: policy,
             outputByteCount: outputByteCount,
             operation: operation))
@@ -242,6 +494,7 @@ private enum CBORLDBatchExecutor {
             try await perform(
               inputs[index],
               inputByteCount: byteCounts[index],
+              inputMeasure: inputMeasure,
               policy: policy,
               outputByteCount: outputByteCount,
               operation: operation)
@@ -266,8 +519,9 @@ private enum CBORLDBatchExecutor {
   static func perform<Input: Sendable, Output: Sendable>(
     _ input: Input,
     inputByteCount: Int,
+    inputMeasure: CBORLDBatchInputMeasure,
     policy: CBORLDExecutionPolicy,
-    outputByteCount: @escaping @Sendable (Output) -> Int?,
+    outputByteCount: @escaping @Sendable (Output) -> (Int, CBORLDBatchOutputMeasure)?,
     operation: @escaping @Sendable (Input) async throws -> Output
   ) async throws -> CBORLDBatchOutcome<Output> {
     let clock = ContinuousClock()
@@ -279,14 +533,19 @@ private enum CBORLDBatchExecutor {
       let allocatedAfter = policy.allocationByteCounter?()
       let allocated = allocationDelta(before: allocatedBefore, after: allocatedAfter)
       let duration = started.map { nanoseconds(clock.now - $0) }
-      let observation =
-        policy.recordsTiming || policy.allocationByteCounter != nil
-        ? CBORLDBatchObservation(
+      let observation: CBORLDBatchObservation?
+      if policy.recordsObservations {
+        let output = outputByteCount(value)
+        observation = CBORLDBatchObservation(
           durationNanoseconds: duration,
           inputByteCount: inputByteCount,
-          outputByteCount: outputByteCount(value),
+          inputMeasure: inputMeasure,
+          outputByteCount: output?.0,
+          outputMeasure: output?.1,
           allocatedByteCount: allocated)
-        : nil
+      } else {
+        observation = nil
+      }
       return .success(value: value, observation: observation)
     } catch is CancellationError {
       throw CancellationError()
@@ -295,7 +554,7 @@ private enum CBORLDBatchExecutor {
         .init(code: error.code, message: error.message, diagnostic: error.diagnostic))
     } catch {
       return .failure(
-        .init(code: "ERR_BATCH_ITEM", message: String(describing: error), diagnostic: nil))
+        .init(code: .batchItem, message: String(describing: error), diagnostic: nil))
     }
   }
 
@@ -308,7 +567,7 @@ private enum CBORLDBatchExecutor {
       policy.maximumTotalInputBytes >= 0
     else {
       throw CBORLDError(
-        code: "ERR_INVALID_EXECUTION_POLICY",
+        code: .invalidExecutionPolicy,
         message:
           "Batch execution counts, limits, and stride must be positive or zero as documented.")
     }
@@ -346,6 +605,6 @@ private enum CBORLDBatchExecutor {
   }
 
   private static func batchLimit(_ message: String) -> CBORLDError {
-    .init(code: "ERR_BATCH_LIMIT", message: message)
+    .init(code: .batchLimit, message: message)
   }
 }

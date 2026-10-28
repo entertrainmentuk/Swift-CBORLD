@@ -113,7 +113,7 @@ enum CBORLDConstants {
     for (value, id) in map {
       guard result[id] == nil else {
         throw CBORLDError(
-          code: "ERR_INVALID_TYPETABLE",
+          code: .invalidTypeTable,
           message: "Type table contains duplicate identifier \(id).")
       }
       result[id] = value
@@ -126,6 +126,8 @@ enum CBORLDConstants {
 ///
 /// This facade is inspired by Iridium's document-dictionary boundary while
 /// retaining the JavaScript processor's `context` / `url` / `none` table model.
+/// ``registryEntry`` exposes the same configuration as a complete
+/// ``CBORLDRegistryEntry``.
 public struct CBORLDDocumentDictionary: Sendable, Hashable, Codable {
   public let code: UInt64
   public let profileName: String?
@@ -134,6 +136,12 @@ public struct CBORLDDocumentDictionary: Sendable, Hashable, Codable {
   public let typedValues: [String: CBORLDValueTable]
   public let uris: [String: UInt64]
   public let untypedValues: CBORLDValueTable
+  /// The registry entry's declared processing model. `nil` selects the
+  /// default processing model (entry `0` is always uncompressed).
+  public let processingModel: CBORLDProcessingModel?
+  /// Whether the registry entry is provisional. Provisional status does not
+  /// change the wire format and is not part of the dictionary fingerprint.
+  public let provisional: Bool
 
   public init(
     code: UInt64,
@@ -142,7 +150,9 @@ public struct CBORLDDocumentDictionary: Sendable, Hashable, Codable {
     contexts: [String: UInt64] = [:],
     typedValues: [String: CBORLDValueTable] = [:],
     uris: [String: UInt64] = [:],
-    untypedValues: CBORLDValueTable = [:]
+    untypedValues: CBORLDValueTable = [:],
+    processingModel: CBORLDProcessingModel? = nil,
+    provisional: Bool = false
   ) {
     self.code = code
     self.profileName = profileName
@@ -151,6 +161,8 @@ public struct CBORLDDocumentDictionary: Sendable, Hashable, Codable {
     self.typedValues = typedValues
     self.uris = uris
     self.untypedValues = untypedValues
+    self.processingModel = processingModel
+    self.provisional = provisional
   }
 
   public var typeTable: CBORLDTypeTable {
@@ -165,26 +177,44 @@ public struct CBORLDDocumentDictionary: Sendable, Hashable, Codable {
     return result
   }
 
+  /// The processing model used for conversion.
+  public var effectiveProcessingModel: CBORLDProcessingModel {
+    registryEntry.effectiveProcessingModel
+  }
+
   /// Validates identifiers and table structure before the dictionary is used
   /// to encode or decode a document.
   public func validate() throws {
     guard code <= CBORLDConstants.maximumSafeInteger else {
       throw CBORLDError(
-        code: "ERR_INVALID_DICTIONARY",
+        code: .invalidDictionary,
         message: "Dictionary code \(code) exceeds the CBOR-LD safe-integer limit.")
     }
     if code <= 1,
       !contexts.isEmpty || !typedValues.isEmpty || !uris.isEmpty || !untypedValues.isEmpty
     {
       throw CBORLDError(
-        code: "ERR_INVALID_DICTIONARY",
+        code: .invalidDictionary,
         message: "Dictionary codes 0 and 1 cannot carry application tables.")
+    }
+    if code <= 1, processingModel != nil {
+      throw CBORLDError(
+        code: .invalidDictionary,
+        message: "Dictionary codes 0 and 1 cannot declare a processing model.")
     }
     for reserved in ["context", "url", "none"] where typedValues[reserved] != nil {
       throw CBORLDError(
-        code: "ERR_INVALID_DICTIONARY",
+        code: .invalidDictionary,
         message: "Typed values cannot replace the reserved \"\(reserved)\" table.")
     }
+    if let type = CBORLDTypeTables.unsupportedLiteralTypes.first(where: {
+      typedValues[$0] != nil
+    }) {
+      throw CBORLDError(
+        code: .unsupportedLiteralType,
+        message: "Type table must not contain unsupported literal type \"\(type)\".")
+    }
+    try processingModel?.validate()
 
     try validateIdentifiers(contexts, tableName: "context")
     try validateIdentifiers(uris, tableName: "url")
@@ -204,17 +234,58 @@ public struct CBORLDDocumentDictionary: Sendable, Hashable, Codable {
     for identifier in table.values {
       guard identifier <= CBORLDConstants.maximumSafeInteger else {
         throw CBORLDError(
-          code: "ERR_INVALID_DICTIONARY",
+          code: .invalidDictionary,
           message:
             "Identifier \(identifier) in \"\(tableName)\" exceeds the safe-integer limit.")
       }
       guard values.insert(identifier).inserted else {
         throw CBORLDError(
-          code: "ERR_INVALID_DICTIONARY",
+          code: .invalidDictionary,
           message: "Identifier \(identifier) is duplicated in \"\(tableName)\".")
       }
     }
   }
 
   public static let unregistered = CBORLDDocumentDictionary(code: 1)
+
+  private enum CodingKeys: String, CodingKey {
+    case code
+    case profileName
+    case profileVersion
+    case contexts
+    case typedValues
+    case uris
+    case untypedValues
+    case processingModel
+    case provisional
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    code = try container.decode(UInt64.self, forKey: .code)
+    profileName = try container.decodeIfPresent(String.self, forKey: .profileName)
+    profileVersion = try container.decodeIfPresent(String.self, forKey: .profileVersion)
+    contexts = try container.decodeIfPresent([String: UInt64].self, forKey: .contexts) ?? [:]
+    typedValues =
+      try container.decodeIfPresent([String: CBORLDValueTable].self, forKey: .typedValues) ?? [:]
+    uris = try container.decodeIfPresent([String: UInt64].self, forKey: .uris) ?? [:]
+    untypedValues =
+      try container.decodeIfPresent(CBORLDValueTable.self, forKey: .untypedValues) ?? [:]
+    processingModel = try container.decodeIfPresent(
+      CBORLDProcessingModel.self, forKey: .processingModel)
+    provisional = try container.decodeIfPresent(Bool.self, forKey: .provisional) ?? false
+  }
+
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(code, forKey: .code)
+    try container.encodeIfPresent(profileName, forKey: .profileName)
+    try container.encodeIfPresent(profileVersion, forKey: .profileVersion)
+    try container.encode(contexts, forKey: .contexts)
+    try container.encode(typedValues, forKey: .typedValues)
+    try container.encode(uris, forKey: .uris)
+    try container.encode(untypedValues, forKey: .untypedValues)
+    try container.encodeIfPresent(processingModel, forKey: .processingModel)
+    if provisional { try container.encode(provisional, forKey: .provisional) }
+  }
 }

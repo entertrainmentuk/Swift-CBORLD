@@ -1,37 +1,129 @@
 import Foundation
 
-/// Dependency-free incremental SHA-2 used on every supported platform. Keeping
-/// one implementation avoids an Apple/Linux semantic split and preserves true
-/// streaming file digests without buffering the complete input.
+#if canImport(CryptoKit)
+  import CryptoKit
+#endif
+
+/// Incremental SHA-2 behind every digest API.
+///
+/// Apple platforms use CryptoKit, a system framework that runs on the
+/// processor's SHA-2 instructions. Other platforms use
+/// ``PortableSHA2Hasher``, which is dependency-free. The two produce identical
+/// digests; the test suite keeps the portable implementation compiled on every
+/// platform and checks both against each other.
 struct CBORLDSHA2Hasher {
-  private enum Storage {
-    case sha256(SHA256State)
-    case sha512(SHA512State)
-  }
+  #if canImport(CryptoKit)
+    private enum Storage {
+      case sha256(CryptoKit.SHA256)
+      case sha384(CryptoKit.SHA384)
+      case sha512(CryptoKit.SHA512)
+    }
+  #else
+    private typealias Storage = PortableSHA2Hasher
+  #endif
 
   private var storage: Storage
 
+  /// The implementation in use on this platform, for diagnostics.
+  static var implementation: String {
+    #if canImport(CryptoKit)
+      "CryptoKit"
+    #else
+      "portable"
+    #endif
+  }
+
+  init(algorithm: CBORLDHashAlgorithm) {
+    #if canImport(CryptoKit)
+      switch algorithm {
+      case .sha256: storage = .sha256(CryptoKit.SHA256())
+      case .sha384: storage = .sha384(CryptoKit.SHA384())
+      case .sha512: storage = .sha512(CryptoKit.SHA512())
+      }
+    #else
+      storage = PortableSHA2Hasher(algorithm: algorithm)
+    #endif
+  }
+
+  mutating func update(bytes: UnsafeRawBufferPointer) {
+    #if canImport(CryptoKit)
+      switch storage {
+      case .sha256(var hasher):
+        hasher.update(bufferPointer: bytes)
+        storage = .sha256(hasher)
+      case .sha384(var hasher):
+        hasher.update(bufferPointer: bytes)
+        storage = .sha384(hasher)
+      case .sha512(var hasher):
+        hasher.update(bufferPointer: bytes)
+        storage = .sha512(hasher)
+      }
+    #else
+      storage.update(bytes: bytes)
+    #endif
+  }
+
+  mutating func update(data: Data) {
+    data.withUnsafeBytes { update(bytes: $0) }
+  }
+
+  func finalize() -> Data {
+    #if canImport(CryptoKit)
+      switch storage {
+      case .sha256(let hasher): return Data(hasher.finalize())
+      case .sha384(let hasher): return Data(hasher.finalize())
+      case .sha512(let hasher): return Data(hasher.finalize())
+      }
+    #else
+      return storage.finalize()
+    #endif
+  }
+
+  static func hash(_ data: Data, algorithm: CBORLDHashAlgorithm) -> Data {
+    var hasher = Self(algorithm: algorithm)
+    hasher.update(data: data)
+    return hasher.finalize()
+  }
+}
+
+/// Dependency-free FIPS 180-4 SHA-256, SHA-384, and SHA-512.
+///
+/// Blocks are compressed straight from the caller's buffer, the message
+/// schedule lives in a temporary stack allocation, and only a partial block is
+/// retained between updates, so hashing allocates nothing per block.
+struct PortableSHA2Hasher {
+  private enum Core {
+    case sha256(PortableSHA256)
+    case sha512(PortableSHA512)
+  }
+
+  private var core: Core
+
   init(algorithm: CBORLDHashAlgorithm) {
     switch algorithm {
-    case .sha256: storage = .sha256(SHA256State())
-    case .sha384: storage = .sha512(SHA512State(is384: true))
-    case .sha512: storage = .sha512(SHA512State(is384: false))
+    case .sha256: core = .sha256(PortableSHA256())
+    case .sha384: core = .sha512(PortableSHA512(is384: true))
+    case .sha512: core = .sha512(PortableSHA512(is384: false))
+    }
+  }
+
+  mutating func update(bytes: UnsafeRawBufferPointer) {
+    switch core {
+    case .sha256(var state):
+      state.update(bytes)
+      core = .sha256(state)
+    case .sha512(var state):
+      state.update(bytes)
+      core = .sha512(state)
     }
   }
 
   mutating func update(data: Data) {
-    switch storage {
-    case .sha256(var state):
-      state.update(data)
-      storage = .sha256(state)
-    case .sha512(var state):
-      state.update(data)
-      storage = .sha512(state)
-    }
+    data.withUnsafeBytes { update(bytes: $0) }
   }
 
-  mutating func finalize() -> Data {
-    switch storage {
+  func finalize() -> Data {
+    switch core {
     case .sha256(let state): return state.finalize()
     case .sha512(let state): return state.finalize()
     }
@@ -44,12 +136,7 @@ struct CBORLDSHA2Hasher {
   }
 }
 
-private struct SHA256State {
-  private static let initial: [UInt32] = [
-    0x6a09_e667, 0xbb67_ae85, 0x3c6e_f372, 0xa54f_f53a,
-    0x510e_527f, 0x9b05_688c, 0x1f83_d9ab, 0x5be0_cd19,
-  ]
-
+private struct PortableSHA256 {
   private static let constants: [UInt32] = [
     0x428a_2f98, 0x7137_4491, 0xb5c0_fbcf, 0xe9b5_dba5,
     0x3956_c25b, 0x59f1_11f1, 0x923f_82a4, 0xab1c_5ed5,
@@ -69,104 +156,113 @@ private struct SHA256State {
     0x90be_fffa, 0xa450_6ceb, 0xbef9_a3f7, 0xc671_78f2,
   ]
 
-  private var state = Self.initial
-  private var buffer: [UInt8] = []
+  private var state: [UInt32] = [
+    0x6a09_e667, 0xbb67_ae85, 0x3c6e_f372, 0xa54f_f53a,
+    0x510e_527f, 0x9b05_688c, 0x1f83_d9ab, 0x5be0_cd19,
+  ]
+  private var pending = [UInt8](repeating: 0, count: 64)
+  private var pendingCount = 0
   private var byteCount: UInt64 = 0
 
-  mutating func update(_ data: Data) {
-    byteCount &+= UInt64(data.count)
-    consume([UInt8](data))
+  mutating func update(_ bytes: UnsafeRawBufferPointer) {
+    guard let base = bytes.baseAddress, !bytes.isEmpty else { return }
+    byteCount &+= UInt64(bytes.count)
+    var offset = 0
+    if pendingCount > 0 {
+      let taken = Swift.min(64 - pendingCount, bytes.count)
+      pending.withUnsafeMutableBytes { buffer in
+        (buffer.baseAddress! + pendingCount).copyMemory(from: base, byteCount: taken)
+      }
+      pendingCount += taken
+      offset = taken
+      guard pendingCount == 64 else { return }
+      pending.withUnsafeBytes { compress($0.baseAddress!) }
+      pendingCount = 0
+    }
+    while bytes.count - offset >= 64 {
+      compress(base + offset)
+      offset += 64
+    }
+    if offset < bytes.count {
+      let remaining = bytes.count - offset
+      pending.withUnsafeMutableBytes { buffer in
+        buffer.baseAddress!.copyMemory(from: base + offset, byteCount: remaining)
+      }
+      pendingCount = remaining
+    }
   }
 
   func finalize() -> Data {
     var copy = self
-    let bitCount = copy.byteCount &* 8
-    var final = copy.buffer
-    final.append(0x80)
-    while final.count % 64 != 56 { final.append(0) }
-    appendBigEndian(bitCount, to: &final)
-    copy.buffer.removeAll(keepingCapacity: false)
-    copy.consume(final)
+    let bitCount = byteCount &* 8
+    var padding = [UInt8](
+      repeating: 0, count: pendingCount < 56 ? 64 - pendingCount : 128 - pendingCount)
+    padding[0] = 0x80
+    for index in 0..<8 {
+      padding[padding.count - 1 - index] = UInt8(truncatingIfNeeded: bitCount >> UInt64(8 * index))
+    }
+    padding.withUnsafeBytes { copy.update($0) }
     var digest = Data(capacity: 32)
-    for word in copy.state { appendBigEndian(word, to: &digest) }
+    for word in copy.state {
+      digest.append(contentsOf: [
+        UInt8(truncatingIfNeeded: word >> 24), UInt8(truncatingIfNeeded: word >> 16),
+        UInt8(truncatingIfNeeded: word >> 8), UInt8(truncatingIfNeeded: word),
+      ])
+    }
     return digest
   }
 
-  private mutating func consume(_ bytes: [UInt8]) {
-    var index = 0
-    if !buffer.isEmpty {
-      let needed = min(64 - buffer.count, bytes.count)
-      buffer.append(contentsOf: bytes[0..<needed])
-      index += needed
-      if buffer.count == 64 {
-        process(buffer, offset: 0)
-        buffer.removeAll(keepingCapacity: true)
+  private mutating func compress(_ block: UnsafeRawPointer) {
+    withUnsafeTemporaryAllocation(of: UInt32.self, capacity: 64) { schedule in
+      for index in 0..<16 {
+        schedule[index] = UInt32(
+          bigEndian: block.loadUnaligned(fromByteOffset: index &* 4, as: UInt32.self))
       }
+      for index in 16..<64 {
+        let early = schedule[index &- 15]
+        let late = schedule[index &- 2]
+        let sigma0 = rotateRight(early, 7) ^ rotateRight(early, 18) ^ (early >> 3)
+        let sigma1 = rotateRight(late, 17) ^ rotateRight(late, 19) ^ (late >> 10)
+        schedule[index] = schedule[index &- 16] &+ sigma0 &+ schedule[index &- 7] &+ sigma1
+      }
+      var a = state[0]
+      var b = state[1]
+      var c = state[2]
+      var d = state[3]
+      var e = state[4]
+      var f = state[5]
+      var g = state[6]
+      var h = state[7]
+      Self.constants.withUnsafeBufferPointer { constants in
+        for index in 0..<64 {
+          let sum1 = rotateRight(e, 6) ^ rotateRight(e, 11) ^ rotateRight(e, 25)
+          let choice = (e & f) ^ (~e & g)
+          let temporary1 = h &+ sum1 &+ choice &+ constants[index] &+ schedule[index]
+          let sum0 = rotateRight(a, 2) ^ rotateRight(a, 13) ^ rotateRight(a, 22)
+          let majority = (a & b) ^ (a & c) ^ (b & c)
+          h = g
+          g = f
+          f = e
+          e = d &+ temporary1
+          d = c
+          c = b
+          b = a
+          a = temporary1 &+ sum0 &+ majority
+        }
+      }
+      state[0] &+= a
+      state[1] &+= b
+      state[2] &+= c
+      state[3] &+= d
+      state[4] &+= e
+      state[5] &+= f
+      state[6] &+= g
+      state[7] &+= h
     }
-    while index + 64 <= bytes.count {
-      process(bytes, offset: index)
-      index += 64
-    }
-    if index < bytes.count { buffer.append(contentsOf: bytes[index...]) }
-  }
-
-  private mutating func process(_ bytes: [UInt8], offset: Int) {
-    var schedule = [UInt32](repeating: 0, count: 64)
-    for index in 0..<16 {
-      let start = offset + index * 4
-      schedule[index] =
-        UInt32(bytes[start]) << 24 | UInt32(bytes[start + 1]) << 16
-        | UInt32(bytes[start + 2]) << 8 | UInt32(bytes[start + 3])
-    }
-    for index in 16..<64 {
-      let s0 =
-        rotate(schedule[index - 15], 7) ^ rotate(schedule[index - 15], 18)
-        ^ (schedule[index - 15] >> 3)
-      let s1 =
-        rotate(schedule[index - 2], 17) ^ rotate(schedule[index - 2], 19)
-        ^ (schedule[index - 2] >> 10)
-      schedule[index] = schedule[index - 16] &+ s0 &+ schedule[index - 7] &+ s1
-    }
-    var a = state[0]
-    var b = state[1]
-    var c = state[2]
-    var d = state[3]
-    var e = state[4]
-    var f = state[5]
-    var g = state[6]
-    var h = state[7]
-    for index in 0..<64 {
-      let sum1 = rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25)
-      let choice = (e & f) ^ (~e & g)
-      let temporary1 = h &+ sum1 &+ choice &+ Self.constants[index] &+ schedule[index]
-      let sum0 = rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22)
-      let majority = (a & b) ^ (a & c) ^ (b & c)
-      let temporary2 = sum0 &+ majority
-      h = g
-      g = f
-      f = e
-      e = d &+ temporary1
-      d = c
-      c = b
-      b = a
-      a = temporary1 &+ temporary2
-    }
-    state[0] &+= a
-    state[1] &+= b
-    state[2] &+= c
-    state[3] &+= d
-    state[4] &+= e
-    state[5] &+= f
-    state[6] &+= g
-    state[7] &+= h
-  }
-
-  private func rotate(_ value: UInt32, _ amount: UInt32) -> UInt32 {
-    (value >> amount) | (value << (32 - amount))
   }
 }
 
-private struct SHA512State {
+private struct PortableSHA512 {
   private static let initial512: [UInt64] = [
     0x6a09_e667_f3bc_c908, 0xbb67_ae85_84ca_a73b,
     0x3c6e_f372_fe94_f82b, 0xa54f_f53a_5f1d_36f1,
@@ -225,7 +321,8 @@ private struct SHA512State {
   ]
 
   private var state: [UInt64]
-  private var buffer: [UInt8] = []
+  private var pending = [UInt8](repeating: 0, count: 128)
+  private var pendingCount = 0
   private var byteCount: UInt64 = 0
   private let is384: Bool
 
@@ -234,109 +331,112 @@ private struct SHA512State {
     self.state = is384 ? Self.initial384 : Self.initial512
   }
 
-  mutating func update(_ data: Data) {
-    byteCount &+= UInt64(data.count)
-    consume([UInt8](data))
+  mutating func update(_ bytes: UnsafeRawBufferPointer) {
+    guard let base = bytes.baseAddress, !bytes.isEmpty else { return }
+    byteCount &+= UInt64(bytes.count)
+    var offset = 0
+    if pendingCount > 0 {
+      let taken = Swift.min(128 - pendingCount, bytes.count)
+      pending.withUnsafeMutableBytes { buffer in
+        (buffer.baseAddress! + pendingCount).copyMemory(from: base, byteCount: taken)
+      }
+      pendingCount += taken
+      offset = taken
+      guard pendingCount == 128 else { return }
+      pending.withUnsafeBytes { compress($0.baseAddress!) }
+      pendingCount = 0
+    }
+    while bytes.count - offset >= 128 {
+      compress(base + offset)
+      offset += 128
+    }
+    if offset < bytes.count {
+      let remaining = bytes.count - offset
+      pending.withUnsafeMutableBytes { buffer in
+        buffer.baseAddress!.copyMemory(from: base + offset, byteCount: remaining)
+      }
+      pendingCount = remaining
+    }
   }
 
   func finalize() -> Data {
     var copy = self
-    let bitHigh = copy.byteCount >> 61
-    let bitLow = copy.byteCount << 3
-    var final = copy.buffer
-    final.append(0x80)
-    while final.count % 128 != 112 { final.append(0) }
-    appendBigEndian(bitHigh, to: &final)
-    appendBigEndian(bitLow, to: &final)
-    copy.buffer.removeAll(keepingCapacity: false)
-    copy.consume(final)
-    let wordCount = copy.is384 ? 6 : 8
-    var digest = Data(capacity: wordCount * 8)
-    for word in copy.state.prefix(wordCount) { appendBigEndian(word, to: &digest) }
+    // The message length is a 128-bit big-endian bit count.
+    let bitHigh = byteCount >> 61
+    let bitLow = byteCount << 3
+    var padding = [UInt8](
+      repeating: 0, count: pendingCount < 112 ? 128 - pendingCount : 256 - pendingCount)
+    padding[0] = 0x80
+    for index in 0..<8 {
+      padding[padding.count - 1 - index] = UInt8(truncatingIfNeeded: bitLow >> UInt64(8 * index))
+      padding[padding.count - 9 - index] = UInt8(truncatingIfNeeded: bitHigh >> UInt64(8 * index))
+    }
+    padding.withUnsafeBytes { copy.update($0) }
+    var digest = Data(capacity: 64)
+    for word in copy.state.prefix(is384 ? 6 : 8) {
+      for shift in stride(from: 56, through: 0, by: -8) {
+        digest.append(UInt8(truncatingIfNeeded: word >> UInt64(shift)))
+      }
+    }
     return digest
   }
 
-  private mutating func consume(_ bytes: [UInt8]) {
-    var index = 0
-    if !buffer.isEmpty {
-      let needed = min(128 - buffer.count, bytes.count)
-      buffer.append(contentsOf: bytes[0..<needed])
-      index += needed
-      if buffer.count == 128 {
-        process(buffer, offset: 0)
-        buffer.removeAll(keepingCapacity: true)
+  private mutating func compress(_ block: UnsafeRawPointer) {
+    withUnsafeTemporaryAllocation(of: UInt64.self, capacity: 80) { schedule in
+      for index in 0..<16 {
+        schedule[index] = UInt64(
+          bigEndian: block.loadUnaligned(fromByteOffset: index &* 8, as: UInt64.self))
       }
+      for index in 16..<80 {
+        let early = schedule[index &- 15]
+        let late = schedule[index &- 2]
+        let sigma0 = rotateRight(early, 1) ^ rotateRight(early, 8) ^ (early >> 7)
+        let sigma1 = rotateRight(late, 19) ^ rotateRight(late, 61) ^ (late >> 6)
+        schedule[index] = schedule[index &- 16] &+ sigma0 &+ schedule[index &- 7] &+ sigma1
+      }
+      var a = state[0]
+      var b = state[1]
+      var c = state[2]
+      var d = state[3]
+      var e = state[4]
+      var f = state[5]
+      var g = state[6]
+      var h = state[7]
+      Self.constants.withUnsafeBufferPointer { constants in
+        for index in 0..<80 {
+          let sum1 = rotateRight(e, 14) ^ rotateRight(e, 18) ^ rotateRight(e, 41)
+          let choice = (e & f) ^ (~e & g)
+          let temporary1 = h &+ sum1 &+ choice &+ constants[index] &+ schedule[index]
+          let sum0 = rotateRight(a, 28) ^ rotateRight(a, 34) ^ rotateRight(a, 39)
+          let majority = (a & b) ^ (a & c) ^ (b & c)
+          h = g
+          g = f
+          f = e
+          e = d &+ temporary1
+          d = c
+          c = b
+          b = a
+          a = temporary1 &+ sum0 &+ majority
+        }
+      }
+      state[0] &+= a
+      state[1] &+= b
+      state[2] &+= c
+      state[3] &+= d
+      state[4] &+= e
+      state[5] &+= f
+      state[6] &+= g
+      state[7] &+= h
     }
-    while index + 128 <= bytes.count {
-      process(bytes, offset: index)
-      index += 128
-    }
-    if index < bytes.count { buffer.append(contentsOf: bytes[index...]) }
-  }
-
-  private mutating func process(_ bytes: [UInt8], offset: Int) {
-    var schedule = [UInt64](repeating: 0, count: 80)
-    for index in 0..<16 {
-      let start = offset + index * 8
-      var word: UInt64 = 0
-      for byte in bytes[start..<(start + 8)] { word = (word << 8) | UInt64(byte) }
-      schedule[index] = word
-    }
-    for index in 16..<80 {
-      let s0 =
-        rotate(schedule[index - 15], 1) ^ rotate(schedule[index - 15], 8)
-        ^ (schedule[index - 15] >> 7)
-      let s1 =
-        rotate(schedule[index - 2], 19) ^ rotate(schedule[index - 2], 61)
-        ^ (schedule[index - 2] >> 6)
-      schedule[index] = schedule[index - 16] &+ s0 &+ schedule[index - 7] &+ s1
-    }
-    var a = state[0]
-    var b = state[1]
-    var c = state[2]
-    var d = state[3]
-    var e = state[4]
-    var f = state[5]
-    var g = state[6]
-    var h = state[7]
-    for index in 0..<80 {
-      let sum1 = rotate(e, 14) ^ rotate(e, 18) ^ rotate(e, 41)
-      let choice = (e & f) ^ (~e & g)
-      let temporary1 = h &+ sum1 &+ choice &+ Self.constants[index] &+ schedule[index]
-      let sum0 = rotate(a, 28) ^ rotate(a, 34) ^ rotate(a, 39)
-      let majority = (a & b) ^ (a & c) ^ (b & c)
-      let temporary2 = sum0 &+ majority
-      h = g
-      g = f
-      f = e
-      e = d &+ temporary1
-      d = c
-      c = b
-      b = a
-      a = temporary1 &+ temporary2
-    }
-    state[0] &+= a
-    state[1] &+= b
-    state[2] &+= c
-    state[3] &+= d
-    state[4] &+= e
-    state[5] &+= f
-    state[6] &+= g
-    state[7] &+= h
-  }
-
-  private func rotate(_ value: UInt64, _ amount: UInt64) -> UInt64 {
-    (value >> amount) | (value << (64 - amount))
   }
 }
 
-private func appendBigEndian<T: FixedWidthInteger>(_ value: T, to bytes: inout [UInt8]) {
-  for shift in stride(from: T.bitWidth - 8, through: 0, by: -8) {
-    bytes.append(UInt8(truncatingIfNeeded: value >> shift))
-  }
+@inline(__always)
+private func rotateRight(_ value: UInt32, _ amount: UInt32) -> UInt32 {
+  (value >> amount) | (value << (32 &- amount))
 }
 
-private func appendBigEndian<T: FixedWidthInteger>(_ value: T, to data: inout Data) {
-  var value = value.bigEndian
-  withUnsafeBytes(of: &value) { data.append(contentsOf: $0) }
+@inline(__always)
+private func rotateRight(_ value: UInt64, _ amount: UInt64) -> UInt64 {
+  (value >> amount) | (value << (64 &- amount))
 }

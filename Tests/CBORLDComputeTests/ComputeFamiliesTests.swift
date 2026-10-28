@@ -1,7 +1,8 @@
+import CBORLD
 import Foundation
 import XCTest
 
-@testable import CBORLD
+@testable import CBORLDCompute
 
 final class ComputeFamiliesTests: XCTestCase {
   private let cpu = CBORLDCPUComputeProvider()

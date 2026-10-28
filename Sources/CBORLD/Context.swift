@@ -19,21 +19,36 @@ struct ContextEntry: Sendable {
   var termMap: [String: TermDefinition]
 }
 
+/// Per-operation context state: loaded contexts, generated term identifiers,
+/// and the operation's context-loading budget.
 final class ContextLoader {
-  private let documentLoader: CBORLDDocumentLoader?
+  private let resolver: CBORLDContextDocumentLoader?
+  private let policy: CBORLDContextLoadingPolicy
+  /// `false` when the processing model disables semantic compression. Terms
+  /// then keep their string keys, while contexts still supply value types.
+  let generatesTermIdentifiers: Bool
   private var contextMap: [JSONValue: ContextEntry] = [:]
   private var loadingURLs = Set<String>()
   private(set) var termToID = CBORLDConstants.keywords
   private var idToTerm: [UInt64: String]
   private var nextTermID = CBORLDConstants.firstCustomTermID
+  private var termDefinitionCount = 0
+  private var loadedDocumentCount = 0
+  private var loadedByteCount = 0
 
-  init(documentLoader: CBORLDDocumentLoader?) {
-    self.documentLoader = documentLoader
+  init(
+    resolver: CBORLDContextDocumentLoader?,
+    policy: CBORLDContextLoadingPolicy = .init(),
+    generatesTermIdentifiers: Bool = true
+  ) {
+    self.resolver = resolver
+    self.policy = policy
+    self.generatesTermIdentifiers = generatesTermIdentifiers
     self.idToTerm = CBORLDConstants.reversed(CBORLDConstants.keywords)
   }
 
   func id(for term: String, plural: Bool = false) -> CBORValue {
-    guard let id = termToID[term] else { return .string(term) }
+    guard generatesTermIdentifiers, let id = termToID[term] else { return .string(term) }
     return .unsigned(plural ? id + 1 : id)
   }
 
@@ -41,14 +56,21 @@ final class ContextLoader {
     if case .string(let term) = key { return (term, false) }
     guard case .unsigned(let id) = key else {
       throw CBORLDError(
-        code: "ERR_UNKNOWN_CBORLD_TERM_ID",
+        code: .unknownCBORLDTermID,
         message: "A CBOR-LD term key must be a string or unsigned integer.")
+    }
+    guard generatesTermIdentifiers else {
+      throw CBORLDError(
+        code: .unknownCBORLDTermID,
+        message:
+          "Term ID \"\(id)\" is invalid because the processing model disables semantic compression."
+      )
     }
     let plural = id & 1 == 1
     let base = plural ? id - 1 : id
     guard let term = idToTerm[base] else {
       throw CBORLDError(
-        code: "ERR_UNKNOWN_CBORLD_TERM_ID",
+        code: .unknownCBORLDTermID,
         message: "Unknown term ID \"\(id)\" was detected in the CBOR-LD input.")
     }
     return (term, plural)
@@ -60,50 +82,69 @@ final class ContextLoader {
     if let entry = contextMap[contextValue] { return entry }
 
     if case .string(let url) = contextValue {
-      return try await loadRemoteContext(url)
+      return try await loadRemoteContext(url, importDepth: 0)
     }
 
-    return try await add(contextValue, contextURL: nil, cacheKey: contextValue)
+    return try await add(contextValue, contextURL: nil, cacheKey: contextValue, importDepth: 0)
   }
 
-  private func loadRemoteContext(_ url: String) async throws -> ContextEntry {
+  private func loadRemoteContext(_ url: String, importDepth: Int) async throws -> ContextEntry {
     let cacheKey = JSONValue.string(url)
     if let cached = contextMap[cacheKey] { return cached }
     guard loadingURLs.insert(url).inserted else {
       throw CBORLDError(
-        code: "ERR_INVALID_CONTEXT",
+        code: .invalidContext,
         message: "Circular remote context or @import reference detected for \"\(url)\".")
     }
     defer { loadingURLs.remove(url) }
-    guard let documentLoader else {
+    guard let resolver else {
       throw CBORLDError(
-        code: "ERR_NO_DOCUMENT_LOADER",
+        code: .noDocumentLoader,
         message: "A document loader is required to resolve context \"\(url)\".")
     }
-    let document = try await documentLoader(url)
-    guard case .object(let object) = document,
+    guard importDepth <= policy.maximumImportDepth else {
+      throw CBORLDError.resourceLimit(
+        "Context \"\(url)\" is \(importDepth) @import hops deep; the limit is \(policy.maximumImportDepth)."
+      )
+    }
+    try policy.requireAllowed(url: url)
+    guard loadedDocumentCount < policy.maximumContextDocuments else {
+      throw CBORLDError.resourceLimit(
+        "The operation loads more than \(policy.maximumContextDocuments) context documents.")
+    }
+    loadedDocumentCount += 1
+    let request = CBORLDContextRequest(
+      url: url,
+      maximumByteCount: policy.maximumContextBytes - loadedByteCount,
+      maximumRedirects: policy.maximumRedirects,
+      importDepth: importDepth)
+    let loaded = try await resolver(request)
+    try policy.validate(loaded, for: request)
+    loadedByteCount += loaded.byteCount
+    guard case .object(let object) = loaded.document,
       let context = object["@context"]
     else {
       throw CBORLDError(
-        code: "ERR_INVALID_CONTEXT",
+        code: .invalidContext,
         message: "Loaded document \"\(url)\" does not contain @context.")
     }
-    return try await add(context, contextURL: url, cacheKey: cacheKey)
+    return try await add(context, contextURL: url, cacheKey: cacheKey, importDepth: importDepth)
   }
 
   private func add(
     _ contextValue: JSONValue,
     contextURL: String?,
-    cacheKey: JSONValue
+    cacheKey: JSONValue,
+    importDepth: Int
   ) async throws -> ContextEntry {
     guard case .object(var context) = contextValue else {
       throw CBORLDError(
-        code: "ERR_INVALID_CONTEXT",
+        code: .invalidContext,
         message: "A JSON-LD context must be an object or a context URL.")
     }
 
     if let importURL = context["@import"]?.stringValue {
-      let imported = try await loadRemoteContext(importURL)
+      let imported = try await loadRemoteContext(importURL, importDepth: importDepth + 1)
       context = imported.context.merging(context) { _, current in current }
     }
 
@@ -119,7 +160,7 @@ final class ContextLoader {
       case .object(let object): values = object
       default:
         throw CBORLDError(
-          code: "ERR_INVALID_TERM_DEFINITION",
+          code: .invalidTermDefinition,
           message:
             "Invalid JSON-LD term definition for \"\(key)\"; it must be a string or an object.")
       }
@@ -129,6 +170,11 @@ final class ContextLoader {
         propagates: true)
 
       if termToID[key] == nil {
+        guard termDefinitionCount < policy.maximumTermDefinitions else {
+          throw CBORLDError.resourceLimit(
+            "Loaded contexts define more than \(policy.maximumTermDefinitions) terms.")
+        }
+        termDefinitionCount += 1
         termToID[key] = nextTermID
         idToTerm[nextTermID] = key
         nextTermID += 2
@@ -235,7 +281,7 @@ final class ActiveContext {
           if activeDefinition.isProtected {
             if !propertyScope && !definition.semanticallyEquals(activeDefinition) {
               throw CBORLDError(
-                code: "ERR_PROTECTED_TERM_REDEFINITION",
+                code: .protectedTermRedefinition,
                 message: "Unexpected redefinition of protected term \"\(term)\".")
             }
             definition.values = activeDefinition.values
@@ -274,7 +320,7 @@ final class ActiveContext {
       }
       guard definition.id != nil else {
         throw CBORLDError(
-          code: "ERR_INVALID_TERM_DEFINITION",
+          code: .invalidTermDefinition,
           message:
             "Invalid JSON-LD term definition for \"\(key)\"; the @id value could not be determined."
         )
@@ -292,7 +338,7 @@ final class ActiveContext {
     guard possibleCURIE.contains(":") else { return possibleCURIE }
     guard depth < 128 else {
       throw CBORLDError(
-        code: "ERR_INVALID_TERM_DEFINITION",
+        code: .invalidTermDefinition,
         message: "Circular CURIE definition detected for \"\(possibleCURIE)\".")
     }
     let parts = possibleCURIE.split(separator: ":", omittingEmptySubsequences: false)

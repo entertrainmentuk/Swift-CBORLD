@@ -7,24 +7,85 @@ struct TermInfo {
   var definition: TermDefinition
 }
 
+/// A typed-value codec bound to one type by the active processing model.
+enum ValueCodec: Sendable {
+  case url
+  case xsdDate
+  case xsdDateTime
+  case multibase
+  case custom(any CBORLDTypedValueCodec)
+}
+
+/// Immutable, validated state shared by every conversion that uses one
+/// registry entry: tables, their reverse maps, and resolved codec bindings.
 struct SemanticCodecPreparation: Sendable {
   let typeTable: CBORLDTypeTable
   let reverseTypeTable: [String: [UInt64: JSONValue]]
   let legacy: Bool
   let tableTypesEncodedAsBytes: Set<String>
+  let semanticCompression: Bool
+  let codecs: [String: ValueCodec]
+  let registryEntryID: UInt64?
+  let provisional: Bool
+  /// `false` when the payload is exactly the plain CBOR of the document.
+  let performsConversion: Bool
 
-  init(typeTable: CBORLDTypeTable, legacy: Bool) throws {
-    self.typeTable = typeTable
-    self.legacy = legacy
+  init(entry: ResolvedRegistryEntry, codecs userCodecs: [any CBORLDTypedValueCodec]) throws {
+    self.typeTable = entry.typeTable
+    self.legacy = entry.isLegacySingleton
     self.tableTypesEncodedAsBytes =
-      legacy
+      entry.isLegacySingleton
       ? CBORLDConstants.legacyTableTypesEncodedAsBytes
       : CBORLDConstants.tableTypesEncodedAsBytes
     var reverse: [String: [UInt64: JSONValue]] = [:]
-    for (type, table) in typeTable {
+    for (type, table) in entry.typeTable {
       reverse[type] = try CBORLDConstants.reversed(table)
     }
     self.reverseTypeTable = reverse
+    self.semanticCompression = entry.processingModel.semanticCompression
+    self.registryEntryID = entry.registryEntryID
+    self.provisional = entry.provisional
+    self.performsConversion = entry.performsConversion
+
+    let model = entry.processingModel
+    try model.validate()
+    var suppliedCodecs: [CBORLDCodecIdentifier: any CBORLDTypedValueCodec] = [:]
+    for codec in userCodecs {
+      guard !codec.identifier.isBuiltIn else {
+        throw CBORLDError(
+          code: .invalidProcessingModel,
+          message: "A user codec cannot replace the built-in \"\(codec.identifier)\" codec.")
+      }
+      guard !codec.identifier.rawValue.isEmpty else {
+        throw CBORLDError(
+          code: .invalidProcessingModel,
+          message: "A user codec must have a non-empty identifier.")
+      }
+      guard suppliedCodecs.updateValue(codec, forKey: codec.identifier) == nil else {
+        throw CBORLDError(
+          code: .invalidProcessingModel,
+          message: "More than one user codec has the identifier \"\(codec.identifier)\".")
+      }
+    }
+    var resolved: [String: ValueCodec] = [:]
+    for (type, identifier) in model.codecs {
+      switch identifier {
+      case .url: resolved[type] = .url
+      case .xsdDate: resolved[type] = .xsdDate
+      case .xsdDateTime: resolved[type] = .xsdDateTime
+      case .multibase: resolved[type] = .multibase
+      default:
+        guard let codec = suppliedCodecs[identifier] else {
+          throw CBORLDError(
+            code: .unknownCodec,
+            message:
+              "The processing model binds \"\(type)\" to codec \"\(identifier)\", which is neither built in nor supplied."
+          )
+        }
+        resolved[type] = .custom(codec)
+      }
+    }
+    self.codecs = resolved
   }
 }
 
@@ -34,46 +95,52 @@ final class SemanticCodec {
   let contextLoader: ContextLoader
   let legacy: Bool
   let tableTypesEncodedAsBytes: Set<String>
-
-  init(
-    typeTable: CBORLDTypeTable,
-    documentLoader: CBORLDDocumentLoader?,
-    legacy: Bool
-  ) throws {
-    let preparation = try SemanticCodecPreparation(typeTable: typeTable, legacy: legacy)
-    self.typeTable = preparation.typeTable
-    self.contextLoader = ContextLoader(documentLoader: documentLoader)
-    self.legacy = preparation.legacy
-    self.tableTypesEncodedAsBytes = preparation.tableTypesEncodedAsBytes
-    self.reverseTypeTable = preparation.reverseTypeTable
-  }
+  let semanticCompression: Bool
+  let codecs: [String: ValueCodec]
+  let registryEntryID: UInt64?
+  let limits: CBORLDEncodingLimits
+  /// The CBOR depth of the payload root inside its envelope.
+  let payloadDepth: Int
 
   init(
     preparation: SemanticCodecPreparation,
-    documentLoader: CBORLDDocumentLoader?
+    resolver: CBORLDContextDocumentLoader?,
+    contextPolicy: CBORLDContextLoadingPolicy = .init(),
+    limits: CBORLDEncodingLimits = .unbounded,
+    payloadDepth: Int = 0
   ) {
     self.typeTable = preparation.typeTable
-    self.contextLoader = ContextLoader(documentLoader: documentLoader)
+    self.reverseTypeTable = preparation.reverseTypeTable
     self.legacy = preparation.legacy
     self.tableTypesEncodedAsBytes = preparation.tableTypesEncodedAsBytes
-    self.reverseTypeTable = preparation.reverseTypeTable
+    self.semanticCompression = preparation.semanticCompression
+    self.codecs = preparation.codecs
+    self.registryEntryID = preparation.registryEntryID
+    self.limits = limits
+    self.payloadDepth = payloadDepth
+    self.contextLoader = ContextLoader(
+      resolver: resolver,
+      policy: contextPolicy,
+      generatesTermIdentifiers: preparation.semanticCompression)
   }
 
   func compress(_ input: JSONValue) async throws -> CBORValue {
     let initial = ActiveContext(contextLoader: contextLoader)
     switch input {
     case .array(let values):
+      try CBOREncoder.checkContainer(values.count, limits: limits)
       return .array(
         try await asyncMap(values) { value in
           guard case .object(let object) = value else {
-            return try CBORValue.fromJSON(value)
+            return try CBORValue.fromJSON(value, depth: self.payloadDepth + 1, limits: self.limits)
           }
-          return try await self.compressObject(object, activeContext: initial)
+          return try await self.compressObject(
+            object, activeContext: initial, depth: self.payloadDepth + 1)
         })
     case .object(let object):
-      return try await compressObject(object, activeContext: initial)
+      return try await compressObject(object, activeContext: initial, depth: payloadDepth)
     default:
-      return try CBORValue.fromJSON(input)
+      return try CBORValue.fromJSON(input, depth: payloadDepth, limits: limits)
     }
   }
 
@@ -95,24 +162,31 @@ final class SemanticCodec {
 
   private func compressObject(
     _ input: [String: JSONValue],
-    activeContext: ActiveContext
+    activeContext: ActiveContext,
+    depth: Int
   ) async throws -> CBORValue {
+    guard depth <= limits.maximumNestingDepth else { throw CBOREncoder.nestingLimit(limits) }
+    try CBOREncoder.checkContainer(input.count, limits: limits)
     var active = try await activeContext.applyingEmbeddedContexts(to: input)
     var entries: [CBORMapEntry] = []
 
     if let context = input["@context"] {
       let values = context.arrayValue ?? [context]
-      let encoded = try values.map(encodeContext)
+      let valueDepth = depth + (context.arrayValue == nil ? 1 : 2)
+      let encoded = try values.map { try encodeContext($0, depth: valueDepth) }
+      let key: CBORValue =
+        semanticCompression ? .unsigned(context.arrayValue == nil ? 0 : 1) : .string("@context")
       entries.append(
         CBORMapEntry(
-          key: .unsigned(context.arrayValue == nil ? 0 : 1),
+          key: key,
           value: context.arrayValue == nil ? encoded[0] : .array(encoded)))
     }
 
     active = try await active.applyingTypeScopedContexts(
       objectTypes(in: input, activeContext: active))
 
-    for term in input.keys.sorted() where term != "@context" {
+    for (index, term) in input.keys.sorted().enumerated() where term != "@context" {
+      try CBOREncoder.checkCancellation(at: index, limits: limits)
       guard let value = input[term] else { continue }
       let values = value.arrayValue ?? [value]
       let plural = value.arrayValue != nil
@@ -122,17 +196,30 @@ final class SemanticCodec {
         plural: plural,
         definition: active.definition(for: term))
       let valueContext = try await active.applyingPropertyScopedContext(for: term)
+      let valueDepth = depth + (plural ? 2 : 1)
+      if plural { try CBOREncoder.checkContainer(values.count, limits: limits) }
       let converted = try await asyncMap(values) { value in
         try await self.compressValue(
           value,
           termType: termInfo.definition.type,
           termInfo: termInfo,
-          activeContext: valueContext)
+          activeContext: valueContext,
+          depth: valueDepth)
       }
-      entries.append(
-        CBORMapEntry(
-          key: termInfo.key,
-          value: plural ? .array(converted) : converted[0]))
+      let encodedValue: CBORValue
+      if !plural {
+        encodedValue = converted[0]
+      } else if semanticCompression {
+        encodedValue = .array(converted)
+      } else {
+        encodedValue = try await unambiguousPluralValue(
+          original: values,
+          converted: converted,
+          termInfo: termInfo,
+          activeContext: valueContext,
+          depth: valueDepth)
+      }
+      entries.append(CBORMapEntry(key: termInfo.key, value: encodedValue))
     }
     return .map(entries)
   }
@@ -141,23 +228,116 @@ final class SemanticCodec {
     _ value: JSONValue,
     termType: String?,
     termInfo: TermInfo,
-    activeContext: ActiveContext
+    activeContext: ActiveContext,
+    depth: Int,
+    usesCodecs: Bool = true
   ) async throws -> CBORValue {
+    guard depth <= limits.maximumNestingDepth else { throw CBOREncoder.nestingLimit(limits) }
     if value == .null { return .null }
     switch value {
     case .array(let values):
+      try CBOREncoder.checkContainer(values.count, limits: limits)
       return .array(
         try await asyncMap(values) {
           try await self.compressValue(
             $0,
             termType: termType,
             termInfo: termInfo,
-            activeContext: activeContext)
+            activeContext: activeContext,
+            depth: depth + 1,
+            usesCodecs: usesCodecs)
         })
     case .object(let object):
-      return try await compressObject(object, activeContext: activeContext)
+      return try await compressObject(object, activeContext: activeContext, depth: depth)
     default:
-      return try encodeScalar(value, termType: termType, termInfo: termInfo)
+      return try encodeScalar(
+        value, termType: termType, termInfo: termInfo, usesCodecs: usesCodecs)
+    }
+  }
+
+  /// Without semantic compression a plural value has no plural key marker, so
+  /// the decoder first offers the whole array to the type's codec. This keeps
+  /// that from succeeding: when the codec could claim the converted array, the
+  /// elements are carried without codecs instead, and a value that remains
+  /// ambiguous is refused rather than encoded into bytes that decode
+  /// differently.
+  private func unambiguousPluralValue(
+    original: [JSONValue],
+    converted: [CBORValue],
+    termInfo: TermInfo,
+    activeContext: ActiveContext,
+    depth: Int
+  ) async throws -> CBORValue {
+    let termType = termInfo.definition.type
+    let candidate = CBORValue.array(converted)
+    if !claimsAsSingleValue(candidate, termType: termType, termInfo: termInfo) {
+      return candidate
+    }
+    var fallback: [CBORValue] = []
+    fallback.reserveCapacity(original.count)
+    for value in original {
+      fallback.append(
+        try await compressValue(
+          value,
+          termType: termType,
+          termInfo: termInfo,
+          activeContext: activeContext,
+          depth: depth,
+          usesCodecs: false))
+    }
+    let fallbackValue = CBORValue.array(fallback)
+    guard !claimsAsSingleValue(fallbackValue, termType: termType, termInfo: termInfo),
+      zip(original, fallback).allSatisfy({
+        restoresExactly($0, from: $1, termType: termType, termInfo: termInfo)
+      })
+    else {
+      throw CBORLDError(
+        code: .ambiguousValue,
+        message:
+          "The values of term \"\(termInfo.term)\" cannot be represented unambiguously without semantic compression."
+      )
+    }
+    return fallbackValue
+  }
+
+  /// Whether the decoder would read `value` as one compressed scalar. A value
+  /// the codec rejects with an error counts as claimed, because it would not
+  /// decode element by element either.
+  private func claimsAsSingleValue(
+    _ value: CBORValue,
+    termType: String?,
+    termInfo: TermInfo
+  ) -> Bool {
+    do {
+      return try decodeScalar(value, termType: termType, termInfo: termInfo) != nil
+    } catch {
+      return true
+    }
+  }
+
+  /// Checks the decoder's element-wise path for a codec-free plural element.
+  /// Objects always take the object path and are restored by construction.
+  private func restoresExactly(
+    _ original: JSONValue,
+    from encoded: CBORValue,
+    termType: String?,
+    termInfo: TermInfo
+  ) -> Bool {
+    switch (original, encoded) {
+    case (_, .map), (.null, .null):
+      return true
+    case (.array(let values), .array(let elements)):
+      return values.count == elements.count
+        && !claimsAsSingleValue(encoded, termType: termType, termInfo: termInfo)
+        && zip(values, elements).allSatisfy {
+          restoresExactly($0, from: $1, termType: termType, termInfo: termInfo)
+        }
+    default:
+      guard
+        let restored = try? decodeScalar(encoded, termType: termType, termInfo: termInfo)
+          ?? encoded.toJSON()
+      else { return false }
+      return restored == original
     }
   }
 
@@ -166,30 +346,46 @@ final class SemanticCodec {
     activeContext: ActiveContext
   ) async throws -> JSONValue {
     var output: [String: JSONValue] = [:]
-    let singularContexts = input.values(forUnsignedKey: 0)
-    let pluralContexts = input.values(forUnsignedKey: 1)
-    guard singularContexts.count <= 1, pluralContexts.count <= 1 else {
-      throw CBORLDError(
-        code: "ERR_INVALID_ENCODED_CONTEXT",
-        message: "The CBOR-LD input contains a duplicate encoded context key.")
-    }
-    let singularContext = singularContexts.first
-    let pluralContext = pluralContexts.first
-    if singularContext != nil, pluralContext != nil {
-      throw CBORLDError(
-        code: "ERR_INVALID_ENCODED_CONTEXT",
-        message: "Both singular and plural context IDs were found in the CBOR-LD input.")
-    }
-    if let singularContext {
-      output["@context"] = try decodeContext(singularContext)
-    }
-    if let pluralContext {
-      guard case .array(let contexts) = pluralContext else {
+    if semanticCompression {
+      let singularContexts = input.values(forUnsignedKey: 0)
+      let pluralContexts = input.values(forUnsignedKey: 1)
+      guard singularContexts.count <= 1, pluralContexts.count <= 1 else {
         throw CBORLDError(
-          code: "ERR_INVALID_ENCODED_CONTEXT",
-          message: "Encoded plural context value must be an array.")
+          code: .invalidEncodedContext,
+          message: "The CBOR-LD input contains a duplicate encoded context key.")
       }
-      output["@context"] = .array(try contexts.map(decodeContext))
+      let singularContext = singularContexts.first
+      let pluralContext = pluralContexts.first
+      if singularContext != nil, pluralContext != nil {
+        throw CBORLDError(
+          code: .invalidEncodedContext,
+          message: "Both singular and plural context IDs were found in the CBOR-LD input.")
+      }
+      if let singularContext {
+        output["@context"] = try decodeContext(singularContext)
+      }
+      if let pluralContext {
+        guard case .array(let contexts) = pluralContext else {
+          throw CBORLDError(
+            code: .invalidEncodedContext,
+            message: "Encoded plural context value must be an array.")
+        }
+        output["@context"] = .array(try contexts.map(decodeContext))
+      }
+    } else {
+      let contexts = input.values(forStringKey: "@context")
+      guard contexts.count <= 1 else {
+        throw CBORLDError(
+          code: .invalidEncodedContext,
+          message: "The CBOR-LD input contains a duplicate @context key.")
+      }
+      if let context = contexts.first {
+        if case .array(let values) = context {
+          output["@context"] = .array(try values.map(decodeContext))
+        } else {
+          output["@context"] = try decodeContext(context)
+        }
+      }
     }
 
     var active = try await activeContext.applyingEmbeddedContexts(to: output)
@@ -198,11 +394,11 @@ final class SemanticCodec {
 
     var termEntries: [(TermInfo, CBORValue)] = []
     var seenTerms = Set<String>()
-    for entry in input where !entry.key.isUnsigned(0) && !entry.key.isUnsigned(1) {
+    for entry in input where !isEncodedContextKey(entry.key) {
       let resolved = try contextLoader.term(for: entry.key)
       guard seenTerms.insert(resolved.term).inserted else {
         throw CBORLDError(
-          code: "ERR_INVALID_INPUT",
+          code: .invalidInput,
           message: "The CBOR-LD input contains duplicate term \"\(resolved.term)\".")
       }
       termEntries.append(
@@ -221,7 +417,7 @@ final class SemanticCodec {
       if termInfo.plural {
         guard case .array(let array) = value else {
           throw CBORLDError(
-            code: "ERR_INVALID_INPUT",
+            code: .invalidInput,
             message: "Plural term \"\(termInfo.term)\" must contain a CBOR array.")
         }
         values = array
@@ -239,6 +435,11 @@ final class SemanticCodec {
       output[termInfo.term] = termInfo.plural ? .array(converted) : converted[0]
     }
     return .object(output)
+  }
+
+  private func isEncodedContextKey(_ key: CBORValue) -> Bool {
+    if semanticCompression { return key.isUnsigned(0) || key.isUnsigned(1) }
+    return key.stringValue == "@context"
   }
 
   private func decompressValue(
@@ -288,18 +489,31 @@ final class SemanticCodec {
   ) throws -> Set<String> {
     var result = Set<String>()
     for typeTerm in activeContext.typeTerms {
-      let singularKey = contextLoader.id(for: typeTerm)
-      guard let baseID = singularKey.unsignedValue else { continue }
-      guard
-        let value = input.firstValue(forUnsignedKey: baseID)
-          ?? input.firstValue(forUnsignedKey: baseID + 1)
-      else { continue }
       let termInfo = TermInfo(
         term: typeTerm,
-        key: singularKey,
+        key: contextLoader.id(for: typeTerm),
         plural: false,
         definition: activeContext.definition(for: typeTerm))
-      for encoded in value.arrayValue ?? [value] {
+      let encodedTypes: [CBORValue]
+      if semanticCompression {
+        guard let baseID = termInfo.key.unsignedValue,
+          let value = input.firstValue(forUnsignedKey: baseID)
+            ?? input.firstValue(forUnsignedKey: baseID + 1)
+        else { continue }
+        // Matches the reference processor, which inspects every element of an
+        // array value.
+        encodedTypes = value.arrayValue ?? [value]
+      } else {
+        guard let value = input.first(where: { $0.key.stringValue == typeTerm })?.value else {
+          continue
+        }
+        // String keys carry no plural marker; a compressed single type such
+        // as `[2, "example.com/Type"]` must not be split into elements.
+        encodedTypes =
+          claimsAsSingleValue(value, termType: "@vocab", termInfo: termInfo)
+          ? [value] : (value.arrayValue ?? [value])
+      }
+      for encoded in encodedTypes {
         if let decoded = try decodeScalar(
           encoded, termType: "@vocab", termInfo: termInfo),
           let type = decoded.stringValue
@@ -313,20 +527,20 @@ final class SemanticCodec {
     return result
   }
 
-  private func encodeContext(_ value: JSONValue) throws -> CBORValue {
+  private func encodeContext(_ value: JSONValue, depth: Int) throws -> CBORValue {
     if case .string(let context) = value,
       let id = typeTable["context"]?[.string(context)]
     {
       return .unsigned(id)
     }
-    return try CBORValue.fromJSON(value)
+    return try CBORValue.fromJSON(value, depth: depth, limits: limits)
   }
 
   private func decodeContext(_ value: CBORValue) throws -> JSONValue {
     if case .unsigned(let id) = value {
       guard let context = reverseTypeTable["context"]?[id] else {
         throw CBORLDError(
-          code: "ERR_UNDEFINED_COMPRESSED_CONTEXT",
+          code: .undefinedCompressedContext,
           message: "Undefined compressed context \"\(id)\".")
       }
       return context
@@ -347,12 +561,14 @@ final class SemanticCodec {
   private func encodeScalar(
     _ value: JSONValue,
     termType: String?,
-    termInfo: TermInfo
+    termInfo: TermInfo,
+    usesCodecs: Bool = true
   ) throws -> CBORValue {
     let tableType = tableType(termInfo: termInfo, termType: termType)
-    if tableType == "url", value.stringValue == nil {
+    let codec = usesCodecs ? codecs[tableType] : nil
+    if case .url = codec, value.stringValue == nil {
       throw CBORLDError(
-        code: "ERR_UNSUPPORTED_JSON_TYPE",
+        code: .unsupportedJSONType,
         message: "Invalid value type for URL; expected a string.")
     }
 
@@ -367,19 +583,49 @@ final class SemanticCodec {
       }
     }
 
-    switch tableType {
-    case "url":
-      if let encoded = try encodeURL(value.stringValue!) { return encoded }
-    case "https://w3id.org/security#multibase":
-      if let encoded = try encodeMultibase(value) { return encoded }
-    case "http://www.w3.org/2001/XMLSchema#date":
-      if let encoded = DateCodec.encodeDate(value) { return encoded }
-    case "http://www.w3.org/2001/XMLSchema#dateTime":
-      if let encoded = DateCodec.encodeDateTime(value) { return encoded }
-    default:
-      break
+    if let codec,
+      let encoded = try encode(
+        value, with: codec, tableType: tableType, termType: termType, termInfo: termInfo)
+    {
+      return encoded
     }
     return try CBORValue.fromJSON(value)
+  }
+
+  private func encode(
+    _ value: JSONValue,
+    with codec: ValueCodec,
+    tableType: String,
+    termType: String?,
+    termInfo: TermInfo
+  ) throws -> CBORValue? {
+    switch codec {
+    case .url:
+      guard let string = value.stringValue else { return nil }
+      return try encodeURL(string)
+    case .multibase:
+      return try encodeMultibase(value)
+    case .xsdDate:
+      return DateCodec.encodeDate(value)
+    case .xsdDateTime:
+      return DateCodec.encodeDateTime(value)
+    case .custom(let codec):
+      let context = CBORLDCodecContext(
+        type: tableType, term: termInfo.term, registryEntryID: registryEntryID)
+      guard let item = try codec.encode(value, context: context) else { return nil }
+      let encoded = item.cborValue
+      // Verify through the complete decode path, including type-table
+      // lookups, so a codec cannot emit bytes that decode differently.
+      let restored = try? decodeScalar(encoded, termType: termType, termInfo: termInfo)
+      guard let restored, restored == value else {
+        throw CBORLDError(
+          code: .codecNotInvertible,
+          message:
+            "Codec \"\(codec.identifier)\" encoded a value of term \"\(termInfo.term)\" that does not decode to the original value."
+        )
+      }
+      return encoded
+    }
   }
 
   private func decodeScalar(
@@ -410,7 +656,7 @@ final class SemanticCodec {
         guard let decoded else {
           if !legacyTermCollision {
             throw CBORLDError(
-              code: "ERR_UNKNOWN_COMPRESSED_VALUE",
+              code: .unknownCompressedValue,
               message: "Compressed value \"\(id.map(String.init) ?? "negative")\" not found.")
           }
           return try decodeURL(value).map(JSONValue.string)
@@ -422,22 +668,38 @@ final class SemanticCodec {
       }
     }
 
-    switch tableType {
-    case "url":
-      if let decoded = try decodeURL(value) { return .string(decoded) }
-    case "https://w3id.org/security#multibase":
-      if let decoded = try decodeMultibase(value) { return .string(decoded) }
-    case "http://www.w3.org/2001/XMLSchema#date":
-      if let decoded = DateCodec.decodeDate(value) { return .string(decoded) }
-    case "http://www.w3.org/2001/XMLSchema#dateTime":
-      if let decoded = DateCodec.decodeDateTime(value) { return .string(decoded) }
-    default:
-      break
+    if let codec = codecs[tableType],
+      let decoded = try decode(value, with: codec, tableType: tableType, termInfo: termInfo)
+    {
+      return decoded
     }
 
     switch value {
     case .array, .map: return nil
     default: return try value.toJSON()
+    }
+  }
+
+  private func decode(
+    _ value: CBORValue,
+    with codec: ValueCodec,
+    tableType: String,
+    termInfo: TermInfo
+  ) throws -> JSONValue? {
+    switch codec {
+    case .url:
+      return try decodeURL(value).map(JSONValue.string)
+    case .multibase:
+      return try decodeMultibase(value).map(JSONValue.string)
+    case .xsdDate:
+      return DateCodec.decodeDate(value).map(JSONValue.string)
+    case .xsdDateTime:
+      return DateCodec.decodeDateTime(value).map(JSONValue.string)
+    case .custom(let codec):
+      return try codec.decode(
+        CBORLDDataItem(value),
+        context: CBORLDCodecContext(
+          type: tableType, term: termInfo.term, registryEntryID: registryEntryID))
     }
   }
 
@@ -584,7 +846,7 @@ final class SemanticCodec {
 
   private func unknownCompressedURL(_ value: CBORValue) -> CBORLDError {
     .init(
-      code: "ERR_UNKNOWN_COMPRESSED_VALUE",
+      code: .unknownCompressedValue,
       message: "Unknown or malformed compressed URL \"\(value)\".")
   }
 }
@@ -618,6 +880,10 @@ extension Array where Element == CBORMapEntry {
   fileprivate func values(forUnsignedKey key: UInt64) -> [CBORValue] {
     compactMap { $0.key.isUnsigned(key) ? $0.value : nil }
   }
+
+  fileprivate func values(forStringKey key: String) -> [CBORValue] {
+    compactMap { $0.key.stringValue == key ? $0.value : nil }
+  }
 }
 
 private func asyncMap<T, U>(
@@ -636,7 +902,7 @@ private func asyncMap<T, U>(
 private func bytes(fromUnsigned value: UInt64) throws -> Data {
   guard value < CBORLDConstants.maximumSafeInteger else {
     throw CBORLDError(
-      code: "ERR_COMPRESSION_VALUE_TOO_LARGE",
+      code: .compressionValueTooLarge,
       message: "Compression value \"\(value)\" too large.")
   }
   if value < 0xff { return Data([UInt8(value)]) }
@@ -648,7 +914,7 @@ private func bytes(fromUnsigned value: UInt64) throws -> Data {
 private func bytes(fromSigned value: Int64) throws -> Data {
   guard value < Int64(CBORLDConstants.maximumSafeInteger) else {
     throw CBORLDError(
-      code: "ERR_COMPRESSION_VALUE_TOO_LARGE",
+      code: .compressionValueTooLarge,
       message: "Compression value \"\(value)\" too large.")
   }
   // Preserve the JavaScript processor's width thresholds and two's-complement
@@ -666,7 +932,7 @@ private func unsigned(from data: Data) throws -> UInt64 {
   case 4: return UInt64(try integer(from: data) as UInt32)
   default:
     throw CBORLDError(
-      code: "ERR_UNRECOGNIZED_BYTES",
+      code: .unrecognizedBytes,
       message: "Improperly formatted unsigned integer bytes.")
   }
 }
@@ -680,13 +946,13 @@ private func signed(from data: Data) throws -> Int64 {
     let value: Int64 = try integer(from: data)
     guard value <= Int64(CBORLDConstants.maximumSafeInteger) else {
       throw CBORLDError(
-        code: "ERR_COMPRESSION_VALUE_TOO_LARGE",
+        code: .compressionValueTooLarge,
         message: "Compression value \"\(value)\" too large.")
     }
     return value
   default:
     throw CBORLDError(
-      code: "ERR_UNRECOGNIZED_BYTES",
+      code: .unrecognizedBytes,
       message: "Improperly formatted signed integer bytes.")
   }
 }

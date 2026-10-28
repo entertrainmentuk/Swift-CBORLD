@@ -19,7 +19,8 @@ enum HalfPrecision {
     case 0x1f:
       return Double(bitPattern: (negative ? 1 << 63 : 0) | 0x7ff8_0000_0000_0000 | fraction << 42)
     default:
-      let magnitude = Double(sign: .plus, exponent: exponent - 15, significand: 1 + Double(fraction) / 1024)
+      let magnitude = Double(
+        sign: .plus, exponent: exponent - 15, significand: 1 + Double(fraction) / 1024)
       return negative ? -magnitude : magnitude
     }
   }

@@ -19,22 +19,9 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - name: Emit public symbol graph
-        run: |
-          mkdir -p .build/public-symbols
-          swift build --target CBORLD \
-            -Xswiftc -emit-symbol-graph \
-            -Xswiftc -emit-symbol-graph-dir \
-            -Xswiftc .build/public-symbols
-      - name: Build DocC site
-        run: >-
-          xcrun docc convert Sources/CBORLD/CBORLD.docc
-          --additional-symbol-graph-dir .build/public-symbols
-          --output-path docs/api
-          --hosting-base-path Swift-CBORLD/api
-          --warnings-as-errors
-          --fallback-display-name Swift-CBORLD
-          --fallback-bundle-identifier io.github.entertrainment.swift-cborld
+      # CBORLD is published at api/ and CBORLDCompute at api-compute/.
+      - name: Build DocC references
+        run: Scripts/build-docs.sh docs
       - name: Add published evidence
         run: |
           mkdir -p docs/evidence

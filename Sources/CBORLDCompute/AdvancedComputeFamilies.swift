@@ -1,3 +1,4 @@
+import CBORLD
 import Foundation
 
 // MARK: - Whole-document transformation
@@ -60,7 +61,7 @@ public struct CBORLDWholeDocumentTransformConfiguration: Sendable, Codable {
       || !dictionary.uris.isEmpty || !dictionary.untypedValues.isEmpty
     if hasApplicationDictionary, requiredDictionaryFingerprint == nil {
       throw CBORLDError(
-        code: "ERR_UNPINNED_DICTIONARY",
+        code: .unpinnedDictionary,
         message: "Whole-document family requests must pin application dictionaries.")
     }
     if let requiredDictionaryFingerprint {
@@ -70,7 +71,7 @@ public struct CBORLDWholeDocumentTransformConfiguration: Sendable, Codable {
     for (url, document) in contextDocuments {
       guard let expected = requiredContextFingerprints[url] else {
         throw CBORLDError(
-          code: "ERR_UNPINNED_CONTEXT",
+          code: .unpinnedContext,
           message: "Materialized context \"\(url)\" has no required fingerprint.")
       }
       try CBORLD.verifyContext(document, against: expected)
@@ -78,7 +79,7 @@ public struct CBORLDWholeDocumentTransformConfiguration: Sendable, Codable {
     for (url, fingerprint) in requiredContextFingerprints {
       guard fingerprint.domain == .contextDocument, fingerprint.version == 1 else {
         throw CBORLDError(
-          code: "ERR_INVALID_DIGEST",
+          code: .invalidDigest,
           message: "Context pin for \"\(url)\" must be a version 1 context-document digest.")
       }
     }
@@ -130,7 +131,7 @@ public struct CBORLDWholeDocumentTransformRequest: Sendable, Codable {
       let inputByteCount = try jsonLDDocument?.data().count ?? 0
       guard inputByteCount <= configuration.decodingLimits.maximumInputBytes else {
         throw CBORLDError(
-          code: "ERR_RESOURCE_LIMIT",
+          code: .resourceLimit,
           message: "JSON-LD input exceeds the whole-document input limit.")
       }
     case .decode:
@@ -140,7 +141,7 @@ public struct CBORLDWholeDocumentTransformRequest: Sendable, Codable {
       }
       guard cborldBytes.count <= configuration.decodingLimits.maximumInputBytes else {
         throw CBORLDError(
-          code: "ERR_RESOURCE_LIMIT",
+          code: .resourceLimit,
           message: "CBOR-LD input exceeds the whole-document input limit.")
       }
     }
@@ -197,7 +198,7 @@ public struct CBORLDWholeDocumentTransformResult: Sendable, Codable {
           throw invalidComputeOutput("Whole-document encode inspection metadata is inconsistent.")
         }
       } catch {
-        if let error = error as? CBORLDError, error.code == "ERR_INVALID_COMPUTE_OUTPUT" {
+        if let error = error as? CBORLDError, error.code == .invalidComputeOutput {
           throw error
         }
         throw invalidComputeOutput(
@@ -222,7 +223,7 @@ public struct CBORLDWholeDocumentTransformResult: Sendable, Codable {
           throw invalidComputeOutput("Whole-document decode inspection metadata is inconsistent.")
         }
       } catch {
-        if let error = error as? CBORLDError, error.code == "ERR_INVALID_COMPUTE_OUTPUT" {
+        if let error = error as? CBORLDError, error.code == .invalidComputeOutput {
           throw error
         }
         throw invalidComputeOutput(
@@ -313,10 +314,10 @@ public struct CBORLDCDDLValidationRequest: Sendable, Hashable, Codable {
       throw CBORLDError.invalidInput("A CDDL work item requires a non-empty schema.")
     }
     guard schemaByteCount <= limits.maximumSchemaBytes else {
-      throw CBORLDError(code: "ERR_RESOURCE_LIMIT", message: "CDDL schema exceeds its limit.")
+      throw CBORLDError(code: .resourceLimit, message: "CDDL schema exceeds its limit.")
     }
     guard document.count <= limits.maximumDocumentBytes else {
-      throw CBORLDError(code: "ERR_RESOURCE_LIMIT", message: "CDDL document exceeds its limit.")
+      throw CBORLDError(code: .resourceLimit, message: "CDDL document exceeds its limit.")
     }
     if let rootRule, rootRule.isEmpty {
       throw CBORLDError.invalidInput("CDDL rootRule must be nil or non-empty.")
@@ -524,15 +525,18 @@ extension CBORLDCPUComputeProvider {
         guard let document = request.jsonLDDocument else {
           throw CBORLDError.invalidInput("Missing JSON-LD encode input.")
         }
+        // The output bound is enforced while bytes are produced; the writer
+        // refuses to grow past it rather than checking a finished buffer.
         let encoder = CBORLDEncoder(
           format: configuration.format,
           serializationMode: configuration.serializationMode,
           dictionary: configuration.dictionary,
-          documentLoader: contextRegistry.documentLoader)
+          documentLoader: contextRegistry.documentLoader,
+          limits: CBORLDEncodingLimits(maximumOutputBytes: configuration.maximumOutputBytes))
         let bytes = try await encoder.encode(document)
         guard bytes.count <= configuration.maximumOutputBytes else {
           throw CBORLDError(
-            code: "ERR_RESOURCE_LIMIT",
+            code: .resourceLimit,
             message: "CBOR-LD output exceeds the whole-document output limit.")
         }
         results.append(
@@ -563,7 +567,7 @@ extension CBORLDCPUComputeProvider {
         let outputByteCount = try document.data().count
         guard outputByteCount <= configuration.maximumOutputBytes else {
           throw CBORLDError(
-            code: "ERR_RESOURCE_LIMIT",
+            code: .resourceLimit,
             message: "JSON-LD output exceeds the whole-document output limit.")
         }
         results.append(
@@ -583,7 +587,7 @@ extension CBORLDCPUComputeProvider {
   ) async throws -> [CBORLDCDDLValidationResult] {
     guard let cddlOracle else {
       throw CBORLDError(
-        code: "ERR_COMPUTE_FAMILY_UNAVAILABLE",
+        code: .computeFamilyUnavailable,
         message: "CDDL validation requires an explicitly injected independent CPU oracle.")
     }
     var results: [CBORLDCDDLValidationResult] = []

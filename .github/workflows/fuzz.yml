@@ -1,0 +1,57 @@
+name: Property tests
+
+# The ordinary suite runs every property with 300 cases from a fixed seed.
+# This workflow runs far more cases from a fresh seed each night. A failure
+# message names the seed and case; rerun it locally with
+#   CBORLD_FUZZ_SEED=<seed> CBORLD_FUZZ_ITERATIONS=<n> swift test --filter <test>
+# and reduce the case to a permanent fixture.
+
+on:
+  schedule:
+    - cron: "29 2 * * *"
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: Cases per property
+        default: "20000"
+      seed:
+        description: Hexadecimal seed to replay (empty for a fresh seed)
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  properties:
+    name: Properties / Linux
+    runs-on: ubuntu-24.04
+    container: swift:6.4-noble
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Choose the seed
+        id: seed
+        env:
+          REQUESTED_SEED: ${{ inputs.seed }}
+        run: |
+          seed="${REQUESTED_SEED#0x}"
+          if [ -z "$seed" ]; then
+            seed="$(od -An -N8 -tx8 /dev/urandom | tr -d ' \n')"
+          fi
+          case "$seed" in
+          *[!0-9a-fA-F]* | "")
+            echo "::error::The seed must be hexadecimal."
+            exit 1
+            ;;
+          esac
+          echo "seed=$seed" >> "$GITHUB_OUTPUT"
+          echo "Property-test seed: \`$seed\`" >> "$GITHUB_STEP_SUMMARY"
+      - name: Release build
+        run: swift build -c release --build-tests
+      - name: Properties and stream parity
+        env:
+          CBORLD_FUZZ_SEED: ${{ steps.seed.outputs.seed }}
+          CBORLD_FUZZ_ITERATIONS: ${{ inputs.iterations || '20000' }}
+        run: >-
+          swift test -c release --disable-swift-testing --skip-build
+          --filter 'PropertyTests|StreamingTests'
