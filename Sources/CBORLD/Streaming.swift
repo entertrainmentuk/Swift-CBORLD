@@ -787,7 +787,7 @@ struct IncrementalCBORReader {
       if simple < 24 { noteRequiredModeViolation(at: offset) }
       value = .simple(simple)
     case 25:
-      value = .double(Double(Float16(bitPattern: UInt16(argument))))
+      value = .double(HalfPrecision.double(fromBits: UInt16(argument)))
       try checkFloat(info: info, bits: argument, offset: offset)
     case 26:
       value = .double(Double(Float(bitPattern: UInt32(argument))))
@@ -978,14 +978,14 @@ struct IncrementalCBORReader {
   private mutating func checkFloat(info: UInt8, bits: UInt64, offset: Int) throws {
     let value: Double
     switch info {
-    case 25: value = Double(Float16(bitPattern: UInt16(bits)))
+    case 25: value = HalfPrecision.double(fromBits: UInt16(bits))
     case 26: value = Double(Float(bitPattern: UInt32(bits)))
     default: value = Double(bitPattern: bits)
     }
     let preferred: Bool
     if value.isNaN {
       preferred = info == 25 && bits == 0x7e00
-    } else if Double(Float16(value)).bitPattern == value.bitPattern {
+    } else if HalfPrecision.exactBits(of: value) != nil {
       preferred = info == 25
     } else if Double(Float(value)).bitPattern == value.bitPattern {
       preferred = info == 26

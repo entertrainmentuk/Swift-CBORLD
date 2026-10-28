@@ -85,7 +85,7 @@ extension JSONValue {
         return CBOREncoder.headerByteCount(UInt64(bitPattern: ~Int64(number)))
       }
     }
-    if number.isNaN || Double(Float16(number)).bitPattern == number.bitPattern { return 3 }
+    if number.isNaN || HalfPrecision.exactBits(of: number) != nil { return 3 }
     if Double(Float(number)).bitPattern == number.bitPattern { return 5 }
     return 9
   }
