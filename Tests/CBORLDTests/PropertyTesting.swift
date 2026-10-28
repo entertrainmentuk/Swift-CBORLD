@@ -95,7 +95,7 @@ struct JSONGenerator {
   private mutating func anyNumber() -> Double {
     switch random.int(0...6) {
     case 0: return random.element([0.5, -1.5, 1.0, 65_504, 1e-7, 3.4028234663852886e38])
-    case 1: return Double(Float16(bitPattern: UInt16(truncatingIfNeeded: random.next())))
+    case 1: return HalfPrecision.double(fromBits: UInt16(truncatingIfNeeded: random.next()))
     case 2: return Double(Float(bitPattern: UInt32(truncatingIfNeeded: random.next())))
     case 3: return random.element([5e-324, 2.2250738585072014e-308, -0.0, 9_007_199_254_740_994])
     default:
@@ -225,7 +225,9 @@ struct CBORGenerator {
     let value = numbers.number()
     switch random.int(0...4) {
     case 0:
-      return [0xf9] + Self.bigEndian(UInt64(Float16(value).bitPattern), byteCount: 2)
+      // The value's exact half when it has one, else arbitrary half bits.
+      let half = HalfPrecision.exactBits(of: value) ?? UInt16(truncatingIfNeeded: random.next())
+      return [0xf9] + Self.bigEndian(UInt64(half), byteCount: 2)
     case 1:
       return [0xfa] + Self.bigEndian(UInt64(Float(value).bitPattern), byteCount: 4)
     case 2:
